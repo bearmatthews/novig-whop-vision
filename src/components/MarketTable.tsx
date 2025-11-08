@@ -44,7 +44,7 @@ export function MarketTable({ markets, showLiquidity = false }: MarketTableProps
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {marketsWithPrices.map((market) => (
         <Card key={market.id} className="p-4 space-y-3">
           <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
