@@ -11,15 +11,23 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Get the x-whop-user-token from the request headers
+    // This is automatically added by Whop to requests made to our domain
     const whopToken = req.headers.get('x-whop-user-token');
     
+    console.log('Whop auth request received');
+    console.log('Has whop token:', !!whopToken);
+    
     if (!whopToken) {
+      console.log('No Whop token in headers');
       return new Response(
-        JSON.stringify({ error: 'No Whop token provided' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+        JSON.stringify({ error: 'No Whop token provided', user: null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
+    console.log('Calling Whop API to verify token...');
+    
     // Call Whop API to verify token and get user info
     const whopApiKey = Deno.env.get('WHOP_API_KEY');
     const response = await fetch('https://api.whop.com/api/v2/me', {
@@ -29,15 +37,19 @@ Deno.serve(async (req) => {
       },
     });
 
+    console.log('Whop API response status:', response.status);
+
     if (!response.ok) {
-      console.error('Whop API error:', await response.text());
+      const errorText = await response.text();
+      console.error('Whop API error:', errorText);
       return new Response(
-        JSON.stringify({ error: 'Invalid Whop token' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+        JSON.stringify({ error: 'Invalid Whop token', details: errorText, user: null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
 
     const userData = await response.json();
+    console.log('Whop user data retrieved:', userData.id);
     
     return new Response(
       JSON.stringify({ user: userData }),
@@ -48,7 +60,7 @@ Deno.serve(async (req) => {
     console.error('Error in whop-auth function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: errorMessage, user: null }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

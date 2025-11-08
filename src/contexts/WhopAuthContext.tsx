@@ -36,11 +36,10 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const verifyWhopToken = async () => {
       try {
-        // Check if we're in development mode (not in Whop iframe)
         const isInIframe = window.self !== window.top;
         
         // For development/preview: Use mock user
-        if (!isInIframe) {
+        if (!isInIframe && import.meta.env.DEV) {
           console.log('Development mode: Using mock Whop user');
           setUser({
             id: 'dev-user-123',
@@ -52,26 +51,24 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // Production: Get the Whop token from session storage
-        const whopToken = sessionStorage.getItem('whop-user-token');
-        
-        if (!whopToken) {
-          console.log('No Whop token found');
+        // In production Whop iframe, make a request that will include the x-whop-user-token header
+        // This header is automatically added by Whop to requests to our domain
+        const { data, error: fnError } = await supabase.functions.invoke('whop-auth', {
+          method: 'POST',
+        });
+
+        if (fnError) {
+          console.error('Whop auth error:', fnError);
+          setError(fnError.message);
           setLoading(false);
           return;
         }
 
-        const { data, error } = await supabase.functions.invoke('whop-auth', {
-          headers: {
-            'x-whop-user-token': whopToken,
-          },
-        });
-
-        if (error) {
-          console.error('Whop auth error:', error);
-          setError(error.message);
-        } else if (data?.user) {
+        if (data?.user) {
+          console.log('Whop user authenticated:', data.user);
           setUser(data.user);
+        } else {
+          console.log('No Whop user data returned');
         }
       } catch (err) {
         console.error('Error verifying Whop token:', err);
