@@ -36,17 +36,23 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const verifyWhopToken = async () => {
       try {
-        // Check if we're in an iframe (Whop context)
+        // Check if we're in development mode (not in Whop iframe)
         const isInIframe = window.self !== window.top;
         
+        // For development/preview: Use mock user
         if (!isInIframe) {
-          console.log('Not in Whop iframe, skipping authentication');
+          console.log('Development mode: Using mock Whop user');
+          setUser({
+            id: 'dev-user-123',
+            username: 'TestUser',
+            email: 'test@whop.com',
+            profile_picture_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=TestUser',
+          });
           setLoading(false);
           return;
         }
 
-        // Get the Whop token from headers (would be passed by Whop iframe)
-        // For local development, you can mock this
+        // Production: Get the Whop token from session storage
         const whopToken = sessionStorage.getItem('whop-user-token');
         
         if (!whopToken) {

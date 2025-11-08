@@ -5,7 +5,16 @@ import { User } from "lucide-react";
 export function WhopUserProfile() {
   const { user, loading } = useWhopAuth();
 
-  if (loading || !user) {
+  // Show loading state briefly
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 mr-4">
+        <div className="w-10 h-10 rounded-full border-2 border-primary animate-pulse bg-secondary" />
+      </div>
+    );
+  }
+
+  if (!user) {
     return null;
   }
 
@@ -19,8 +28,8 @@ export function WhopUserProfile() {
     <div className="flex items-center gap-2 mr-4">
       <Avatar className="w-10 h-10 border-2 border-primary">
         <AvatarImage src={user.profile_picture_url} alt={user.username || 'User'} />
-        <AvatarFallback>
-          {user.profile_picture_url ? <User className="w-5 h-5" /> : initials}
+        <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+          {initials}
         </AvatarFallback>
       </Avatar>
       {user.username && (
