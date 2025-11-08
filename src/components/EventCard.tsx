@@ -57,30 +57,30 @@ export function EventCard({
     prevLiquidityRef.current = totalLiquidity;
   }, [totalLiquidity]);
   return <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer group" onClick={onClick}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-4">
           {/* Team Logos */}
-          {(logos.away || logos.home) && <div className="flex items-center gap-2 flex-shrink-0">
-              {logos.away && <img src={logos.away} alt="Away team" className="w-10 h-10 object-contain" onError={e => {
+          {(logos.away || logos.home) && <div className="flex items-center gap-3 flex-shrink-0">
+              {logos.away && <img src={logos.away} alt="Away team" className="w-14 h-14 object-contain" onError={e => {
             e.currentTarget.style.display = 'none';
           }} />}
-              <span className="text-muted-foreground text-sm">@</span>
-              {logos.home && <img src={logos.home} alt="Home team" className="w-10 h-10 object-contain" onError={e => {
+              <span className="text-muted-foreground text-lg font-bold">@</span>
+              {logos.home && <img src={logos.home} alt="Home team" className="w-14 h-14 object-contain" onError={e => {
             e.currentTarget.style.display = 'none';
           }} />}
             </div>}
           
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
+            <CardTitle className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
               {event.description}
             </CardTitle>
           </div>
-          <div className="flex items-center gap-2">
-            {isLive && <Badge variant="destructive" className="gap-1.5 whitespace-nowrap">
-                <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
+          <div className="flex items-center gap-3">
+            {isLive && <Badge variant="destructive" className="gap-1.5 whitespace-nowrap text-sm px-3 py-1.5">
+                <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
                 LIVE
               </Badge>}
-            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </div>
       </CardHeader>
