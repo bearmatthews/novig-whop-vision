@@ -280,13 +280,28 @@ const Index = () => {
 
                 <TabsContent value="liquidity" className="mt-6">
                   <div className="space-y-6">
-                    {selectedEvent.markets.map((market: any) => (
-                      <LiquidityView
-                        key={market.id}
-                        outcomes={market.outcomes}
-                        marketDescription={market.description}
-                      />
-                    ))}
+                    {selectedEvent.markets
+                      .filter((market: any) => 
+                        market.outcomes.some((outcome: any) => 
+                          outcome.orders && outcome.orders.length > 0
+                        )
+                      )
+                      .map((market: any) => (
+                        <LiquidityView
+                          key={market.id}
+                          outcomes={market.outcomes}
+                          marketDescription={market.description}
+                        />
+                      ))}
+                    {selectedEvent.markets.every((market: any) => 
+                      !market.outcomes.some((outcome: any) => 
+                        outcome.orders && outcome.orders.length > 0
+                      )
+                    ) && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No order book data available for this event.
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>

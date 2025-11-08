@@ -30,9 +30,22 @@ interface MarketTableProps {
 }
 
 export function MarketTable({ markets, showLiquidity = false }: MarketTableProps) {
+  // Filter to only show markets with at least one outcome that has a price
+  const marketsWithPrices = markets.filter((market) =>
+    market.outcomes.some((outcome) => outcome.available || outcome.last)
+  );
+
+  if (marketsWithPrices.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No markets with available prices at the moment.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {markets.map((market) => (
+      {marketsWithPrices.map((market) => (
         <div key={market.id} className="border border-border rounded-lg overflow-hidden">
           <div className="bg-card px-4 py-3 border-b border-border">
             <h3 className="font-semibold">{market.description}</h3>
@@ -53,7 +66,9 @@ export function MarketTable({ markets, showLiquidity = false }: MarketTableProps
               </TableRow>
             </TableHeader>
             <TableBody>
-              {market.outcomes.map((outcome) => {
+              {market.outcomes
+                .filter((outcome) => outcome.available || outcome.last) // Only show outcomes with prices
+                .map((outcome) => {
                 const price = outcome.available || outcome.last;
                 const hasOrders = outcome.orders && outcome.orders.length > 0;
                 const totalLiquidity = hasOrders 

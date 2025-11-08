@@ -22,17 +22,22 @@ interface LiquidityViewProps {
 }
 
 export function LiquidityView({ outcomes, marketDescription }: LiquidityViewProps) {
+  // Filter to only show outcomes with orders
+  const outcomesWithOrders = outcomes.filter(
+    (outcome) => outcome.orders && outcome.orders.length > 0
+  );
+
+  if (outcomesWithOrders.length === 0) {
+    return null; // Don't render if no liquidity
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">{marketDescription} - Order Book</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {outcomes.map((outcome) => {
-          if (!outcome.orders || outcome.orders.length === 0) {
-            return null;
-          }
-
+        {outcomesWithOrders.map((outcome) => {
           return (
             <div key={outcome.id} className="space-y-2">
               <div className="flex items-center justify-between">
