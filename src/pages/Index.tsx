@@ -131,10 +131,7 @@ const Index = () => {
               </Button>
               <ThemeToggle />
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className="gap-1.5">
-                  <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                  {filteredEvents.length} events
-                </Badge>
+                
                 
               </div>
             </div>
