@@ -109,10 +109,10 @@ const Index = () => {
   const eventWithLiquidity = eventDetailData || selectedEvent;
   return <div className="min-h-screen bg-background">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-50 border-b border-border/50 glass-effect">
+        <div className="container mx-auto px-6 py-5">
+          <div className="flex items-center justify-between gap-6 flex-wrap">
+            <div className="flex items-center gap-6">
               <WhopUserProfile />
               <div className="flex-shrink-0">
                 <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
@@ -122,21 +122,21 @@ const Index = () => {
                 }} />
               </div>
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="w-full sm:w-auto sm:max-w-md">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
               </div>
               <Button
                 variant="default"
-                size="sm"
+                size="default"
                 onClick={() => setShowAIChat(!showAIChat)}
-                className="gap-2"
+                className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all"
               >
                 <Bot className="w-4 h-4" />
                 AI Search
               </Button>
               <ThemeToggle />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Badge variant="outline" className="gap-1.5">
                   <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
                   {filteredEvents.length} events

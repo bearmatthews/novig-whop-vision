@@ -140,37 +140,36 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       {/* Backdrop with blur */}
       <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-md"
+        className="absolute inset-0 bg-background/95 backdrop-blur-2xl"
         onClick={onClose}
       />
 
       {/* Main Content */}
-      <div className="relative w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col animate-scale-in">
+      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col animate-scale-in">
         {!hasSearched ? (
-          /* Initial Search State */
-          <Card className="border-2 border-primary/20 shadow-2xl">
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-full bg-primary/10">
-                    <Bot className="w-6 h-6 text-primary" />
+          <Card className="glass-effect border-0 shadow-2xl">
+            <CardContent className="p-12">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-foreground/5 to-foreground/10">
+                    <Bot className="w-7 h-7" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold">AI Betting Assistant</h2>
-                    <p className="text-sm text-muted-foreground">Ask me anything about betting opportunities</p>
+                    <h2 className="text-3xl font-semibold mb-1">AI Betting Assistant</h2>
+                    <p className="text-muted-foreground">Ask me anything about betting opportunities</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={onClose}>
+                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
                   <X className="w-5 h-5" />
                 </Button>
               </div>
 
               {/* Search Input */}
-              <div className="mb-8">
-                <div className="flex gap-2">
+              <div className="mb-10">
+                <div className="flex gap-3">
                   <Input
                     ref={inputRef}
                     value={input}
@@ -178,13 +177,13 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
                     onKeyPress={handleKeyPress}
                     placeholder="What betting opportunities are you looking for?"
                     disabled={isLoading}
-                    className="flex-1 h-14 text-lg"
+                    className="flex-1 h-16 text-lg border-2 rounded-2xl px-6 focus-visible:ring-2 focus-visible:ring-foreground/20 transition-all"
                   />
                   <Button
                     onClick={() => handleSearch(input)}
                     disabled={isLoading || !input.trim()}
                     size="lg"
-                    className="px-8"
+                    className="px-8 h-16 rounded-2xl shadow-lg hover:shadow-xl transition-all"
                   >
                     {isLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -196,21 +195,21 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
               </div>
 
               {/* Example Questions */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Sparkles className="w-4 h-4" />
-                  <span>Try these example questions:</span>
+                  <span className="text-sm font-medium">Try these examples</span>
                 </div>
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {exampleQuestions.map((question, index) => (
                     <Button
                       key={index}
                       variant="outline"
-                      className="justify-between h-auto py-3 px-4 text-left hover:border-primary hover:bg-primary/5 transition-all group"
+                      className="justify-between h-auto py-4 px-5 text-left border-2 hover:border-foreground hover:bg-foreground/5 rounded-xl transition-all group"
                       onClick={() => handleSearch(question)}
                     >
-                      <span className="text-sm">{question}</span>
-                      <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span className="text-sm font-medium">{question}</span>
+                      <ArrowRight className="w-4 h-4 ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     </Button>
                   ))}
                 </div>
@@ -218,57 +217,57 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
             </CardContent>
           </Card>
         ) : (
-          /* Results View */
-          <Card className="border-2 border-primary/20 shadow-2xl flex flex-col h-[85vh]">
+          <Card className="glass-effect border-0 shadow-2xl flex flex-col h-[88vh]">
             {/* Header with Query */}
-            <div className="p-6 border-b">
+            <div className="p-8 border-b border-border/50">
               <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <Bot className="w-4 h-4" />
-                    <span>Your question:</span>
+                    <span className="text-sm font-medium">Your question</span>
                   </div>
-                  <h3 className="text-xl font-bold">{currentQuery}</h3>
+                  <h3 className="text-2xl font-semibold text-balance">{currentQuery}</h3>
                   {messages[messages.length - 1]?.role === "assistant" && (
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="text-muted-foreground leading-relaxed">
                       {messages[messages.length - 1].content}
                     </p>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" onClick={onClose}>
+                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
                   <X className="w-5 h-5" />
                 </Button>
               </div>
             </div>
 
             {/* Recommended Events */}
-            <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+            <ScrollArea className="flex-1 p-8" ref={scrollRef}>
               {isLoading && messages.length <= 2 ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center space-y-3">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-                    <p className="text-muted-foreground">Finding the best matches...</p>
+                <div className="flex items-center justify-center h-96">
+                  <div className="text-center space-y-4">
+                    <Loader2 className="w-10 h-10 animate-spin mx-auto" />
+                    <p className="text-muted-foreground text-lg">Finding the best matches...</p>
                   </div>
                 </div>
               ) : recommendedEvents.length > 0 ? (
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold mb-4">Recommended Matches</h4>
+                <div className="space-y-5">
+                  <h4 className="text-lg font-semibold mb-6">Recommended Matches</h4>
                   {recommendedEvents.map((event) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      onClick={() => {
-                        onEventSelect(event);
-                        onClose();
-                      }}
-                      showMarkets={true}
-                    />
+                    <div key={event.id} className="card-hover">
+                      <EventCard
+                        event={event}
+                        onClick={() => {
+                          onEventSelect(event);
+                          onClose();
+                        }}
+                        showMarkets={true}
+                      />
+                    </div>
                   ))}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-64">
+                <div className="flex items-center justify-center h-96">
                   <div className="text-center space-y-2">
-                    <p className="text-muted-foreground">No matches found for your query</p>
+                    <p className="text-lg text-muted-foreground">No matches found for your query</p>
                     <p className="text-sm text-muted-foreground">Try asking something different below</p>
                   </div>
                 </div>
@@ -276,20 +275,21 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
             </ScrollArea>
 
             {/* Chat Input at Bottom */}
-            <div className="p-4 border-t bg-card/50">
-              <div className="flex gap-2">
+            <div className="p-6 border-t border-border/50 bg-background/50">
+              <div className="flex gap-3">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask a follow-up question..."
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 h-12 rounded-xl border-2"
                 />
                 <Button
                   onClick={() => handleSearch(input)}
                   disabled={isLoading || !input.trim()}
                   size="icon"
+                  className="h-12 w-12 rounded-xl"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

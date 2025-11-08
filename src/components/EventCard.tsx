@@ -56,7 +56,7 @@ export function EventCard({
     }
     prevLiquidityRef.current = totalLiquidity;
   }, [totalLiquidity]);
-  return <Card className={`${onClick ? 'hover:border-primary hover:shadow-lg transition-all cursor-pointer group' : 'border-2 border-primary/20 bg-gradient-to-br from-card to-card/50'}`} onClick={onClick}>
+  return <Card className={`${onClick ? 'hover:shadow-2xl transition-all duration-300 cursor-pointer group border-2 hover:border-foreground/20' : 'border-2 border-border/50 shadow-lg'} rounded-2xl overflow-hidden`} onClick={onClick}>
       <CardHeader className={onClick ? "pb-4" : "pb-6 pt-8"}>
         {!onClick ? (
           // Detail view - centered layout with large logos
