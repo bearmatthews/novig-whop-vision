@@ -94,10 +94,6 @@ export function EventCard({
             <Clock className="w-3.5 h-3.5" />
             <span>{formatGameTime(event.game.scheduled_start)}</span>
           </div>
-          {activeMarkets.length > 0 && <div className="flex items-center gap-1.5">
-              
-              <span>{activeMarkets.length} markets</span>
-            </div>}
           {totalLiquidity > 0 && <div className="flex items-center gap-1.5 text-success font-semibold">
               <DollarSign className="w-3.5 h-3.5" />
               <span>{formatLargeCurrency(totalLiquidity)} volume</span>
