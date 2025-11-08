@@ -7,6 +7,7 @@ import { MarketTable } from "@/components/MarketTable";
 import { LiquidityView } from "@/components/LiquidityView";
 import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
+import { WhopUserProfile } from "@/components/WhopUserProfile";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -101,12 +102,15 @@ const Index = () => {
       <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex-shrink-0">
-              <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
-                setSelectedLeague(league);
-                setSelectedEvent(null);
-                setSearchQuery("");
-              }} />
+            <div className="flex items-center gap-4">
+              <WhopUserProfile />
+              <div className="flex-shrink-0">
+                <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
+                  setSelectedLeague(league);
+                  setSelectedEvent(null);
+                  setSearchQuery("");
+                }} />
+              </div>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <div className="w-full sm:w-auto sm:max-w-md">
