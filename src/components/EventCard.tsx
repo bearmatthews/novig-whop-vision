@@ -85,20 +85,20 @@ export function EventCard({
         </div>
       </CardHeader>
       
-      {showMarkets && activeMarkets.length > 0 && <CardContent className="pt-0 pb-4">
-          <div className="space-y-4">
+      {showMarkets && activeMarkets.length > 0 && <CardContent className="pt-0 pb-3">
+          <div className="space-y-3">
             {activeMarkets.slice(0, 2).map(market => <div key={market.id}>
-                <div className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">
+                <div className="font-semibold text-muted-foreground mb-2 text-xs uppercase tracking-wide">
                   {market.description}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button key={outcome.id} className="bg-card border-2 border-border rounded-lg p-4 flex flex-col gap-2 hover:border-primary hover:bg-card/80 transition-all group cursor-pointer">
-                      <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                <div className="grid grid-cols-2 gap-2">
+                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button key={outcome.id} className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer">
+                      <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
                         {outcome.description}
                       </span>
-                      {outcome.available ? <span className="text-2xl font-black text-success font-mono">
+                      {outcome.available ? <span className="text-lg font-black text-success font-mono">
                           {outcome.available.toFixed(2)}
-                        </span> : outcome.last ? <span className="text-2xl font-black text-warning font-mono">
+                        </span> : outcome.last ? <span className="text-lg font-black text-warning font-mono">
                           {outcome.last.toFixed(2)}
                         </span> : null}
                     </button>)}
