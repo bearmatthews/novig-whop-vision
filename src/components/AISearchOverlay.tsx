@@ -85,11 +85,27 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
     setMessages(newMessages);
 
     try {
+      // Only send essential event data to reduce payload size
+      const essentialEvents = events.map(e => ({
+        id: e.id,
+        description: e.description,
+        league: e.game.league,
+        status: e.status,
+        scheduled_start: e.game.scheduled_start,
+        markets: e.markets?.slice(0, 3).map((m: any) => ({
+          description: m.description,
+          outcomes: m.outcomes.slice(0, 3).map((o: any) => ({
+            description: o.description,
+            last: o.last
+          }))
+        }))
+      }));
+
       const { data, error } = await supabase.functions.invoke("ai-betting-search", {
         body: {
           message: query,
-          events,
-          conversationHistory: messages.slice(-6)
+          events: essentialEvents,
+          conversationHistory: messages.slice(-4) // Reduced from 6 to 4
         }
       });
 

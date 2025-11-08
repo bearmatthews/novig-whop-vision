@@ -22,48 +22,20 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Prepare events summary for AI context
-    const eventsSummary = events.map((event: any) => ({
-      id: event.id,
-      description: event.description,
-      league: event.game.league,
-      status: event.status,
-      scheduled_start: event.game.scheduled_start,
-      markets: event.markets?.map((m: any) => ({
-        description: m.description,
-        outcomes: m.outcomes.map((o: any) => ({
-          description: o.description,
-          available: o.available,
-          last: o.last
-        }))
-      }))
-    }));
+    // Events are already pre-filtered on the client, so we can use them directly
+    const systemPrompt = `You are an expert sports betting assistant. Find relevant betting opportunities from the provided events.
 
-    const systemPrompt = `You are an expert sports betting assistant. Your job is to help users find betting opportunities based on their natural language queries.
+Events: ${JSON.stringify(events)}
 
-Available Events Data:
-${JSON.stringify(eventsSummary, null, 2)}
+Analyze the user's query and return matching event IDs with a brief explanation.
 
-When a user asks about betting opportunities:
-1. Analyze their query to understand what they're looking for (specific teams, leagues, bet types, odds ranges, etc.)
-2. Search through the available events and markets to find relevant matches
-3. Return event IDs that match their criteria
-4. Provide a friendly, conversational response explaining what you found
-
-Return your response in this JSON format:
+Response format (JSON):
 {
-  "message": "Your conversational response to the user",
-  "eventIds": ["event_id_1", "event_id_2"],
-  "reasoning": "Brief explanation of why you selected these events"
+  "message": "Brief explanation of what you found",
+  "eventIds": ["id1", "id2"]
 }
 
-Examples:
-- "Show me NBA games with good underdog odds" -> Find NBA events where underdogs have attractive odds
-- "Find high-scoring games" -> Look for events with high over/under lines
-- "What are the best bets for tonight?" -> Show events happening today with interesting odds
-- "Lakers games" -> Filter for events involving the Lakers
-
-Be helpful, concise, and focus on actionable betting insights.`;
+Be concise and focus on the most relevant matches.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -78,9 +50,9 @@ Be helpful, concise, and focus on actionable betting insights.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-flash-lite", // Faster, cheaper model for this use case
         messages,
-        temperature: 0.7,
+        temperature: 0.5,
         response_format: { type: "json_object" }
       }),
     });
