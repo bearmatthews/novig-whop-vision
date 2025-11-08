@@ -56,33 +56,76 @@ export function EventCard({
     }
     prevLiquidityRef.current = totalLiquidity;
   }, [totalLiquidity]);
-  return <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer group" onClick={onClick}>
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-4">
-          {/* Team Logos */}
-          {(logos.away || logos.home) && <div className="flex items-center gap-3 flex-shrink-0">
-              {logos.away && <img src={logos.away} alt="Away team" className="w-14 h-14 object-contain" onError={e => {
-            e.currentTarget.style.display = 'none';
-          }} />}
-              <span className="text-muted-foreground text-lg font-bold">@</span>
-              {logos.home && <img src={logos.home} alt="Home team" className="w-14 h-14 object-contain" onError={e => {
-            e.currentTarget.style.display = 'none';
-          }} />}
-            </div>}
-          
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
-              {event.description}
-            </CardTitle>
+  return <Card className={`${onClick ? 'hover:border-primary hover:shadow-lg transition-all cursor-pointer group' : 'border-2 border-primary/20 bg-gradient-to-br from-card to-card/50'}`} onClick={onClick}>
+      <CardHeader className={onClick ? "pb-4" : "pb-6 pt-8"}>
+        {!onClick ? (
+          // Detail view - centered layout with large logos
+          <div className="flex flex-col items-center gap-6 text-center">
+            {(logos.away || logos.home) && (
+              <div className="flex items-center justify-center gap-8">
+                {logos.away && (
+                  <div className="flex flex-col items-center gap-3">
+                    <img 
+                      src={logos.away} 
+                      alt="Away team" 
+                      className="w-24 h-24 object-contain drop-shadow-lg" 
+                      onError={e => { e.currentTarget.style.display = 'none'; }} 
+                    />
+                  </div>
+                )}
+                <span className="text-3xl font-black text-muted-foreground">@</span>
+                {logos.home && (
+                  <div className="flex flex-col items-center gap-3">
+                    <img 
+                      src={logos.home} 
+                      alt="Home team" 
+                      className="w-24 h-24 object-contain drop-shadow-lg" 
+                      onError={e => { e.currentTarget.style.display = 'none'; }} 
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <CardTitle className="text-3xl font-black leading-tight">
+                {event.description}
+              </CardTitle>
+              {isLive && (
+                <Badge variant="destructive" className="gap-2 whitespace-nowrap text-base px-4 py-2">
+                  <div className="w-2.5 h-2.5 bg-destructive-foreground rounded-full animate-pulse" />
+                  LIVE
+                </Badge>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {isLive && <Badge variant="destructive" className="gap-1.5 whitespace-nowrap text-sm px-3 py-1.5">
-                <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
-                LIVE
-              </Badge>}
-            <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        ) : (
+          // List view - horizontal compact layout
+          <div className="flex items-center gap-4">
+            {(logos.away || logos.home) && <div className="flex items-center gap-3 flex-shrink-0">
+                {logos.away && <img src={logos.away} alt="Away team" className="w-14 h-14 object-contain" onError={e => {
+              e.currentTarget.style.display = 'none';
+            }} />}
+                <span className="text-muted-foreground text-lg font-bold">@</span>
+                {logos.home && <img src={logos.home} alt="Home team" className="w-14 h-14 object-contain" onError={e => {
+              e.currentTarget.style.display = 'none';
+            }} />}
+              </div>}
+            
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
+                {event.description}
+              </CardTitle>
+            </div>
+            <div className="flex items-center gap-3">
+              {isLive && <Badge variant="destructive" className="gap-1.5 whitespace-nowrap text-sm px-3 py-1.5">
+                  <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
+                  LIVE
+                </Badge>}
+              <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            </div>
           </div>
-        </div>
+        )}
       </CardHeader>
       
       {showMarkets && activeMarkets.length > 0 && <CardContent className="pt-0 pb-3">
