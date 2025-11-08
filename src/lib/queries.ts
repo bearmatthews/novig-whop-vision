@@ -1,10 +1,10 @@
-export const GET_EVENTS_BY_LEAGUE_QUERY = `
-  query GetEventsByLeague($league: String!) {
+export const GET_ALL_EVENTS_QUERY = `
+  query GetAllEvents($leagues: [String!]!) {
     event(
       where: {
         _and: [
           { _or: [{ status: { _eq: "OPEN_PREGAME" } }, { status: { _eq: "OPEN_INGAME" } }] }
-          { game: { league: { _eq: $league } } }
+          { game: { league: { _in: $leagues } } }
         ]
       }
     ) {

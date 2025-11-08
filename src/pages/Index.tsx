@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { LeagueSelector } from "@/components/LeagueSelector";
+import { LeagueSelector, LEAGUES } from "@/components/LeagueSelector";
 import { EventCard } from "@/components/EventCard";
 import { MarketTable } from "@/components/MarketTable";
 import { LiquidityView } from "@/components/LiquidityView";
@@ -10,19 +10,21 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { graphqlQuery } from "@/lib/graphql-client";
-import { GET_EVENTS_BY_LEAGUE_QUERY } from "@/lib/queries";
+import { GET_ALL_EVENTS_QUERY } from "@/lib/queries";
 import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
-  const [selectedLeague, setSelectedLeague] = useState("MLB");
+  const [selectedLeague, setSelectedLeague] = useState("ALL");
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Fetch all sports
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['events', selectedLeague],
+    queryKey: ['events'],
     queryFn: async () => {
-      const response = await graphqlQuery(GET_EVENTS_BY_LEAGUE_QUERY, { league: selectedLeague });
+      const allLeagues = LEAGUES.filter(l => l.id !== 'ALL').map(l => l.id);
+      const response = await graphqlQuery(GET_ALL_EVENTS_QUERY, { leagues: allLeagues });
       if (response.errors) {
         throw new Error(response.errors[0].message);
       }
@@ -45,26 +47,35 @@ const Index = () => {
     toast.success("Data refreshed");
   };
 
-  // Filter out events with no active markets and apply search
+  // Filter out events with no active markets, apply league filter and search
   const filteredEvents = useMemo(() => {
     const allEvents = data?.event || [];
     
     // Filter out events without active markets
-    const activeEvents = allEvents.filter((event: any) => {
+    let activeEvents = allEvents.filter((event: any) => {
       const hasActiveMarkets = event.markets?.some((market: any) => 
         market.outcomes?.some((outcome: any) => outcome.available || outcome.last)
       );
       return hasActiveMarkets;
     });
     
-    // Apply search filter
-    if (!searchQuery.trim()) return activeEvents;
+    // Apply search filter (searches across ALL sports regardless of league filter)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      activeEvents = activeEvents.filter((event: any) => 
+        event.description.toLowerCase().includes(query)
+      );
+    }
     
-    const query = searchQuery.toLowerCase();
-    return activeEvents.filter((event: any) => 
-      event.description.toLowerCase().includes(query)
-    );
-  }, [data?.event, searchQuery]);
+    // Apply league filter AFTER search (so search works across all sports)
+    if (selectedLeague !== 'ALL') {
+      activeEvents = activeEvents.filter((event: any) => 
+        event.game.league === selectedLeague
+      );
+    }
+    
+    return activeEvents;
+  }, [data?.event, searchQuery, selectedLeague]);
 
   const liveEvents = filteredEvents.filter((e: any) => e.status === "OPEN_INGAME");
   const pregameEvents = filteredEvents.filter((e: any) => e.status === "OPEN_PREGAME");
@@ -167,7 +178,11 @@ const Index = () => {
             <EmptyState
               icon={TrendingUp}
               title="No Active Events"
-              description={`There are no active ${selectedLeague} events with open markets at the moment.`}
+              description={
+                selectedLeague === 'ALL' 
+                  ? "There are no active events with open markets at the moment."
+                  : `There are no active ${selectedLeague} events with open markets at the moment.`
+              }
             />
           )}
 

@@ -5,7 +5,8 @@ interface LeagueSelectorProps {
   onLeagueChange: (league: string) => void;
 }
 
-const LEAGUES = [
+export const LEAGUES = [
+  { id: 'ALL', name: 'All Sports', icon: '🏆' },
   { id: 'MLB', name: 'MLB', icon: '⚾' },
   { id: 'NBA', name: 'NBA', icon: '🏀' },
   { id: 'NFL', name: 'NFL', icon: '🏈' },
