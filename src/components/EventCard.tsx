@@ -122,11 +122,6 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
                 </div>
               </div>
             ))}
-            {activeMarkets.length > 2 && (
-              <div className="text-center text-xs text-muted-foreground pt-1 border-t border-border/50">
-                +{activeMarkets.length - 2} more markets
-              </div>
-            )}
           </div>
         </CardContent>
       )}
