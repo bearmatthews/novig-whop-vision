@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import novigLogo from "@/assets/novig-logo.jpg";
 import { useQuery } from "@tanstack/react-query";
 import { LeagueSelector, LEAGUES } from "@/components/LeagueSelector";
 import { EventCard } from "@/components/EventCard";
@@ -106,7 +107,7 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <Activity className="w-7 h-7 text-primary" />
+                  <img src={novigLogo} alt="Novig" className="w-7 h-7 rounded-full" />
                   Novig Live Markets
                 </h1>
                 <p className="text-muted-foreground text-sm mt-0.5">
