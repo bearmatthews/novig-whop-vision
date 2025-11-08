@@ -104,10 +104,7 @@ const Index = () => {
             {/* Top Row - Title & Stats */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <img src={novigLogo} alt="Novig" className="w-7 h-7 rounded-full" />
-                  Novig Live Markets
-                </h1>
+                
                 
               </div>
               <div className="flex items-center gap-2">
