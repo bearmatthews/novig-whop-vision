@@ -8,6 +8,7 @@ import { LiquidityView } from "@/components/LiquidityView";
 import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
 import { WhopUserProfile } from "@/components/WhopUserProfile";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -116,6 +117,7 @@ const Index = () => {
               <div className="w-full sm:w-auto sm:max-w-md">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
               </div>
+              <ThemeToggle />
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="gap-1.5">
                   <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
