@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatGameTime, calculateEventLiquidity, formatLargeCurrency } from "@/lib/betting-utils";
 import { getEventLogos } from "@/lib/team-logos";
 import { Clock, ChevronRight, DollarSign } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 interface Event {
   id: string;
   description: string;
@@ -38,6 +39,23 @@ export function EventCard({
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
   const logos = getEventLogos(event);
   const totalLiquidity = calculateEventLiquidity(event);
+  
+  const [flashClass, setFlashClass] = useState("");
+  const prevLiquidityRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (prevLiquidityRef.current !== null && prevLiquidityRef.current !== totalLiquidity) {
+      if (totalLiquidity > prevLiquidityRef.current) {
+        setFlashClass("animate-flash-green");
+      } else if (totalLiquidity < prevLiquidityRef.current) {
+        setFlashClass("animate-flash-red");
+      }
+      
+      const timer = setTimeout(() => setFlashClass(""), 500);
+      return () => clearTimeout(timer);
+    }
+    prevLiquidityRef.current = totalLiquidity;
+  }, [totalLiquidity]);
   return <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer group" onClick={onClick}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
@@ -94,7 +112,7 @@ export function EventCard({
             <Clock className="w-3.5 h-3.5" />
             <span>{formatGameTime(event.game.scheduled_start)}</span>
           </div>
-          {totalLiquidity > 0 && <div className="flex items-center gap-1.5 text-success font-semibold">
+          {totalLiquidity > 0 && <div className={`flex items-center gap-1.5 text-success font-semibold rounded-md px-2 py-1 -mx-2 -my-1 transition-colors ${flashClass}`}>
               <DollarSign className="w-3.5 h-3.5" />
               <span>{formatLargeCurrency(totalLiquidity)} volume</span>
             </div>}

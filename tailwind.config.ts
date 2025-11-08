@@ -95,10 +95,28 @@ export default {
             height: "0",
           },
         },
+        "flash-green": {
+          "0%, 100%": {
+            backgroundColor: "transparent",
+          },
+          "50%": {
+            backgroundColor: "hsl(var(--success) / 0.3)",
+          },
+        },
+        "flash-red": {
+          "0%, 100%": {
+            backgroundColor: "transparent",
+          },
+          "50%": {
+            backgroundColor: "hsl(var(--destructive) / 0.3)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "flash-green": "flash-green 0.5s ease-out",
+        "flash-red": "flash-red 0.5s ease-out",
       },
     },
   },
