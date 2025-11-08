@@ -12,11 +12,12 @@ Deno.serve(async (req) => {
 
   try {
     // Get the x-whop-user-token from the request headers
-    // This is automatically added by Whop to requests made to our domain
     const whopToken = req.headers.get('x-whop-user-token');
     
     console.log('Whop auth request received');
     console.log('Has whop token:', !!whopToken);
+    console.log('Request URL:', req.url);
+    console.log('All headers:', JSON.stringify([...req.headers.entries()]));
     
     if (!whopToken) {
       console.log('No Whop token in headers');
@@ -28,8 +29,13 @@ Deno.serve(async (req) => {
 
     console.log('Calling Whop API to verify token...');
     
-    // Call Whop API to verify token and get user info
+    // Verify token and get user info using Whop API
     const whopApiKey = Deno.env.get('WHOP_API_KEY');
+    const whopAppId = Deno.env.get('WHOP_APP_ID');
+    
+    console.log('Has API key:', !!whopApiKey);
+    console.log('Has App ID:', !!whopAppId);
+    
     const response = await fetch('https://api.whop.com/api/v2/me', {
       headers: {
         'Authorization': `Bearer ${whopToken}`,
@@ -49,7 +55,10 @@ Deno.serve(async (req) => {
     }
 
     const userData = await response.json();
-    console.log('Whop user data retrieved:', userData.id);
+    console.log('Whop user data retrieved successfully');
+    console.log('User ID:', userData.id);
+    console.log('User email:', userData.email);
+    console.log('User username:', userData.username);
     
     return new Response(
       JSON.stringify({ user: userData }),
