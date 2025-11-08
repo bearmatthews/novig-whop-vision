@@ -9,7 +9,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
 import { WhopUserProfile } from "@/components/WhopUserProfile";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { AIChatInterface } from "@/components/AIChatInterface";
+import { AISearchOverlay } from "@/components/AISearchOverlay";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -232,17 +232,17 @@ const Index = () => {
         </div>
       </main>
 
-      {/* AI Chat Interface */}
+      {/* AI Search Overlay */}
       {showAIChat && (
-        <AIChatInterface
+        <AISearchOverlay
           events={data?.event || []}
-          onEventsFiltered={(eventIds) => {
-            setAiFilteredEventIds(eventIds);
-            setSearchQuery(""); // Clear regular search when AI filtering
-          }}
           onClose={() => {
             setShowAIChat(false);
-            setAiFilteredEventIds([]); // Clear AI filter when closing
+            setAiFilteredEventIds([]);
+          }}
+          onEventSelect={(event) => {
+            setSelectedEvent(event);
+            setShowAIChat(false);
           }}
         />
       )}
