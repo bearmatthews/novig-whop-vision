@@ -34,13 +34,13 @@ export function LiquidityView({ outcomes, marketDescription }: LiquidityViewProp
   return (
     <Card className="p-4">
       <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">
-        {marketDescription} - Order Book
+        {marketDescription}
       </h3>
       <div className="space-y-4">
         {outcomesWithOrders.map((outcome) => {
           return (
             <div key={outcome.id} className="space-y-2">
-              <div className="flex items-center justify-between pb-2 border-b border-border">
+              <div className="flex items-center justify-between pb-2">
                 <h4 className="font-semibold text-sm">{outcome.description}</h4>
                 <Badge variant="outline" className="gap-1 text-xs">
                   <TrendingUp className="w-3 h-3" />
@@ -56,18 +56,18 @@ export function LiquidityView({ outcomes, marketDescription }: LiquidityViewProp
                   return (
                     <div 
                       key={order.id}
-                      className="bg-secondary/30 border border-border rounded-md p-3 space-y-2"
+                      className="bg-secondary/30 border border-border rounded-md p-3"
                     >
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="font-mono text-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-lg font-bold font-mono">
                           {odds}
-                        </Badge>
+                        </div>
                         <div className="text-xs text-muted-foreground">
                           Price: <span className="font-semibold text-foreground">{order.price.toFixed(3)}</span>
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center justify-between text-xs pt-2 border-t border-border/50">
                         <div className="flex items-center gap-1 text-success">
                           <DollarSign className="w-3 h-3" />
                           <span className="font-semibold">{formatCurrency(order.qty)} total</span>
