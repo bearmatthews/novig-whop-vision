@@ -133,7 +133,7 @@ const Index = () => {
                 className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all"
               >
                 <Bot className="w-4 h-4" />
-                AI Search
+                Ask Bear
               </Button>
               <ThemeToggle />
               <div className="flex items-center gap-3">
