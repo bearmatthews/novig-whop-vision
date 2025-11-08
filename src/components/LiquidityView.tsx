@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { priceToAmericanOdds, calculatePayouts, formatCurrency } from "@/lib/betting-utils";
 import { DollarSign, TrendingUp } from "lucide-react";
@@ -32,23 +32,23 @@ export function LiquidityView({ outcomes, marketDescription }: LiquidityViewProp
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{marketDescription} - Order Book</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Card className="p-4">
+      <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">
+        {marketDescription} - Order Book
+      </h3>
+      <div className="space-y-4">
         {outcomesWithOrders.map((outcome) => {
           return (
             <div key={outcome.id} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold">{outcome.description}</h4>
-                <Badge variant="outline" className="gap-1">
+              <div className="flex items-center justify-between pb-2 border-b border-border">
+                <h4 className="font-semibold text-sm">{outcome.description}</h4>
+                <Badge variant="outline" className="gap-1 text-xs">
                   <TrendingUp className="w-3 h-3" />
                   {outcome.orders.length} orders
                 </Badge>
               </div>
               
-              <div className="space-y-2">
+              <div className="grid gap-2">
                 {outcome.orders.map((order) => {
                   const payouts = calculatePayouts(order.price, order.qty);
                   const odds = priceToAmericanOdds(order.price);
@@ -56,27 +56,24 @@ export function LiquidityView({ outcomes, marketDescription }: LiquidityViewProp
                   return (
                     <div 
                       key={order.id}
-                      className="bg-secondary rounded-lg p-3 flex items-center justify-between"
+                      className="bg-secondary/30 border border-border rounded-md p-3 space-y-2"
                     >
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="font-mono">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="font-mono text-sm">
                           {odds}
                         </Badge>
-                        <div className="text-sm">
-                          <div className="flex items-center gap-1 text-success">
-                            <DollarSign className="w-4 h-4" />
-                            <span className="font-semibold">
-                              {formatCurrency(order.qty)} total
-                            </span>
-                          </div>
-                          <div className="text-muted-foreground">
-                            Risk {formatCurrency(Math.round(payouts.risk * 100))} to win {formatCurrency(Math.round(payouts.toWin * 100))}
-                          </div>
+                        <div className="text-xs text-muted-foreground">
+                          Price: <span className="font-semibold text-foreground">{order.price.toFixed(3)}</span>
                         </div>
                       </div>
-                      <div className="text-right text-sm">
-                        <div className="font-mono text-muted-foreground">
-                          {order.price.toFixed(3)}
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1 text-success">
+                          <DollarSign className="w-3 h-3" />
+                          <span className="font-semibold">{formatCurrency(order.qty)} total</span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          Risk {formatCurrency(Math.round(payouts.risk * 100))} to win {formatCurrency(Math.round(payouts.toWin * 100))}
                         </div>
                       </div>
                     </div>
@@ -86,7 +83,7 @@ export function LiquidityView({ outcomes, marketDescription }: LiquidityViewProp
             </div>
           );
         })}
-      </CardContent>
+      </div>
     </Card>
   );
 }

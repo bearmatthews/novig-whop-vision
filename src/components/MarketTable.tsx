@@ -1,7 +1,7 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { priceToAmericanOdds, calculatePayouts, formatCurrency } from "@/lib/betting-utils";
+import { priceToAmericanOdds, formatCurrency } from "@/lib/betting-utils";
 import { TrendingUp, DollarSign } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 interface Market {
   id: string;
@@ -44,31 +44,17 @@ export function MarketTable({ markets, showLiquidity = false }: MarketTableProps
   }
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
       {marketsWithPrices.map((market) => (
-        <div key={market.id} className="border border-border rounded-lg overflow-hidden">
-          <div className="bg-card px-4 py-3 border-b border-border">
-            <h3 className="font-semibold">{market.description}</h3>
-          </div>
+        <Card key={market.id} className="p-4 space-y-3">
+          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+            {market.description}
+          </h3>
           
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Outcome</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Odds</TableHead>
-                {showLiquidity && (
-                  <>
-                    <TableHead className="text-right">Liquidity</TableHead>
-                    <TableHead className="text-right">Total Orders</TableHead>
-                  </>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {market.outcomes
-                .filter((outcome) => outcome.available || outcome.last) // Only show outcomes with prices
-                .map((outcome) => {
+          <div className="grid gap-2">
+            {market.outcomes
+              .filter((outcome) => outcome.available || outcome.last)
+              .map((outcome) => {
                 const price = outcome.available || outcome.last;
                 const hasOrders = outcome.orders && outcome.orders.length > 0;
                 const totalLiquidity = hasOrders 
@@ -76,58 +62,46 @@ export function MarketTable({ markets, showLiquidity = false }: MarketTableProps
                   : 0;
                 
                 return (
-                  <TableRow key={outcome.id}>
-                    <TableCell className="font-medium">{outcome.description}</TableCell>
-                    <TableCell className="text-right">
-                      {price ? (
-                        <div className="flex items-center justify-end gap-2">
-                          {outcome.available ? (
-                            <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                              {price.toFixed(2)}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                              {price.toFixed(2)}
-                            </Badge>
-                          )}
-                        </div>
+                  <div key={outcome.id} className="bg-secondary/30 border border-border rounded-md p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">{outcome.description}</span>
+                      {outcome.available ? (
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                          Available
+                        </Badge>
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">
+                          Last
+                        </Badge>
                       )}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {price ? priceToAmericanOdds(price) : '-'}
-                    </TableCell>
-                    {showLiquidity && (
-                      <>
-                        <TableCell className="text-right">
-                          {hasOrders ? (
-                            <div className="flex items-center justify-end gap-1 text-success">
-                              <DollarSign className="w-4 h-4" />
-                              {formatCurrency(totalLiquidity)}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {hasOrders ? (
-                            <div className="flex items-center justify-end gap-1">
-                              <TrendingUp className="w-4 h-4" />
-                              {outcome.orders.length}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                      </>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-muted-foreground">
+                        Price: <span className="font-semibold text-foreground">{price?.toFixed(2)}</span>
+                      </div>
+                      <div className="text-lg font-bold font-mono">
+                        {price ? priceToAmericanOdds(price) : '-'}
+                      </div>
+                    </div>
+
+                    {showLiquidity && hasOrders && (
+                      <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+                        <div className="flex items-center gap-1 text-success">
+                          <DollarSign className="w-3 h-3" />
+                          {formatCurrency(totalLiquidity)}
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <TrendingUp className="w-3 h-3" />
+                          {outcome.orders.length} orders
+                        </div>
+                      </div>
                     )}
-                  </TableRow>
+                  </div>
                 );
               })}
-            </TableBody>
-          </Table>
-        </div>
+          </div>
+        </Card>
       ))}
     </div>
   );
