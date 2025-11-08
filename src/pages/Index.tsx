@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@tanstack/react-query";
 import { LeagueSelector } from "@/components/LeagueSelector";
 import { EventCard } from "@/components/EventCard";
 import { MarketTable } from "@/components/MarketTable";
@@ -7,7 +7,8 @@ import { LiquidityView } from "@/components/LiquidityView";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { GET_ALL_EVENTS_WITH_LIQUIDITY } from "@/lib/graphql-queries";
+import { graphqlQuery } from "@/lib/graphql-client";
+import { GET_EVENTS_BY_LEAGUE_QUERY } from "@/lib/queries";
 import { RefreshCw, Activity, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,15 +16,22 @@ const Index = () => {
   const [selectedLeague, setSelectedLeague] = useState("MLB");
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
-  const { data, loading, error, refetch } = useQuery(GET_ALL_EVENTS_WITH_LIQUIDITY, {
-    variables: { league: selectedLeague },
-    pollInterval: 30000, // Poll every 30 seconds
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['events', selectedLeague],
+    queryFn: async () => {
+      const response = await graphqlQuery(GET_EVENTS_BY_LEAGUE_QUERY, { league: selectedLeague });
+      if (response.errors) {
+        throw new Error(response.errors[0].message);
+      }
+      return response.data;
+    },
+    refetchInterval: 30000, // Poll every 30 seconds
   });
 
   useEffect(() => {
     if (error) {
       toast.error("Failed to fetch betting data", {
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }, [error]);
@@ -62,9 +70,9 @@ const Index = () => {
                 variant="secondary" 
                 size="sm" 
                 onClick={handleRefresh}
-                disabled={loading}
+                disabled={isLoading}
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </div>
@@ -83,14 +91,14 @@ const Index = () => {
             }}
           />
 
-          {loading && !data && (
+          {isLoading && !data && (
             <div className="text-center py-12">
               <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
               <p className="text-muted-foreground mt-4">Loading betting data...</p>
             </div>
           )}
 
-          {!loading && events.length === 0 && (
+          {!isLoading && events.length === 0 && (
             <div className="text-center py-12">
               <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold mb-2">No Active Events</h3>
