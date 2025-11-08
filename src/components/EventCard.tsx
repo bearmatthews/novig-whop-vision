@@ -80,24 +80,6 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
             <CardTitle className="text-lg leading-tight mb-2 group-hover:text-primary transition-colors">
               {event.description}
             </CardTitle>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{formatGameTime(event.game.scheduled_start)}</span>
-              </div>
-              {activeMarkets.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span>{activeMarkets.length} markets</span>
-                </div>
-              )}
-              {totalLiquidity > 0 && (
-                <div className="flex items-center gap-1.5 text-success font-semibold">
-                  <DollarSign className="w-3.5 h-3.5" />
-                  <span>{formatLargeCurrency(totalLiquidity)} volume</span>
-                </div>
-              )}
-            </div>
           </div>
           <div className="flex flex-col items-end gap-2">
             {isLive && (
@@ -112,7 +94,7 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
       </CardHeader>
       
       {showMarkets && activeMarkets.length > 0 && (
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 pb-3">
           <div className="space-y-3">
             {activeMarkets.slice(0, 2).map((market) => (
               <div key={market.id} className="text-sm">
@@ -148,6 +130,28 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
           </div>
         </CardContent>
       )}
+      
+      {/* Game Info Footer */}
+      <CardContent className="pt-0 pb-3 border-t border-border/50">
+        <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            <span>{formatGameTime(event.game.scheduled_start)}</span>
+          </div>
+          {activeMarkets.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{activeMarkets.length} markets</span>
+            </div>
+          )}
+          {totalLiquidity > 0 && (
+            <div className="flex items-center gap-1.5 text-success font-semibold">
+              <DollarSign className="w-3.5 h-3.5" />
+              <span>{formatLargeCurrency(totalLiquidity)} volume</span>
+            </div>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 }
