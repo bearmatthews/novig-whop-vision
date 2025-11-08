@@ -51,8 +51,23 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // In production Whop iframe, make a request that will include the x-whop-user-token header
-        // This header is automatically added by Whop to requests to our domain
+        // 1) Try same-origin endpoint so Whop injects x-whop-user-token
+        try {
+          const res = await fetch('/whop-auth', { method: 'POST' });
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.user) {
+              console.log('Whop user via same-origin endpoint');
+              setUser(data.user);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (e) {
+          console.log('Same-origin whop-auth not available, falling back');
+        }
+
+        // 2) Fallback to edge function (header may not be present here)
         const { data, error: fnError } = await supabase.functions.invoke('whop-auth', {
           method: 'POST',
         });
@@ -65,7 +80,7 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (data?.user) {
-          console.log('Whop user authenticated:', data.user);
+          console.log('Whop user via edge function');
           setUser(data.user);
         } else {
           console.log('No Whop user data returned');
