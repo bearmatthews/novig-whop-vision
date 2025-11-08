@@ -53,18 +53,28 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
 
         // 1) Try same-origin endpoint so Whop injects x-whop-user-token
         try {
-          const res = await fetch('/whop-auth', { method: 'POST' });
+          const res = await fetch('/whop-auth', { 
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          });
+          
           if (res.ok) {
             const data = await res.json();
             if (data?.user) {
-              console.log('Whop user via same-origin endpoint');
+              console.log('Whop user authenticated:', data.user);
               setUser(data.user);
               setLoading(false);
               return;
             }
           }
+          
+          const errorData = await res.json();
+          console.log('Same-origin auth response:', errorData);
         } catch (e) {
-          console.log('Same-origin whop-auth not available, falling back');
+          console.log('Same-origin whop-auth error:', e);
         }
 
         // 2) Fallback to edge function (header may not be present here)
