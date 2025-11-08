@@ -130,7 +130,7 @@ const Index = () => {
             </div>
             
             {/* Bottom Row - League Selector & Search */}
-            <div className="flex flex-col sm:flex-row gap-3 items-start">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-shrink-0">
                 <LeagueSelector
                   selectedLeague={selectedLeague}
@@ -141,6 +141,13 @@ const Index = () => {
                   }}
                 />
               </div>
+              <div className="flex-1 max-w-md">
+                <SearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search teams or games..."
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -148,24 +155,6 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        {/* Sticky Search Box - Right Side */}
-        <div className="fixed top-24 right-4 z-40 w-80 hidden lg:block">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search teams or games..."
-          />
-        </div>
-        
-        {/* Mobile Search - Shows on small screens */}
-        <div className="mb-4 lg:hidden">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search teams or games..."
-          />
-        </div>
-        
         <div className="space-y-6">
           {isLoading && !data && (
             <EmptyState
