@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatGameTime, calculateEventLiquidity, formatLargeCurrency } from "@/lib/betting-utils";
 import { getEventLogos } from "@/lib/team-logos";
+import { getEventTeamColor } from "@/lib/team-colors";
 import { Clock, ChevronRight, DollarSign } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 interface Event {
@@ -39,6 +40,7 @@ export function EventCard({
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
   const logos = getEventLogos(event);
   const totalLiquidity = calculateEventLiquidity(event);
+  const teamColor = getEventTeamColor(event);
   
   const [flashClass, setFlashClass] = useState("");
   const prevLiquidityRef = useRef<number | null>(null);
@@ -92,8 +94,10 @@ export function EventCard({
                   {market.description}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button key={outcome.id} className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer">
-                      <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
+                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button key={outcome.id} className="relative bg-card/40 rounded-md p-3 pl-4 flex flex-col gap-1 hover:bg-card/60 transition-all group cursor-pointer overflow-hidden" style={teamColor ? {
+                borderLeft: `3px solid hsl(${teamColor})`
+              } : undefined}>
+                      <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
                         {outcome.description}
                       </span>
                       {outcome.available ? <span className="text-lg font-black text-success font-mono">
