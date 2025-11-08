@@ -48,7 +48,7 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
       onClick={onClick}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           {/* Team Logos */}
           {(logos.away || logos.home) && (
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -77,11 +77,11 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
           )}
           
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg leading-tight mb-2 group-hover:text-primary transition-colors">
+            <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
               {event.description}
             </CardTitle>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
             {isLive && (
               <Badge variant="destructive" className="gap-1.5 whitespace-nowrap">
                 <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
