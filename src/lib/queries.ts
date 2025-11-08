@@ -23,6 +23,12 @@ export const GET_ALL_EVENTS_QUERY = `
           last
           available
           id
+          orders(where: { status: { _eq: "OPEN" }, currency: { _eq: "CASH" } }) {
+            status
+            qty
+            price
+            id
+          }
         }
       }
     }
