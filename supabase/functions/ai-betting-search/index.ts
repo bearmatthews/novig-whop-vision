@@ -22,17 +22,22 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Events are already pre-filtered on the client, so we can use them directly
     const systemPrompt = `You are an expert sports betting assistant. Find relevant betting opportunities from the provided events.
 
 Events: ${JSON.stringify(events)}
 
-Analyze the user's query and return matching event IDs with a brief explanation.
+Analyze the user's query and return matching event IDs with reasoning and relevant market info for each event.
 
 Response format (JSON):
 {
   "message": "Brief explanation of what you found",
-  "eventIds": ["id1", "id2"]
+  "results": [
+    {
+      "eventId": "id1",
+      "reasoning": "Short 1-sentence reason why this matches (max 15 words)",
+      "relevantMarket": "market description if relevant to search"
+    }
+  ]
 }
 
 Be concise and focus on the most relevant matches.`;
@@ -84,12 +89,19 @@ Be concise and focus on the most relevant matches.`;
     let parsedContent;
     try {
       parsedContent = JSON.parse(content);
+      // Backwards compatibility: convert old format to new format
+      if (parsedContent.eventIds && !parsedContent.results) {
+        parsedContent.results = parsedContent.eventIds.map((id: string) => ({
+          eventId: id,
+          reasoning: "",
+          relevantMarket: ""
+        }));
+      }
     } catch (e) {
       console.error("Failed to parse AI response:", content);
       parsedContent = {
         message: content,
-        eventIds: [],
-        reasoning: ""
+        results: []
       };
     }
 

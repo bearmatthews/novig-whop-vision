@@ -29,16 +29,26 @@ interface EventCardProps {
   event: Event;
   onClick?: () => void;
   showMarkets?: boolean;
+  aiReasoning?: string;
+  relevantMarket?: string;
 }
 export function EventCard({
   event,
   onClick,
-  showMarkets = false
+  showMarkets = false,
+  aiReasoning,
+  relevantMarket
 }: EventCardProps) {
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
   const logos = getEventLogos(event);
   const totalLiquidity = calculateEventLiquidity(event);
+  
+  // Filter markets to show relevant one first if specified
+  const displayMarkets = relevantMarket 
+    ? [...activeMarkets.filter(m => m.description.toLowerCase().includes(relevantMarket.toLowerCase())),
+       ...activeMarkets.filter(m => !m.description.toLowerCase().includes(relevantMarket.toLowerCase()))]
+    : activeMarkets;
   
   const [flashClass, setFlashClass] = useState("");
   const prevLiquidityRef = useRef<number | null>(null);
@@ -128,9 +138,22 @@ export function EventCard({
         )}
       </CardHeader>
       
-      {showMarkets && activeMarkets.length > 0 && <CardContent className="pt-0 pb-3">
+      {aiReasoning && (
+        <CardContent className="pt-0 pb-3 border-b border-border/50">
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-primary/5 border border-primary/10">
+            <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-0 font-semibold shrink-0">
+              AI Match
+            </Badge>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {aiReasoning}
+            </p>
+          </div>
+        </CardContent>
+      )}
+      
+      {showMarkets && displayMarkets.length > 0 && <CardContent className="pt-0 pb-3">
           <div className="space-y-3">
-            {activeMarkets.slice(0, 2).map(market => <div key={market.id}>
+            {displayMarkets.slice(0, 2).map(market => <div key={market.id}>
                 <div className="font-semibold text-muted-foreground mb-2 text-xs uppercase tracking-wide">
                   {market.description}
                 </div>

@@ -19,13 +19,19 @@ interface Message {
   content: string;
 }
 
+interface EventResult {
+  event: any;
+  reasoning: string;
+  relevantMarket?: string;
+}
+
 export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOverlayProps) {
   const [currentQuery, setCurrentQuery] = useState("");
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [recommendedEvents, setRecommendedEvents] = useState<any[]>([]);
+  const [recommendedEvents, setRecommendedEvents] = useState<EventResult[]>([]);
   const [exampleQuestions, setExampleQuestions] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -119,10 +125,22 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
 
       setMessages([...newMessages, assistantMessage]);
 
-      // Filter and set recommended events
-      if (data.eventIds && data.eventIds.length > 0) {
+      // Process results with reasoning
+      if (data.results && data.results.length > 0) {
+        const eventResults: EventResult[] = data.results.map((result: any) => {
+          const event = events.find(e => e.id === result.eventId);
+          return event ? {
+            event,
+            reasoning: result.reasoning || "",
+            relevantMarket: result.relevantMarket
+          } : null;
+        }).filter(Boolean);
+        
+        setRecommendedEvents(eventResults);
+      } else if (data.eventIds && data.eventIds.length > 0) {
+        // Backwards compatibility
         const filtered = events.filter(e => data.eventIds.includes(e.id));
-        setRecommendedEvents(filtered);
+        setRecommendedEvents(filtered.map(e => ({ event: e, reasoning: "" })));
       } else {
         setRecommendedEvents([]);
         toast.info("No matching events found. Try adjusting your search.");
@@ -267,15 +285,17 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
               ) : recommendedEvents.length > 0 ? (
                 <div className="space-y-5">
                   <h4 className="text-lg font-semibold mb-6">Recommended Matches</h4>
-                  {recommendedEvents.map((event) => (
-                    <div key={event.id} className="card-hover">
+                  {recommendedEvents.map((result) => (
+                    <div key={result.event.id} className="card-hover">
                       <EventCard
-                        event={event}
+                        event={result.event}
                         onClick={() => {
-                          onEventSelect(event);
+                          onEventSelect(result.event);
                           onClose();
                         }}
                         showMarkets={true}
+                        aiReasoning={result.reasoning}
+                        relevantMarket={result.relevantMarket}
                       />
                     </div>
                   ))}
