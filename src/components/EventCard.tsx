@@ -31,13 +31,15 @@ interface EventCardProps {
   showMarkets?: boolean;
   aiReasoning?: string;
   relevantMarket?: string;
+  onOutcomeClick?: (outcomeId: string) => void;
 }
 export function EventCard({
   event,
   onClick,
   showMarkets = false,
   aiReasoning,
-  relevantMarket
+  relevantMarket,
+  onOutcomeClick
 }: EventCardProps) {
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
@@ -158,7 +160,14 @@ export function EventCard({
                   {market.description}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button key={outcome.id} className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer">
+                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button 
+                      key={outcome.id} 
+                      className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOutcomeClick?.(outcome.id);
+                      }}
+                    >
                       <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
                         {outcome.description}
                       </span>

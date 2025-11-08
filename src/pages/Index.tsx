@@ -23,6 +23,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAIChat, setShowAIChat] = useState(false);
   const [aiFilteredEventIds, setAiFilteredEventIds] = useState<string[]>([]);
+  const [targetOutcomeId, setTargetOutcomeId] = useState<string | null>(null);
 
   // Fetch all sports
   const {
@@ -169,19 +170,46 @@ const Index = () => {
 
               <TabsContent value="all" className="mt-6">
                 <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                  {filteredEvents.map((event: any) => <EventCard key={event.id} event={event} onClick={() => setSelectedEvent(event)} showMarkets />)}
+                  {filteredEvents.map((event: any) => <EventCard 
+                    key={event.id} 
+                    event={event} 
+                    onClick={() => setSelectedEvent(event)}
+                    onOutcomeClick={(outcomeId) => {
+                      setSelectedEvent(event);
+                      setTargetOutcomeId(outcomeId);
+                    }}
+                    showMarkets 
+                  />)}
                 </div>
               </TabsContent>
 
               <TabsContent value="live" className="mt-6">
                 {liveEvents.length === 0 ? <EmptyState icon={Activity} title="No Live Events" description="There are no live games at the moment. Check back during game time!" /> : <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                    {liveEvents.map((event: any) => <EventCard key={event.id} event={event} onClick={() => setSelectedEvent(event)} showMarkets />)}
+                    {liveEvents.map((event: any) => <EventCard 
+                      key={event.id} 
+                      event={event} 
+                      onClick={() => setSelectedEvent(event)}
+                      onOutcomeClick={(outcomeId) => {
+                        setSelectedEvent(event);
+                        setTargetOutcomeId(outcomeId);
+                      }}
+                      showMarkets 
+                    />)}
                   </div>}
               </TabsContent>
 
               <TabsContent value="pregame" className="mt-6">
                 {pregameEvents.length === 0 ? <EmptyState icon={TrendingUp} title="No Upcoming Games" description="All games are currently live or there are no scheduled games with open markets." /> : <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                    {pregameEvents.map((event: any) => <EventCard key={event.id} event={event} onClick={() => setSelectedEvent(event)} showMarkets />)}
+                    {pregameEvents.map((event: any) => <EventCard 
+                      key={event.id} 
+                      event={event} 
+                      onClick={() => setSelectedEvent(event)}
+                      onOutcomeClick={(outcomeId) => {
+                        setSelectedEvent(event);
+                        setTargetOutcomeId(outcomeId);
+                      }}
+                      showMarkets 
+                    />)}
                   </div>}
               </TabsContent>
             </Tabs>}
@@ -204,7 +232,12 @@ const Index = () => {
                     </TabsList>
 
                     <TabsContent value="markets" className="mt-6">
-                      <MarketTable markets={eventWithLiquidity.markets} eventId={selectedEvent.id} />
+                      <MarketTable 
+                        markets={eventWithLiquidity.markets} 
+                        eventId={selectedEvent.id}
+                        targetOutcomeId={targetOutcomeId}
+                        onOutcomeHighlighted={() => setTargetOutcomeId(null)}
+                      />
                     </TabsContent>
 
                     <TabsContent value="liquidity" className="mt-6">

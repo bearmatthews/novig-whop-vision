@@ -3,6 +3,7 @@ import { priceToAmericanOdds, formatCurrency } from "@/lib/betting-utils";
 import { TrendingUp, DollarSign, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useEffect, useRef } from "react";
 
 interface Market {
   id: string;
@@ -29,9 +30,40 @@ interface MarketTableProps {
   markets: Market[];
   showLiquidity?: boolean;
   eventId?: string;
+  targetOutcomeId?: string | null;
+  onOutcomeHighlighted?: () => void;
 }
 
-export function MarketTable({ markets, showLiquidity = false, eventId }: MarketTableProps) {
+export function MarketTable({ 
+  markets, 
+  showLiquidity = false, 
+  eventId,
+  targetOutcomeId,
+  onOutcomeHighlighted
+}: MarketTableProps) {
+  const outcomeRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  useEffect(() => {
+    if (targetOutcomeId && outcomeRefs.current[targetOutcomeId]) {
+      const element = outcomeRefs.current[targetOutcomeId];
+      
+      // Scroll to element with offset for header
+      setTimeout(() => {
+        const yOffset = -100;
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        
+        // Trigger highlight animation
+        element.classList.add('outcome-highlight');
+        
+        // Remove highlight after animation
+        setTimeout(() => {
+          element.classList.remove('outcome-highlight');
+          onOutcomeHighlighted?.();
+        }, 2000);
+      }, 300);
+    }
+  }, [targetOutcomeId, onOutcomeHighlighted]);
   const handleOutcomeClick = (outcomeId: string) => {
     if (!eventId) return;
     
@@ -76,6 +108,7 @@ export function MarketTable({ markets, showLiquidity = false, eventId }: MarketT
                 return (
                   <button
                     key={outcome.id}
+                    ref={(el) => outcomeRefs.current[outcome.id] = el}
                     onClick={() => isAvailable && handleOutcomeClick(outcome.id)}
                     disabled={!isAvailable}
                     className={`bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all ${
