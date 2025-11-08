@@ -82,7 +82,6 @@ const Index = () => {
         activeEvents = activeEvents.filter((event: any) => event.game.league === selectedLeague);
       }
     }
-    
     return activeEvents;
   }, [data?.event, searchQuery, selectedLeague, aiFilteredEventIds]);
   const liveEvents = filteredEvents.filter((e: any) => e.status === "OPEN_INGAME");
@@ -116,22 +115,17 @@ const Index = () => {
               <WhopUserProfile />
               <div className="flex-shrink-0">
                 <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
-                  setSelectedLeague(league);
-                  setSelectedEvent(null);
-                  setSearchQuery("");
-                }} />
+                setSelectedLeague(league);
+                setSelectedEvent(null);
+                setSearchQuery("");
+              }} />
               </div>
             </div>
             <div className="flex items-center gap-4 flex-wrap">
               <div className="w-full sm:w-auto sm:max-w-md">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
               </div>
-              <Button
-                variant="default"
-                size="default"
-                onClick={() => setShowAIChat(!showAIChat)}
-                className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all"
-              >
+              <Button variant="default" size="default" onClick={() => setShowAIChat(!showAIChat)} className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all">
                 <Bot className="w-4 h-4" />
                 Ask Bear
               </Button>
@@ -141,9 +135,7 @@ const Index = () => {
                   <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
                   {filteredEvents.length} events
                 </Badge>
-                <Button variant="secondary" size="sm" onClick={handleRefresh} disabled={isLoading}>
-                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </Button>
+                
               </div>
             </div>
           </div>
@@ -233,19 +225,13 @@ const Index = () => {
       </main>
 
       {/* AI Search Overlay */}
-      {showAIChat && (
-        <AISearchOverlay
-          events={data?.event || []}
-          onClose={() => {
-            setShowAIChat(false);
-            setAiFilteredEventIds([]);
-          }}
-          onEventSelect={(event) => {
-            setSelectedEvent(event);
-            setShowAIChat(false);
-          }}
-        />
-      )}
+      {showAIChat && <AISearchOverlay events={data?.event || []} onClose={() => {
+      setShowAIChat(false);
+      setAiFilteredEventIds([]);
+    }} onEventSelect={event => {
+      setSelectedEvent(event);
+      setShowAIChat(false);
+    }} />}
     </div>;
 };
 export default Index;
