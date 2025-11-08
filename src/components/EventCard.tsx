@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatGameTime } from "@/lib/betting-utils";
+import { formatGameTime, calculateEventLiquidity, formatLargeCurrency } from "@/lib/betting-utils";
 import { getEventLogos } from "@/lib/team-logos";
-import { Clock, TrendingUp, ChevronRight } from "lucide-react";
+import { Clock, TrendingUp, ChevronRight, DollarSign } from "lucide-react";
 
 interface Event {
   id: string;
@@ -40,6 +40,7 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
     m.outcomes.some(o => o.available || o.last)
   ) || [];
   const logos = getEventLogos(event);
+  const totalLiquidity = calculateEventLiquidity(event);
   
   return (
     <Card 
@@ -79,7 +80,7 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
             <CardTitle className="text-lg leading-tight mb-2 group-hover:text-primary transition-colors">
               {event.description}
             </CardTitle>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
                 <span>{formatGameTime(event.game.scheduled_start)}</span>
@@ -88,6 +89,12 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
                 <div className="flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5" />
                   <span>{activeMarkets.length} markets</span>
+                </div>
+              )}
+              {totalLiquidity > 0 && (
+                <div className="flex items-center gap-1.5 text-success font-semibold">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>{formatLargeCurrency(totalLiquidity)} volume</span>
                 </div>
               )}
             </div>

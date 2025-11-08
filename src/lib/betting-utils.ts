@@ -40,6 +40,23 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
+ * Format large currency amounts with K/M suffix
+ * @param amount - Amount in cents
+ * @returns Formatted string (e.g., "$45K" or "$1.2M")
+ */
+export function formatLargeCurrency(amount: number): string {
+  const dollars = amount / 100;
+  
+  if (dollars >= 1000000) {
+    return `$${(dollars / 1000000).toFixed(1)}M`;
+  } else if (dollars >= 1000) {
+    return `$${(dollars / 1000).toFixed(1)}K`;
+  }
+  
+  return `$${Math.round(dollars).toLocaleString()}`;
+}
+
+/**
  * Format date and time
  * @param dateString - ISO date string
  * @returns Formatted date and time
@@ -65,4 +82,31 @@ export function formatGameTime(dateString: string): string {
   });
   
   return `${dateStr} ${timeString}`;
+}
+
+/**
+ * Calculate total liquidity for an event
+ * @param event - Event object with markets and outcomes
+ * @returns Total liquidity in cents
+ */
+export function calculateEventLiquidity(event: any): number {
+  if (!event.markets) return 0;
+  
+  let total = 0;
+  
+  for (const market of event.markets) {
+    if (!market.outcomes) continue;
+    
+    for (const outcome of market.outcomes) {
+      if (!outcome.orders) continue;
+      
+      for (const order of outcome.orders) {
+        if (order.status === 'OPEN' && order.qty) {
+          total += order.qty;
+        }
+      }
+    }
+  }
+  
+  return total;
 }
