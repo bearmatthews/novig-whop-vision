@@ -127,7 +127,7 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
       )}
       
       {/* Game Info Footer */}
-      <CardContent className="pt-0 pb-3 border-t border-border/50">
+      <CardContent className="pt-2.5 pb-3 border-t border-border/50">
         <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground flex-wrap">
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />
