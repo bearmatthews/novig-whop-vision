@@ -113,7 +113,7 @@ export function EventCard({
               </div>}
             
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
+              <CardTitle className="text-lg font-bold leading-tight group-hover:text-primary transition-colors">
                 {event.description}
               </CardTitle>
             </div>
