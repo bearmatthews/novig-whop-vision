@@ -14,6 +14,10 @@ export const GET_ALL_EVENTS_QUERY = `
       game {
         scheduled_start
         league
+        home_team
+        away_team
+        home_logo
+        away_logo
       }
       markets {
         description

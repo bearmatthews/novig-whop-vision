@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatGameTime } from "@/lib/betting-utils";
+import { getEventLogos } from "@/lib/team-logos";
 import { Clock, TrendingUp, ChevronRight } from "lucide-react";
 
 interface Event {
@@ -38,6 +39,7 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
   const activeMarkets = event.markets?.filter(m => 
     m.outcomes.some(o => o.available || o.last)
   ) || [];
+  const logos = getEventLogos(event);
   
   return (
     <Card 
@@ -45,7 +47,34 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
       onClick={onClick}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          {/* Team Logos */}
+          {(logos.away || logos.home) && (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {logos.away && (
+                <img 
+                  src={logos.away} 
+                  alt="Away team" 
+                  className="w-10 h-10 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+              <span className="text-muted-foreground text-sm">@</span>
+              {logos.home && (
+                <img 
+                  src={logos.home} 
+                  alt="Home team" 
+                  className="w-10 h-10 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+            </div>
+          )}
+          
           <div className="flex-1 min-w-0">
             <CardTitle className="text-lg leading-tight mb-2 group-hover:text-primary transition-colors">
               {event.description}
