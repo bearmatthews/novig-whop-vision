@@ -1,20 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LeagueSelector } from "@/components/LeagueSelector";
 import { EventCard } from "@/components/EventCard";
 import { MarketTable } from "@/components/MarketTable";
 import { LiquidityView } from "@/components/LiquidityView";
+import { SearchBar } from "@/components/SearchBar";
+import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { graphqlQuery } from "@/lib/graphql-client";
 import { GET_EVENTS_BY_LEAGUE_QUERY } from "@/lib/queries";
-import { RefreshCw, Activity, TrendingUp } from "lucide-react";
+import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
   const [selectedLeague, setSelectedLeague] = useState("MLB");
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['events', selectedLeague],
@@ -42,89 +45,149 @@ const Index = () => {
     toast.success("Data refreshed");
   };
 
-  const events = data?.event || [];
-  const liveEvents = events.filter((e: any) => e.status === "OPEN_INGAME");
-  const pregameEvents = events.filter((e: any) => e.status === "OPEN_PREGAME");
+  // Filter out events with no active markets and apply search
+  const filteredEvents = useMemo(() => {
+    const allEvents = data?.event || [];
+    
+    // Filter out events without active markets
+    const activeEvents = allEvents.filter((event: any) => {
+      const hasActiveMarkets = event.markets?.some((market: any) => 
+        market.outcomes?.some((outcome: any) => outcome.available || outcome.last)
+      );
+      return hasActiveMarkets;
+    });
+    
+    // Apply search filter
+    if (!searchQuery.trim()) return activeEvents;
+    
+    const query = searchQuery.toLowerCase();
+    return activeEvents.filter((event: any) => 
+      event.description.toLowerCase().includes(query)
+    );
+  }, [data?.event, searchQuery]);
+
+  const liveEvents = filteredEvents.filter((e: any) => e.status === "OPEN_INGAME");
+  const pregameEvents = filteredEvents.filter((e: any) => e.status === "OPEN_PREGAME");
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center gap-2">
-                <Activity className="w-8 h-8 text-primary" />
-                Novig Live Markets
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Real-time betting data and liquidity visualization
-              </p>
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col gap-4">
+            {/* Top Row - Title & Stats */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <Activity className="w-7 h-7 text-primary" />
+                  Novig Live Markets
+                </h1>
+                <p className="text-muted-foreground text-sm mt-0.5">
+                  Real-time betting data and liquidity
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="gap-1.5">
+                  <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
+                  {filteredEvents.length} events
+                </Badge>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="gap-1">
-                <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                {events.length} active events
-              </Badge>
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                onClick={handleRefresh}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </Button>
+            
+            {/* Bottom Row - League Selector & Search */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-shrink-0">
+                <LeagueSelector
+                  selectedLeague={selectedLeague}
+                  onLeagueChange={(league) => {
+                    setSelectedLeague(league);
+                    setSelectedEvent(null);
+                    setSearchQuery("");
+                  }}
+                />
+              </div>
+              <div className="flex-1 max-w-md">
+                <SearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search teams or games..."
+                />
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6">
         <div className="space-y-6">
-          {/* League Selector */}
-          <LeagueSelector
-            selectedLeague={selectedLeague}
-            onLeagueChange={(league) => {
-              setSelectedLeague(league);
-              setSelectedEvent(null);
-            }}
-          />
-
           {isLoading && !data && (
-            <div className="text-center py-12">
-              <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-              <p className="text-muted-foreground mt-4">Loading betting data...</p>
-            </div>
+            <EmptyState
+              icon={RefreshCw}
+              title="Loading betting data"
+              description="Fetching live markets from Novig..."
+            />
           )}
 
-          {!isLoading && events.length === 0 && (
-            <div className="text-center py-12">
-              <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No Active Events</h3>
-              <p className="text-muted-foreground">
-                There are no active {selectedLeague} events at the moment.
-              </p>
-            </div>
+          {error && (
+            <EmptyState
+              icon={AlertCircle}
+              title="Failed to load data"
+              description="There was an error fetching betting data. Please try refreshing."
+              action={
+                <Button onClick={handleRefresh} variant="default">
+                  Try Again
+                </Button>
+              }
+            />
           )}
 
-          {events.length > 0 && !selectedEvent && (
+          {!isLoading && !error && data && filteredEvents.length === 0 && searchQuery && (
+            <EmptyState
+              icon={SearchX}
+              title="No results found"
+              description={`No games match "${searchQuery}". Try a different search term.`}
+              action={
+                <Button onClick={() => setSearchQuery("")} variant="outline">
+                  Clear Search
+                </Button>
+              }
+            />
+          )}
+
+          {!isLoading && !error && data && filteredEvents.length === 0 && !searchQuery && (
+            <EmptyState
+              icon={TrendingUp}
+              title="No Active Events"
+              description={`There are no active ${selectedLeague} events with open markets at the moment.`}
+            />
+          )}
+
+          {filteredEvents.length > 0 && !selectedEvent && (
             <Tabs defaultValue="all" className="w-full">
-              <TabsList>
+              <TabsList className="grid w-full max-w-md grid-cols-3">
                 <TabsTrigger value="all">
-                  All Events ({events.length})
+                  All <span className="ml-1.5 text-xs">({filteredEvents.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="live">
-                  Live ({liveEvents.length})
+                  Live <span className="ml-1.5 text-xs">({liveEvents.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="pregame">
-                  Pre-Game ({pregameEvents.length})
+                  Pre-Game <span className="ml-1.5 text-xs">({pregameEvents.length})</span>
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="all" className="space-y-4 mt-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {events.map((event: any) => (
+              <TabsContent value="all" className="mt-6">
+                <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                  {filteredEvents.map((event: any) => (
                     <EventCard
                       key={event.id}
                       event={event}
@@ -135,30 +198,46 @@ const Index = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="live" className="space-y-4 mt-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {liveEvents.map((event: any) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      onClick={() => setSelectedEvent(event)}
-                      showMarkets
-                    />
-                  ))}
-                </div>
+              <TabsContent value="live" className="mt-6">
+                {liveEvents.length === 0 ? (
+                  <EmptyState
+                    icon={Activity}
+                    title="No Live Events"
+                    description="There are no live games at the moment. Check back during game time!"
+                  />
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                    {liveEvents.map((event: any) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        onClick={() => setSelectedEvent(event)}
+                        showMarkets
+                      />
+                    ))}
+                  </div>
+                )}
               </TabsContent>
 
-              <TabsContent value="pregame" className="space-y-4 mt-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {pregameEvents.map((event: any) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      onClick={() => setSelectedEvent(event)}
-                      showMarkets
-                    />
-                  ))}
-                </div>
+              <TabsContent value="pregame" className="mt-6">
+                {pregameEvents.length === 0 ? (
+                  <EmptyState
+                    icon={TrendingUp}
+                    title="No Upcoming Games"
+                    description="All games are currently live or there are no scheduled games with open markets."
+                  />
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                    {pregameEvents.map((event: any) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        onClick={() => setSelectedEvent(event)}
+                        showMarkets
+                      />
+                    ))}
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           )}
