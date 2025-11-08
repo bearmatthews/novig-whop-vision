@@ -40,7 +40,12 @@ export function EventCard({ event, onClick, showMarkets = false }: EventCardProp
     m.outcomes.some(o => o.available || o.last)
   ) || [];
   const logos = getEventLogos(event);
-  const totalLiquidity = calculateEventLiquidity(event);
+  
+  // Only calculate liquidity if order data is available (check if any outcome has orders)
+  const hasOrderData = event.markets?.some(m => 
+    m.outcomes?.some((o: any) => o.orders !== undefined)
+  );
+  const totalLiquidity = hasOrderData ? calculateEventLiquidity(event) : 0;
   
   return (
     <Card 

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { graphqlQuery } from "@/lib/graphql-client";
-import { GET_ALL_EVENTS_QUERY } from "@/lib/queries";
+import { GET_ALL_EVENTS_QUERY, GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
 import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,6 +79,22 @@ const Index = () => {
 
   const liveEvents = filteredEvents.filter((e: any) => e.status === "OPEN_INGAME");
   const pregameEvents = filteredEvents.filter((e: any) => e.status === "OPEN_PREGAME");
+
+  // Fetch detailed event data when an event is selected
+  const { data: eventDetailData, isLoading: isLoadingDetail } = useQuery({
+    queryKey: ['eventDetail', selectedEvent?.id],
+    queryFn: async () => {
+      if (!selectedEvent?.id) return null;
+      const response = await graphqlQuery(GET_EVENT_DETAIL_QUERY, { eventId: selectedEvent.id });
+      if (response.errors) {
+        throw new Error(response.errors[0].message);
+      }
+      return response.data?.event?.[0];
+    },
+    enabled: !!selectedEvent?.id,
+  });
+
+  const eventWithLiquidity = eventDetailData || selectedEvent;
 
   return (
     <div className="min-h-screen bg-background">
@@ -266,45 +282,54 @@ const Index = () => {
                 ← Back to events
               </Button>
 
-              <EventCard event={selectedEvent} />
+              {isLoadingDetail ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Loading event details and liquidity...</p>
+                </div>
+              ) : (
+                <>
+                  <EventCard event={eventWithLiquidity} />
 
-              <Tabs defaultValue="markets" className="w-full">
-                <TabsList>
-                  <TabsTrigger value="markets">Markets</TabsTrigger>
-                  <TabsTrigger value="liquidity">Order Book</TabsTrigger>
-                </TabsList>
+                  <Tabs defaultValue="markets" className="w-full">
+                    <TabsList>
+                      <TabsTrigger value="markets">Markets</TabsTrigger>
+                      <TabsTrigger value="liquidity">Order Book</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="markets" className="mt-6">
-                  <MarketTable markets={selectedEvent.markets} />
-                </TabsContent>
+                    <TabsContent value="markets" className="mt-6">
+                      <MarketTable markets={eventWithLiquidity.markets} />
+                    </TabsContent>
 
-                <TabsContent value="liquidity" className="mt-6">
-                  <div className="space-y-6">
-                    {selectedEvent.markets
-                      .filter((market: any) => 
-                        market.outcomes.some((outcome: any) => 
-                          outcome.orders && outcome.orders.length > 0
-                        )
-                      )
-                      .map((market: any) => (
-                        <LiquidityView
-                          key={market.id}
-                          outcomes={market.outcomes}
-                          marketDescription={market.description}
-                        />
-                      ))}
-                    {selectedEvent.markets.every((market: any) => 
-                      !market.outcomes.some((outcome: any) => 
-                        outcome.orders && outcome.orders.length > 0
-                      )
-                    ) && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No order book data available for this event.
+                    <TabsContent value="liquidity" className="mt-6">
+                      <div className="space-y-6">
+                        {eventWithLiquidity.markets
+                          .filter((market: any) => 
+                            market.outcomes.some((outcome: any) => 
+                              outcome.orders && outcome.orders.length > 0
+                            )
+                          )
+                          .map((market: any) => (
+                            <LiquidityView
+                              key={market.id}
+                              outcomes={market.outcomes}
+                              marketDescription={market.description}
+                            />
+                          ))}
+                        {eventWithLiquidity.markets.every((market: any) => 
+                          !market.outcomes.some((outcome: any) => 
+                            outcome.orders && outcome.orders.length > 0
+                          )
+                        ) && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            No order book data available for this event.
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                    </TabsContent>
+                  </Tabs>
+                </>
+              )}
             </div>
           )}
         </div>
