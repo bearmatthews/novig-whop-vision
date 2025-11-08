@@ -9,17 +9,20 @@ import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
 import { WhopUserProfile } from "@/components/WhopUserProfile";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AIChatInterface } from "@/components/AIChatInterface";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { graphqlQuery } from "@/lib/graphql-client";
 import { GET_ALL_EVENTS_QUERY, GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
-import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle } from "lucide-react";
+import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle, Bot } from "lucide-react";
 import { toast } from "sonner";
 const Index = () => {
   const [selectedLeague, setSelectedLeague] = useState("ALL");
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiFilteredEventIds, setAiFilteredEventIds] = useState<string[]>([]);
 
   // Fetch all sports
   const {
@@ -64,18 +67,24 @@ const Index = () => {
       return hasActiveMarkets;
     });
 
-    // Apply search filter (searches across ALL sports regardless of league filter)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      activeEvents = activeEvents.filter((event: any) => event.description.toLowerCase().includes(query));
-    }
+    // If AI has filtered events, use that filter
+    if (aiFilteredEventIds.length > 0) {
+      activeEvents = activeEvents.filter((event: any) => aiFilteredEventIds.includes(event.id));
+    } else {
+      // Apply search filter (searches across ALL sports regardless of league filter)
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        activeEvents = activeEvents.filter((event: any) => event.description.toLowerCase().includes(query));
+      }
 
-    // Apply league filter AFTER search (so search works across all sports)
-    if (selectedLeague !== 'ALL') {
-      activeEvents = activeEvents.filter((event: any) => event.game.league === selectedLeague);
+      // Apply league filter AFTER search (so search works across all sports)
+      if (selectedLeague !== 'ALL') {
+        activeEvents = activeEvents.filter((event: any) => event.game.league === selectedLeague);
+      }
     }
+    
     return activeEvents;
-  }, [data?.event, searchQuery, selectedLeague]);
+  }, [data?.event, searchQuery, selectedLeague, aiFilteredEventIds]);
   const liveEvents = filteredEvents.filter((e: any) => e.status === "OPEN_INGAME");
   const pregameEvents = filteredEvents.filter((e: any) => e.status === "OPEN_PREGAME");
 
@@ -117,6 +126,15 @@ const Index = () => {
               <div className="w-full sm:w-auto sm:max-w-md">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
               </div>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowAIChat(!showAIChat)}
+                className="gap-2"
+              >
+                <Bot className="w-4 h-4" />
+                AI Search
+              </Button>
               <ThemeToggle />
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="gap-1.5">
@@ -213,6 +231,21 @@ const Index = () => {
             </div>}
         </div>
       </main>
+
+      {/* AI Chat Interface */}
+      {showAIChat && (
+        <AIChatInterface
+          events={data?.event || []}
+          onEventsFiltered={(eventIds) => {
+            setAiFilteredEventIds(eventIds);
+            setSearchQuery(""); // Clear regular search when AI filtering
+          }}
+          onClose={() => {
+            setShowAIChat(false);
+            setAiFilteredEventIds([]); // Clear AI filter when closing
+          }}
+        />
+      )}
     </div>;
 };
 export default Index;

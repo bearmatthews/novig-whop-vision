@@ -1,1 +1,4 @@
 project_id = "pxyzuhgqcgaljkcvnmel"
+
+[functions.ai-betting-search]
+verify_jwt = false
