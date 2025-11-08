@@ -85,21 +85,23 @@ export function EventCard({
         </div>
       </CardHeader>
       
-      {showMarkets && activeMarkets.length > 0 && <CardContent className="pt-0 pb-3">
-          <div className="space-y-3">
-            {activeMarkets.slice(0, 2).map(market => <div key={market.id} className="text-sm">
-                <div className="font-medium text-muted-foreground mb-2 text-xs">
+      {showMarkets && activeMarkets.length > 0 && <CardContent className="pt-0 pb-4">
+          <div className="space-y-4">
+            {activeMarkets.slice(0, 2).map(market => <div key={market.id}>
+                <div className="font-semibold text-foreground mb-3 text-sm uppercase tracking-wide">
                   {market.description}
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <div key={outcome.id} className="bg-secondary/50 rounded-lg p-2.5 flex justify-between items-center hover:bg-secondary transition-colors">
-                      <span className="text-xs font-medium truncate pr-2">{outcome.description}</span>
-                      {outcome.available ? <Badge variant="outline" className="bg-success/10 text-success border-success/30 font-mono text-xs">
+                <div className="grid grid-cols-2 gap-3">
+                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button key={outcome.id} className="bg-card border-2 border-border rounded-lg p-4 flex flex-col gap-2 hover:border-primary hover:bg-card/80 transition-all group cursor-pointer">
+                      <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                        {outcome.description}
+                      </span>
+                      {outcome.available ? <span className="text-2xl font-black text-success font-mono">
                           {outcome.available.toFixed(2)}
-                        </Badge> : outcome.last ? <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 font-mono text-xs">
+                        </span> : outcome.last ? <span className="text-2xl font-black text-warning font-mono">
                           {outcome.last.toFixed(2)}
-                        </Badge> : null}
-                    </div>)}
+                        </span> : null}
+                    </button>)}
                 </div>
               </div>)}
           </div>
