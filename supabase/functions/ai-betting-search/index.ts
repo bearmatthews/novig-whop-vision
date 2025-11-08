@@ -104,7 +104,10 @@ Be helpful, concise, and focus on actionable betting insights.`;
     }
 
     const aiResponse = await response.json();
-    const content = aiResponse.choices[0].message.content;
+    let content = aiResponse.choices[0].message.content;
+    
+    // Strip markdown code fences if present
+    content = content.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
     
     let parsedContent;
     try {
