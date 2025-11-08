@@ -35,8 +35,8 @@ export function MarketTable({ markets, showLiquidity = false, eventId }: MarketT
   const handleOutcomeClick = (outcomeId: string) => {
     if (!eventId) return;
     
-    // Open Novig with the outcome
-    const novigUrl = `https://app.novig.us/events/${eventId}?outcome=${outcomeId}`;
+    // Open Novig with the event markets
+    const novigUrl = `https://app.novig.us/event-markets/${eventId}`;
     window.open(novigUrl, '_blank');
     toast.success("Opening in Novig...");
   };
