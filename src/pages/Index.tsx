@@ -100,23 +100,27 @@ const Index = () => {
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
-              setSelectedLeague(league);
-              setSelectedEvent(null);
-              setSearchQuery("");
-            }} />
-            <div className="max-w-md">
-              <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex-shrink-0">
+              <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
+                setSelectedLeague(league);
+                setSelectedEvent(null);
+                setSearchQuery("");
+              }} />
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="gap-1.5">
-                <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                {filteredEvents.length} events
-              </Badge>
-              <Button variant="secondary" size="sm" onClick={handleRefresh} disabled={isLoading}>
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </Button>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="w-full sm:w-auto sm:max-w-md">
+                <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="gap-1.5">
+                  <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
+                  {filteredEvents.length} events
+                </Badge>
+                <Button variant="secondary" size="sm" onClick={handleRefresh} disabled={isLoading}>
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
