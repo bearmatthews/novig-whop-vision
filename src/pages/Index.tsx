@@ -191,7 +191,7 @@ const Index = () => {
                     </TabsList>
 
                     <TabsContent value="markets" className="mt-6">
-                      <MarketTable markets={eventWithLiquidity.markets} />
+                      <MarketTable markets={eventWithLiquidity.markets} eventId={selectedEvent.id} />
                     </TabsContent>
 
                     <TabsContent value="liquidity" className="mt-6">

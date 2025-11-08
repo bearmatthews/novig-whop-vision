@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { priceToAmericanOdds, formatCurrency } from "@/lib/betting-utils";
-import { TrendingUp, DollarSign } from "lucide-react";
+import { TrendingUp, DollarSign, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface Market {
   id: string;
@@ -27,9 +28,18 @@ interface Order {
 interface MarketTableProps {
   markets: Market[];
   showLiquidity?: boolean;
+  eventId?: string;
 }
 
-export function MarketTable({ markets, showLiquidity = false }: MarketTableProps) {
+export function MarketTable({ markets, showLiquidity = false, eventId }: MarketTableProps) {
+  const handleOutcomeClick = (outcomeId: string) => {
+    if (!eventId) return;
+    
+    // Open Novig with the outcome
+    const novigUrl = `https://novig.com/events/${eventId}?outcome=${outcomeId}`;
+    window.open(novigUrl, '_blank');
+    toast.success("Opening in Novig...");
+  };
   // Filter to only show markets with at least one outcome that has a price
   const marketsWithPrices = markets.filter((market) =>
     market.outcomes.some((outcome) => outcome.available || outcome.last)
@@ -61,26 +71,42 @@ export function MarketTable({ markets, showLiquidity = false }: MarketTableProps
                   ? outcome.orders.reduce((sum, order) => sum + order.qty, 0)
                   : 0;
                 
+                const isAvailable = !!outcome.available;
+                
                 return (
-                  <div key={outcome.id} className="bg-secondary/30 border border-border rounded-md p-3 space-y-1">
+                  <button
+                    key={outcome.id}
+                    onClick={() => isAvailable && handleOutcomeClick(outcome.id)}
+                    disabled={!isAvailable}
+                    className={`bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all ${
+                      isAvailable 
+                        ? 'hover:border-primary hover:bg-secondary/50 cursor-pointer group' 
+                        : 'opacity-60 cursor-not-allowed'
+                    }`}
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-sm">{outcome.description}</span>
-                      {outcome.available ? (
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
-                          Available
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">
-                          Last
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {outcome.available ? (
+                          <>
+                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                              Available
+                            </Badge>
+                            <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </>
+                        ) : (
+                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">
+                            Last
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-muted-foreground">
                         Price: <span className="font-semibold text-foreground">{price?.toFixed(2)}</span>
                       </div>
-                      <div className="text-lg font-bold font-mono">
+                      <div className="text-lg font-bold font-mono group-hover:text-primary transition-colors">
                         {price ? priceToAmericanOdds(price) : '-'}
                       </div>
                     </div>
@@ -97,7 +123,7 @@ export function MarketTable({ markets, showLiquidity = false }: MarketTableProps
                         </div>
                       </div>
                     )}
-                  </div>
+                  </button>
                 );
               })}
           </div>
