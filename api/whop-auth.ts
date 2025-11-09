@@ -45,7 +45,7 @@ export default async function handler(request: Request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-whop-user-token': whopToken || '',
+        ...(whopToken && { 'x-whop-user-token': whopToken }),
       },
     });
 
