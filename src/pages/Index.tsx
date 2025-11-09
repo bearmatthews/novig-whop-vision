@@ -17,6 +17,7 @@ import { GET_ALL_EVENTS_QUERY, GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
 import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -43,6 +44,21 @@ const Index = () => {
       if (response.errors) {
         throw new Error(response.errors[0].message);
       }
+      
+      // Enhance with Polymarket odds
+      try {
+        const polymarketResponse = await supabase.functions.invoke('polymarket-odds', {
+          body: { novigEvents: response.data.event }
+        });
+        
+        if (polymarketResponse.data?.events) {
+          console.log(`Enhanced ${polymarketResponse.data.events.length} events with Polymarket data`);
+          return { event: polymarketResponse.data.events };
+        }
+      } catch (polyError) {
+        console.error('Failed to fetch Polymarket odds:', polyError);
+      }
+      
       return response.data;
     },
     refetchInterval: 30000 // Poll every 30 seconds
@@ -193,6 +209,21 @@ const Index = () => {
                   Pre-Game <span className="ml-1.5 text-xs">({pregameEvents.length})</span>
                 </TabsTrigger>
               </TabsList>
+
+              {/* Polymarket Integration Info */}
+              {data?.event?.some((e: any) => e.polymarketData?.markets?.length > 0) && (
+                <div className="mt-4 mb-6 p-4 bg-success/10 border border-success/20 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-success text-success-foreground">
+                      Polymarket
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Showing best odds across Novig and Polymarket •{' '}
+                      {data.event.filter((e: any) => e.polymarketData?.markets?.length > 0).length} games with multiple lines
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <TabsContent value="all" className="mt-6">
                 <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">

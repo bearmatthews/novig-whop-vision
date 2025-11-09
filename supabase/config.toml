@@ -2,3 +2,6 @@ project_id = "pxyzuhgqcgaljkcvnmel"
 
 [functions.ai-betting-search]
 verify_jwt = false
+
+[functions.polymarket-odds]
+verify_jwt = false

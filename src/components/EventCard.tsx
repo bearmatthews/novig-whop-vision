@@ -25,6 +25,10 @@ interface Outcome {
   description: string;
   last?: number;
   available?: number;
+  bestOdds?: number;
+  bestSource?: 'novig' | 'polymarket';
+  novigOdds?: number;
+  polymarketOdds?: number;
 }
 interface EventCardProps {
   event: Event;
@@ -162,23 +166,50 @@ export function EventCard({
                   {market.description}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button 
-                      key={outcome.id} 
-                      className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOutcomeClick?.(outcome.id);
-                      }}
-                    >
-                      <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
-                        {outcome.description}
-                      </span>
-                      {outcome.available ? <span className="text-lg font-black text-success font-mono">
-                          {outcome.available.toFixed(2)}
-                        </span> : outcome.last ? <span className="text-lg font-black text-warning font-mono">
-                          {outcome.last.toFixed(2)}
-                        </span> : null}
-                    </button>)}
+                  {market.outcomes.filter(o => o.available || o.last).map(outcome => {
+                    const showPolymarketBadge = outcome.bestSource === 'polymarket';
+                    return (
+                      <button 
+                        key={outcome.id} 
+                        className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer relative"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOutcomeClick?.(outcome.id);
+                        }}
+                      >
+                        {showPolymarketBadge && (
+                          <div className="absolute -top-2 -right-2 z-10">
+                            <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-success">
+                              Best
+                            </Badge>
+                          </div>
+                        )}
+                        <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
+                          {outcome.description}
+                        </span>
+                        {outcome.bestOdds ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-lg font-black text-success font-mono">
+                              {outcome.bestOdds.toFixed(2)}
+                            </span>
+                            {showPolymarketBadge && outcome.novigOdds && (
+                              <span className="text-xs text-muted-foreground line-through">
+                                {outcome.novigOdds.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        ) : outcome.available ? (
+                          <span className="text-lg font-black text-success font-mono">
+                            {outcome.available.toFixed(2)}
+                          </span>
+                        ) : outcome.last ? (
+                          <span className="text-lg font-black text-warning font-mono">
+                            {outcome.last.toFixed(2)}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>)}
           </div>
