@@ -72,9 +72,9 @@ export function MarketTable({
     window.open(novigUrl, '_blank');
     toast.success("Opening in Novig...");
   };
-  // Filter to only show markets with at least one outcome that has a price
+  // Filter to only show markets with available prices
   const marketsWithPrices = markets.filter((market) =>
-    market.outcomes.some((outcome) => outcome.available || outcome.last)
+    market.outcomes.some((outcome) => outcome.available)
   );
 
   if (marketsWithPrices.length === 0) {
@@ -95,43 +95,27 @@ export function MarketTable({
           
           <div className="grid gap-2">
             {market.outcomes
-              .filter((outcome) => outcome.available || outcome.last)
+              .filter((outcome) => outcome.available)
               .map((outcome) => {
                 const price = outcome.available || outcome.last;
                 const hasOrders = outcome.orders && outcome.orders.length > 0;
                 const totalLiquidity = hasOrders 
                   ? outcome.orders.reduce((sum, order) => sum + order.qty, 0)
                   : 0;
-                
-                const isAvailable = !!outcome.available;
-                
                 return (
                   <button
                     key={outcome.id}
                     ref={(el) => outcomeRefs.current[outcome.id] = el}
-                    onClick={() => isAvailable && handleOutcomeClick(outcome.id)}
-                    disabled={!isAvailable}
-                    className={`bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all ${
-                      isAvailable 
-                        ? 'hover:border-primary hover:bg-secondary/50 cursor-pointer group' 
-                        : 'opacity-60 cursor-not-allowed'
-                    }`}
+                    onClick={() => handleOutcomeClick(outcome.id)}
+                    className="bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all hover:border-primary hover:bg-secondary/50 cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-sm">{outcome.description}</span>
                       <div className="flex items-center gap-2">
-                        {outcome.available ? (
-                          <>
-                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
-                              Available
-                            </Badge>
-                            <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                          </>
-                        ) : (
-                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">
-                            Last
-                          </Badge>
-                        )}
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                          Available
+                        </Badge>
+                        <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
                     </div>
                     
