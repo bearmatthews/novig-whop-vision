@@ -5,15 +5,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Polymarket uses a different API structure than expected
+// Let's adjust to handle their actual response format
 interface PolymarketMarket {
-  id: string;
+  condition_id?: string;
   question: string;
   description?: string;
-  outcomes: string[];
-  outcomePrices: string[];
-  volume: string;
-  active: boolean;
-  closed: boolean;
+  end_date_iso?: string;
+  game_start_time?: string;
+  question_id?: string;
+  market_slug?: string;
+  outcomes?: string[];
+  outcomePrices?: string[];
+  outcome_prices?: string[];
+  clob_token_ids?: string[];
+  tokens?: Array<{
+    token_id: string;
+    outcome: string;
+    price?: number;
+  }>;
+  volume?: string;
+  active?: boolean;
+  closed?: boolean;
+  enable_order_book?: boolean;
   tags?: string[];
   events?: any[];
 }
@@ -86,22 +100,43 @@ serve(async (req) => {
     
     console.log(`Fetching Polymarket sports markets for ${novigEvents?.length || 0} Novig events`);
 
-    // Fetch Polymarket markets with sports tags
-    const sportsResponse = await fetch(
-      'https://gamma-api.polymarket.com/markets?tag=sports&limit=100&active=true',
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
+    // Fetch Polymarket markets - try multiple endpoints
+    let polymarketMarkets: any[] = [];
+    let fetchSuccess = false;
+    
+    try {
+      // Try the simplified markets endpoint first
+      const simplifiedResponse = await fetch(
+        'https://gamma-api.polymarket.com/markets?limit=100&closed=false',
+        { headers: { 'Accept': 'application/json' } }
+      );
+      
+      if (simplifiedResponse.ok) {
+        const data = await simplifiedResponse.json();
+        polymarketMarkets = Array.isArray(data) ? data : data.data || [];
+        fetchSuccess = true;
+        console.log(`Fetched ${polymarketMarkets.length} Polymarket markets`);
+        
+        // Log structure of first market to understand the format
+        if (polymarketMarkets.length > 0) {
+          console.log('First Polymarket market structure:', JSON.stringify(polymarketMarkets[0], null, 2));
+        }
       }
-    );
-
-    if (!sportsResponse.ok) {
-      throw new Error(`Polymarket API error: ${sportsResponse.status}`);
+    } catch (err) {
+      console.error('Error fetching from Polymarket:', err);
     }
 
-    const polymarketMarkets: PolymarketMarket[] = await sportsResponse.json();
-    console.log(`Fetched ${polymarketMarkets.length} Polymarket sports markets`);
+    if (!fetchSuccess || polymarketMarkets.length === 0) {
+      console.log('No Polymarket markets found or API error, returning Novig data only');
+      return new Response(
+        JSON.stringify({
+          events: novigEvents,
+          polymarketMarketsCount: 0,
+          matchedEventsCount: 0,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Match and enhance Novig events with Polymarket odds
     const enhancedEvents = novigEvents.map((novigEvent: any) => {
@@ -109,6 +144,11 @@ serve(async (req) => {
       const matchingMarkets = polymarketMarkets.filter(market => 
         matchGame(novigEvent.description, market.question)
       );
+
+      if (matchingMarkets.length > 0) {
+        console.log(`Found ${matchingMarkets.length} Polymarket matches for: ${novigEvent.description}`);
+        console.log('Matched markets:', matchingMarkets.map(m => m.question));
+      }
 
       if (matchingMarkets.length === 0) {
         return {
@@ -119,22 +159,35 @@ serve(async (req) => {
 
       // Process matching markets to extract comparable odds
       const polymarketOdds = matchingMarkets.map(market => {
-        const outcomes = market.outcomes.map((outcome: string, index: number) => {
-          const probability = parseFloat(market.outcomePrices[index]);
+        // Handle different possible structures from Polymarket
+        const outcomes = (market.tokens || market.outcomes || []).map((outcome: any, index: number) => {
+          let probability = 0.5; // default
+          
+          // Try to get price from different possible fields
+          if (typeof outcome === 'object' && outcome.price) {
+            probability = outcome.price;
+          } else if (market.outcomePrices && market.outcomePrices[index]) {
+            probability = parseFloat(market.outcomePrices[index]);
+          } else if (market.outcome_prices && market.outcome_prices[index]) {
+            probability = parseFloat(market.outcome_prices[index]);
+          }
+          
+          const outcomeLabel = typeof outcome === 'string' ? outcome : (outcome.outcome || outcome.name || `Outcome ${index + 1}`);
+          
           return {
-            description: outcome,
+            description: outcomeLabel,
             odds: probabilityToOdds(probability),
             probability,
             source: 'polymarket',
-            marketId: market.id,
+            marketId: market.condition_id || market.question_id || market.market_slug,
           };
         });
 
         return {
-          marketId: market.id,
+          marketId: market.condition_id || market.question_id || market.market_slug,
           question: market.question,
           outcomes,
-          volume: market.volume,
+          volume: market.volume || '0',
         };
       });
 
@@ -205,10 +258,14 @@ serve(async (req) => {
       };
     });
 
+    const matchedCount = eventsWithBestOdds.filter((e: any) => e.polymarketData?.markets?.length > 0).length;
+    console.log(`Successfully matched ${matchedCount} events with Polymarket data`);
+
     return new Response(
       JSON.stringify({
         events: eventsWithBestOdds,
         polymarketMarketsCount: polymarketMarkets.length,
+        matchedEventsCount: matchedCount,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
