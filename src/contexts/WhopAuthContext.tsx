@@ -39,8 +39,8 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
         const isInIframe = window.self !== window.top;
         
         // For development/preview: Use mock user
-        if (!isInIframe && import.meta.env.DEV) {
-          console.log('Development mode: Using mock Whop user');
+        if (!isInIframe) {
+          console.log('Not in iframe: Using mock Whop user');
           setUser({
             id: 'dev-user-123',
             username: 'TestUser',
@@ -51,48 +51,35 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // 1) Try same-origin endpoint so Whop injects x-whop-user-token
-        try {
-          const res = await fetch('/whop-auth', { 
+        // When in Whop iframe: Try to get token from URL params or postMessage
+        console.log('In Whop iframe: Attempting to authenticate...');
+        
+        // Check if Whop passed token via URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        
+        if (tokenFromUrl) {
+          console.log('Found token in URL parameters');
+          // Call edge function with the token
+          const { data, error: fnError } = await supabase.functions.invoke('whop-auth', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
-              'x-whop-user-token': '', // Placeholder - Whop will inject the real token
+              'x-whop-user-token': tokenFromUrl,
             },
-            credentials: 'include',
           });
-          
-          const data = await res.json();
-          
-          if (res.ok && data?.user) {
-            console.log('Whop user authenticated:', data.user);
+
+          if (fnError) {
+            console.error('Whop auth error:', fnError);
+            setError(fnError.message);
+          } else if (data?.user) {
+            console.log('Whop user authenticated via URL token:', data.user);
             setUser(data.user);
-            setLoading(false);
-            return;
-          } else if (data?.error) {
-            console.log('Whop auth response:', data.error);
+          } else {
+            console.log('No Whop user data returned');
           }
-        } catch (e) {
-          console.log('Same-origin whop-auth error:', e);
-        }
-
-        // 2) Fallback to edge function (header may not be present here)
-        const { data, error: fnError } = await supabase.functions.invoke('whop-auth', {
-          method: 'POST',
-        });
-
-        if (fnError) {
-          console.error('Whop auth error:', fnError);
-          setError(fnError.message);
-          setLoading(false);
-          return;
-        }
-
-        if (data?.user) {
-          console.log('Whop user via edge function');
-          setUser(data.user);
         } else {
-          console.log('No Whop user data returned');
+          console.log('No token found - Whop app may need additional configuration');
+          setError('Unable to authenticate: No Whop token found');
         }
       } catch (err) {
         console.error('Error verifying Whop token:', err);

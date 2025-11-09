@@ -8,24 +8,6 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    proxy: {
-      '/whop-auth': {
-        target: 'https://pxyzuhgqcgaljkcvnmel.supabase.co/functions/v1',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/whop-auth/, '/whop-auth'),
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq, req) => {
-            // Forward all headers including x-whop-user-token
-            Object.keys(req.headers).forEach((key) => {
-              const value = req.headers[key];
-              if (value) {
-                proxyReq.setHeader(key, value);
-              }
-            });
-          });
-        },
-      },
-    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
