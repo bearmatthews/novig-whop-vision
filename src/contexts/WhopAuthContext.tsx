@@ -53,9 +53,10 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
 
         console.log('In Whop iframe: Attempting authentication...');
         
-        // 1) Prefer same-origin endpoint so Whop injects x-whop-user-token
+        // Call Vercel proxy endpoint which will forward with x-whop-user-token
         try {
-          const res = await fetch('/whop-auth', {
+          const vercelUrl = 'https://novig-whop-vision.vercel.app/whop-auth';
+          const res = await fetch(vercelUrl, {
             method: 'POST',
             credentials: 'include',
           });
@@ -63,20 +64,20 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           if (res.ok) {
             const payload = await res.json().catch(() => null);
             if (payload?.user) {
-              console.log('Whop user via same-origin endpoint');
+              console.log('Whop user via Vercel proxy:', payload.user);
               setUser(payload.user);
               setLoading(false);
               return;
             }
-            console.log('Same-origin /whop-auth returned no user:', payload);
+            console.log('Vercel proxy returned no user:', payload);
           } else {
-            console.log('Same-origin /whop-auth non-200:', res.status);
+            console.log('Vercel proxy non-200:', res.status);
           }
         } catch (e) {
-          console.log('Same-origin /whop-auth failed:', e);
+          console.log('Vercel proxy failed:', e);
         }
 
-        // 2) Fallback to Supabase edge function (header may not be present cross-origin)
+        // Fallback to Supabase edge function
         const { data, error: authError } = await supabase.functions.invoke('whop-auth', {
           method: 'POST',
         });
