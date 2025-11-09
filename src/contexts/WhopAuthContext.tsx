@@ -5,7 +5,7 @@ interface WhopUser {
   id: string;
   email?: string;
   username?: string;
-  profile_picture_url?: string;
+  profile_pic_url?: string;
 }
 
 interface WhopAuthContextType {
@@ -53,7 +53,7 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
             id: 'dev-user-123',
             username: 'TestUser',
             email: 'test@whop.com',
-            profile_picture_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=TestUser',
+            profile_pic_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=TestUser',
           });
           setLoading(false);
           return;

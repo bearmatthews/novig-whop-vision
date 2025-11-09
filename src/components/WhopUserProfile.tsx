@@ -29,7 +29,7 @@ export function WhopUserProfile() {
   return (
     <div className={`flex items-center gap-2 ${isMobile ? '' : 'mr-4'}`}>
       <Avatar className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} border-2 border-primary`}>
-        <AvatarImage src={user.profile_picture_url} alt={user.username || 'User'} />
+        <AvatarImage src={user.profile_pic_url} alt={user.username || 'User'} />
         <AvatarFallback className="bg-primary text-primary-foreground font-bold">
           {initials}
         </AvatarFallback>
