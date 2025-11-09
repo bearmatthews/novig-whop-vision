@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-whop-user-token',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-whop-user-token, x-whop-app-id',
 };
 
 Deno.serve(async (req) => {
@@ -38,8 +38,9 @@ Deno.serve(async (req) => {
     
     const response = await fetch('https://api.whop.com/api/v2/me', {
       headers: {
-        'Authorization': `Bearer ${whopToken}`,
-        'X-Whop-Api-Key': whopApiKey || '',
+        'Authorization': `Bearer ${whopApiKey || ''}`,
+        ...(whopAppId ? { 'X-Whop-App-Id': whopAppId } : {}),
+        ...(whopToken ? { 'X-Whop-User-Token': whopToken } : {}),
       },
     });
 
