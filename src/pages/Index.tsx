@@ -8,7 +8,6 @@ import { LiquidityView } from "@/components/LiquidityView";
 import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
 import { WhopUserProfile } from "@/components/WhopUserProfile";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { AISearchOverlay } from "@/components/AISearchOverlay";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -130,7 +129,6 @@ const Index = () => {
                 <Bot className="w-4 h-4" />
                 Ask Bear
               </Button>
-              <ThemeToggle />
               <div className="flex items-center gap-3">
                 
                 
