@@ -27,12 +27,18 @@ This will output a URL like: `https://whop-app-proxy.your-account.workers.dev`
 
 ### 4. Configure Whop App Dashboard
 
-In your Whop app dashboard (https://whop.com/apps), set:
+In your Whop app dashboard (https://whop.com/apps), navigate to your app settings:
 
-- **Base URL**: `https://whop-app-proxy.your-account.workers.dev`
-- **Experience Path**: `/experience` (or your preferred path)
-- **Dashboard Path**: `/dashboard` (or your preferred path)
-- **Discover Path**: `/discover` (or your preferred path)
+1. **Important**: Set the **Base URL** to your Cloudflare Worker URL:
+   - Example: `https://whop-app-proxy.your-account.workers.dev`
+   - This tells Whop to load your app through the proxy instead of directly
+   
+2. Configure the paths:
+   - **Experience Path**: `/` (or your preferred path)
+   - **Dashboard Path**: `/dashboard` (optional)
+   - **Discover Path**: `/discover` (optional)
+
+**Why this works**: When users access your app in Whop at `lrjz4kj7viy298e9gbl3.apps.whop.com`, Whop will internally proxy to your base_url (the Cloudflare Worker), which then forwards the `x-whop-user-token` header to authenticate users.
 
 ### 5. Test Authentication
 

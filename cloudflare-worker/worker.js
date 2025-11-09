@@ -11,7 +11,7 @@
  */
 
 const SUPABASE_FUNCTION_URL = 'https://pxyzuhgqcgaljkcvnmel.supabase.co/functions/v1/whop-auth';
-const LOVABLE_APP_URL = 'https://novig-whop-vision.lovable.app';
+const LOVABLE_APP_URL = 'https://8c2962a5-84d3-461a-9ee6-6b646684606d.lovableproject.com';
 
 export default {
   async fetch(request) {
