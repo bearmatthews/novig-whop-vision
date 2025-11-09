@@ -120,7 +120,23 @@ const Index = () => {
       if (response.errors) {
         throw new Error(response.errors[0].message);
       }
-      return response.data?.event?.[0];
+      const detail = response.data?.event?.[0];
+      if (!detail) return null;
+
+      // Enhance the selected event with sportsbook odds
+      try {
+        const { data: oddsData, error } = await supabase.functions.invoke('polymarket-odds', {
+          body: { novigEvents: [detail] }
+        });
+        if (error) throw error;
+        if (oddsData?.events?.[0]) {
+          return oddsData.events[0];
+        }
+      } catch (err) {
+        console.error('Failed to enhance event with sportsbook odds:', err);
+      }
+
+      return detail;
     },
     enabled: !!selectedEvent?.id
   });
