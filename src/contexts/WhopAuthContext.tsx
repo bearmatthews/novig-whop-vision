@@ -37,10 +37,18 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
     const authenticateUser = async () => {
       try {
         const isInIframe = window.self !== window.top;
+        const host = window.location.hostname;
+        const ref = document.referrer || '';
+        const isLovablePreview = host.includes('lovableproject.com') || host.includes('lovable.app');
+        const isWhopEmbed = isInIframe && (
+          ref.includes('apps.whop.com') ||
+          ref.includes('whop.com') ||
+          host.endsWith('.apps.whop.com')
+        );
         
         // For development/preview outside Whop: Use mock user
-        if (!isInIframe) {
-          console.log('Not in iframe: Using mock Whop user');
+        if (!isWhopEmbed || isLovablePreview) {
+          console.log('Not in Whop embed: Using mock Whop user');
           setUser({
             id: 'dev-user-123',
             username: 'TestUser',
@@ -55,7 +63,7 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Call Vercel proxy endpoint which will forward with x-whop-user-token
         try {
-          const vercelUrl = 'https://novig-whop-vision.vercel.app/whop-auth';
+          const vercelUrl = '/whop-auth';
           const res = await fetch(vercelUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
