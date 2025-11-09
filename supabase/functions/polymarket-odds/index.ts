@@ -65,47 +65,69 @@ function matchOutcome(novigOutcome: string, novigMarket: string, oddsOutcome: an
   const novigMarketLower = novigMarket.toLowerCase();
   const oddsOutcomeLower = oddsOutcome.name.toLowerCase();
   
-  // Extract team names from the outcome
-  const awayMatch = novigLower.match(/^([a-z]+)/);
-  const homeMatch = novigMarketLower.match(/([a-z]+)\s*$/);
-  
-  // Check for moneyline (h2h) markets
+  // For moneyline (h2h) markets - just match team names
   if (oddsMarket === 'h2h') {
-    // Match team name in outcome
-    return oddsOutcomeLower.includes(novigLower) || novigLower.includes(oddsOutcomeLower);
-  }
-  
-  // Check for spread markets
-  if (oddsMarket === 'spreads' && (novigMarketLower.includes('-') || novigMarketLower.includes('+'))) {
-    // Extract point value from both
-    const novigPoints = novigMarketLower.match(/[+-]?\d+\.?\d*/);
-    const oddsPoints = Math.abs(oddsOutcome.point || 0);
+    // Extract key words from both outcomes
+    const novigWords = novigLower.split(/\s+/);
+    const oddsWords = oddsOutcomeLower.split(/\s+/);
     
-    if (novigPoints && oddsPoints) {
-      const novigValue = Math.abs(parseFloat(novigPoints[0]));
-      // Match if points are close (within 0.5) and team matches
-      if (Math.abs(novigValue - oddsPoints) <= 0.5) {
-        return oddsOutcomeLower.includes(novigLower) || novigLower.includes(oddsOutcomeLower);
+    // Check if they share significant words (team names)
+    for (const novigWord of novigWords) {
+      if (novigWord.length > 3) { // Skip short words
+        for (const oddsWord of oddsWords) {
+          if (oddsWord.includes(novigWord) || novigWord.includes(oddsWord)) {
+            return true;
+          }
+        }
       }
     }
   }
   
-  // Check for totals (over/under) markets
-  if (oddsMarket === 'totals' && novigMarketLower.includes('t')) {
-    const isOver = novigLower.includes('over');
-    const isUnder = novigLower.includes('under');
+  // For spread markets - match team and spread value
+  if (oddsMarket === 'spreads') {
+    const hasSpread = novigMarketLower.includes('-') || novigMarketLower.includes('+');
+    
+    if (hasSpread && oddsOutcome.point !== undefined) {
+      // Extract team abbreviation from outcome (first 3 letters usually)
+      const novigTeamMatch = novigLower.match(/^([a-z]{3})/);
+      const oddsTeamMatch = oddsOutcomeLower.match(/^([a-z]{3})/);
+      
+      if (novigTeamMatch && oddsTeamMatch) {
+        const teamsMatch = novigTeamMatch[1] === oddsTeamMatch[1];
+        
+        if (teamsMatch) {
+          // Extract spread value from Novig market description
+          const novigSpreadMatch = novigMarketLower.match(/([+-]?\d+\.?\d*)/);
+          if (novigSpreadMatch) {
+            const novigSpread = Math.abs(parseFloat(novigSpreadMatch[1]));
+            const oddsSpread = Math.abs(oddsOutcome.point);
+            
+            // Match if spreads are within 1 point
+            return Math.abs(novigSpread - oddsSpread) <= 1;
+          }
+        }
+      }
+    }
+  }
+  
+  // For totals (over/under) markets
+  if (oddsMarket === 'totals') {
+    const novigIsOver = novigLower.includes('over');
+    const novigIsUnder = novigLower.includes('under');
     const oddsIsOver = oddsOutcomeLower.includes('over');
     const oddsIsUnder = oddsOutcomeLower.includes('under');
     
-    if ((isOver && oddsIsOver) || (isUnder && oddsIsUnder)) {
-      // Extract total values
-      const novigTotal = novigMarketLower.match(/t(\d+\.?\d*)/);
-      const oddsTotal = Math.abs(oddsOutcome.point || 0);
+    // Must match over/under direction
+    if ((novigIsOver && oddsIsOver) || (novigIsUnder && oddsIsUnder)) {
+      // Extract total value from Novig market
+      const novigTotalMatch = novigMarketLower.match(/t(\d+\.?\d*)/);
       
-      if (novigTotal && oddsTotal) {
-        const novigValue = parseFloat(novigTotal[1]);
-        // Match if totals are close (within 1.5)
-        return Math.abs(novigValue - oddsTotal) <= 1.5;
+      if (novigTotalMatch && oddsOutcome.point !== undefined) {
+        const novigTotal = parseFloat(novigTotalMatch[1]);
+        const oddsTotal = Math.abs(oddsOutcome.point);
+        
+        // Match if totals are within 2 points
+        return Math.abs(novigTotal - oddsTotal) <= 2;
       }
     }
   }
@@ -238,7 +260,7 @@ serve(async (req) => {
           const novigOdds = outcome.available || outcome.last;
           let bestOdds = novigOdds;
           let bestSource = 'Novig';
-          const allOdds: any[] = [{ source: 'Novig', odds: novigOdds }];
+          const allOdds: any[] = novigOdds ? [{ source: 'Novig', odds: novigOdds }] : [];
 
           // Compare with other sportsbooks if available
           if (event.oddsComparison?.bookmakers) {
@@ -249,20 +271,27 @@ serve(async (req) => {
                   matchOutcome(outcome.description, market.description, bmo, bmMarket.type)
                 );
 
-                if (matchingOutcome && matchingOutcome.decimalOdds > bestOdds) {
-                  bestOdds = matchingOutcome.decimalOdds;
-                  bestSource = bookmaker.name;
-                }
-
                 if (matchingOutcome) {
+                  const decimalOdds = matchingOutcome.decimalOdds;
+                  
+                  if (decimalOdds > bestOdds) {
+                    bestOdds = decimalOdds;
+                    bestSource = bookmaker.name;
+                  }
+
                   allOdds.push({
                     source: bookmaker.name,
-                    odds: matchingOutcome.decimalOdds,
+                    odds: decimalOdds,
                     americanOdds: matchingOutcome.price,
                   });
                 }
               }
             }
+          }
+
+          // Only include outcome if we have odds data
+          if (allOdds.length === 0) {
+            return outcome;
           }
 
           return {
