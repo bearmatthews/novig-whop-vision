@@ -38,9 +38,7 @@ Deno.serve(async (req) => {
     
     const response = await fetch('https://api.whop.com/api/v2/me', {
       headers: {
-        'Authorization': `Bearer ${whopApiKey || ''}`,
-        ...(whopAppId ? { 'X-Whop-App-Id': whopAppId } : {}),
-        ...(whopToken ? { 'X-Whop-User-Token': whopToken } : {}),
+        'Authorization': `Bearer ${whopToken}`,
       },
     });
 
