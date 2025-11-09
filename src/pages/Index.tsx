@@ -258,9 +258,12 @@ const Index = () => {
       {showAIChat && <AISearchOverlay events={data?.event || []} onClose={() => {
       setShowAIChat(false);
       setAiFilteredEventIds([]);
-    }} onEventSelect={event => {
+    }} onEventSelect={(event, outcomeId) => {
       setSelectedEvent(event);
       setShowAIChat(false);
+      if (outcomeId) {
+        setTargetOutcomeId(outcomeId);
+      }
     }} />}
     </div>;
 };

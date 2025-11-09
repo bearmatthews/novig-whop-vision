@@ -11,7 +11,7 @@ import { toast } from "sonner";
 interface AISearchOverlayProps {
   events: any[];
   onClose: () => void;
-  onEventSelect: (event: any) => void;
+  onEventSelect: (event: any, outcomeId?: string) => void;
 }
 
 interface Message {
@@ -291,6 +291,10 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
                         event={result.event}
                         onClick={() => {
                           onEventSelect(result.event);
+                          onClose();
+                        }}
+                        onOutcomeClick={(outcomeId) => {
+                          onEventSelect(result.event, outcomeId);
                           onClose();
                         }}
                         showMarkets={true}
