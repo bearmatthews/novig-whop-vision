@@ -7,6 +7,7 @@ export const GET_ALL_EVENTS_QUERY = `
           { game: { league: { _in: $leagues } } }
         ]
       }
+      limit: 50
     ) {
       description
       id
@@ -15,20 +16,17 @@ export const GET_ALL_EVENTS_QUERY = `
         scheduled_start
         league
       }
-      markets {
+      markets(limit: 3) {
         description
         id
-        outcomes(where: { _or: [{ last: { _is_null: false } }, { available: { _is_null: false } }] }) {
+        outcomes(
+          where: { _or: [{ last: { _is_null: false } }, { available: { _is_null: false } }] }
+          limit: 4
+        ) {
           description
           last
           available
           id
-          orders(where: { status: { _eq: "OPEN" }, currency: { _eq: "CASH" } }) {
-            status
-            qty
-            price
-            id
-          }
         }
       }
     }
@@ -53,7 +51,10 @@ export const GET_EVENT_DETAIL_QUERY = `
           id
           last
           available
-          orders(where: { status: { _eq: "OPEN" }, currency: { _eq: "CASH" } }) {
+          orders(
+            where: { status: { _eq: "OPEN" }, currency: { _eq: "CASH" } }
+            limit: 10
+          ) {
             status
             qty
             price
