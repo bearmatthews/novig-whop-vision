@@ -148,18 +148,21 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
     setMessages(newMessages);
 
     try {
-      // Only send essential event data to reduce payload size
+      // Send enhanced event data with liquidity info
       const essentialEvents = events.map(e => ({
         id: e.id,
         description: e.description,
         league: e.game.league,
         status: e.status,
         scheduled_start: e.game.scheduled_start,
-        markets: e.markets?.slice(0, 3).map((m: any) => ({
+        markets: e.markets?.slice(0, 5).map((m: any) => ({
           description: m.description,
-          outcomes: m.outcomes.slice(0, 3).map((o: any) => ({
+          outcomes: m.outcomes.slice(0, 4).map((o: any) => ({
             description: o.description,
-            last: o.last
+            last: o.last,
+            available: o.available,
+            totalLiquidity: o.orders?.reduce((sum: number, order: any) => sum + order.qty, 0) || 0,
+            orderCount: o.orders?.length || 0
           }))
         }))
       }));
