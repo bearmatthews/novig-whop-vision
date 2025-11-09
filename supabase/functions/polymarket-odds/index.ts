@@ -228,6 +228,7 @@ serve(async (req) => {
           outcomes: market.outcomes.map(outcome => ({
             name: outcome.name,
             price: outcome.price,
+            point: (outcome as any).point, // carry spread/total points for matching
             decimalOdds: americanToDecimal(outcome.price),
           })),
         })),
