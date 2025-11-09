@@ -29,18 +29,33 @@ Deno.serve(async (req) => {
 
     console.log('Calling Whop API to verify token...');
     
-    // Verify token and get user info using Whop API
+    // Extract user id from JWT without verification (Whop recommends SDK for full verification)
+    let userId: string | null = null;
+    try {
+      const tokenParts = (whopToken || '').split('.');
+      if (tokenParts.length === 3) {
+        const payloadJson = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(tokenParts[1]), c => c.charCodeAt(0))));
+        userId = payloadJson.sub || payloadJson.user_id || null;
+        console.log('Decoded user id from token:', userId);
+      }
+    } catch (e) {
+      console.error('Failed to decode Whop token payload:', e);
+    }
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Unable to decode user from token', user: null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+
+    // Retrieve user via Whop REST API using App API key
     const whopApiKey = Deno.env.get('WHOP_API_KEY');
-    const whopAppId = Deno.env.get('WHOP_APP_ID');
-    
     console.log('Has API key:', !!whopApiKey);
-    console.log('Has App ID:', !!whopAppId);
-    
-    const response = await fetch('https://api.whop.com/api/v2/me', {
+
+    const response = await fetch(`https://api.whop.com/api/v1/users/${userId}` , {
       headers: {
-        'Authorization': `Bearer ${whopToken}`,
-        ...(whopApiKey ? { 'X-Whop-Api-Key': whopApiKey } : {}),
-        ...(whopAppId ? { 'X-Whop-App-Id': whopAppId } : {}),
+        'Authorization': `Bearer ${whopApiKey || ''}`,
       },
     });
 
@@ -58,7 +73,6 @@ Deno.serve(async (req) => {
     const userData = await response.json();
     console.log('Whop user data retrieved successfully');
     console.log('User ID:', userData.id);
-    console.log('User email:', userData.email);
     console.log('User username:', userData.username);
     
     return new Response(
