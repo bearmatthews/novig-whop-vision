@@ -74,24 +74,24 @@ export function EventCard({
           // Detail view - centered layout with large logos
           <div className="flex flex-col items-center gap-6 text-center">
             {(logos.away || logos.home) && (
-              <div className="flex items-center justify-center gap-8">
+              <div className="flex items-center justify-center gap-4 sm:gap-8">
                 {logos.away && (
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center gap-2 sm:gap-3">
                     <img 
                       src={logos.away} 
                       alt="Away team" 
-                      className="w-24 h-24 object-contain drop-shadow-lg" 
+                      className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain drop-shadow-lg" 
                       onError={e => { e.currentTarget.style.display = 'none'; }} 
                     />
                   </div>
                 )}
-                <span className="text-3xl font-black text-muted-foreground">@</span>
+                <span className="text-2xl sm:text-3xl font-black text-muted-foreground">@</span>
                 {logos.home && (
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center gap-2 sm:gap-3">
                     <img 
                       src={logos.home} 
                       alt="Home team" 
-                      className="w-24 h-24 object-contain drop-shadow-lg" 
+                      className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain drop-shadow-lg" 
                       onError={e => { e.currentTarget.style.display = 'none'; }} 
                     />
                   </div>
@@ -99,42 +99,42 @@ export function EventCard({
               </div>
             )}
             
-            <div className="space-y-3">
-              <CardTitle className="text-3xl font-black leading-tight">
+            <div className="space-y-2 sm:space-y-3">
+              <CardTitle className="text-xl sm:text-2xl md:text-3xl font-black leading-tight">
                 {event.description}
               </CardTitle>
               {isLive && (
-                <Badge variant="destructive" className="gap-2 whitespace-nowrap text-base px-4 py-2">
-                  <div className="w-2.5 h-2.5 bg-destructive-foreground rounded-full animate-pulse" />
+                <Badge variant="destructive" className="gap-1.5 sm:gap-2 whitespace-nowrap text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2">
+                  <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-destructive-foreground rounded-full animate-pulse" />
                   LIVE
                 </Badge>
               )}
             </div>
           </div>
         ) : (
-          // List view - horizontal compact layout
-          <div className="flex items-center gap-4">
-            {(logos.away || logos.home) && <div className="flex items-center gap-3 flex-shrink-0">
-                {logos.away && <img src={logos.away} alt="Away team" className="w-14 h-14 object-contain" onError={e => {
+          // List view - responsive layout
+          <div className="flex items-center gap-2 sm:gap-4">
+            {(logos.away || logos.home) && <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+                {logos.away && <img src={logos.away} alt="Away team" className="w-8 h-8 sm:w-12 sm:h-12 object-contain" onError={e => {
               e.currentTarget.style.display = 'none';
             }} />}
-                <span className="text-muted-foreground text-lg font-bold">@</span>
-                {logos.home && <img src={logos.home} alt="Home team" className="w-14 h-14 object-contain" onError={e => {
+                <span className="text-muted-foreground text-sm sm:text-lg font-bold hidden xs:inline">@</span>
+                {logos.home && <img src={logos.home} alt="Home team" className="w-8 h-8 sm:w-12 sm:h-12 object-contain" onError={e => {
               e.currentTarget.style.display = 'none';
             }} />}
               </div>}
             
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg font-bold leading-tight group-hover:text-primary transition-colors">
+              <CardTitle className="text-sm sm:text-base md:text-lg font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
                 {event.description}
               </CardTitle>
             </div>
-            <div className="flex items-center gap-3">
-              {isLive && <Badge variant="destructive" className="gap-1.5 whitespace-nowrap text-sm px-3 py-1.5">
-                  <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
-                  LIVE
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+              {isLive && <Badge variant="destructive" className="gap-1 sm:gap-1.5 whitespace-nowrap text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-destructive-foreground rounded-full animate-pulse" />
+                  <span className="hidden xs:inline">LIVE</span>
                 </Badge>}
-              <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
             </div>
           </div>
         )}
@@ -162,18 +162,18 @@ export function EventCard({
                 <div className="grid grid-cols-2 gap-2">
                   {market.outcomes.filter(o => o.available || o.last).map(outcome => <button 
                       key={outcome.id} 
-                      className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
+                      className="bg-secondary/30 border border-border rounded-md p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         onOutcomeClick?.(outcome.id);
                       }}
                     >
-                      <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
+                      <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors line-clamp-2">
                         {outcome.description}
                       </span>
-                      {outcome.available ? <span className="text-lg font-black text-success font-mono">
+                      {outcome.available ? <span className="text-base sm:text-lg font-black text-success font-mono">
                           {outcome.available.toFixed(2)}
-                        </span> : outcome.last ? <span className="text-lg font-black text-warning font-mono">
+                        </span> : outcome.last ? <span className="text-base sm:text-lg font-black text-warning font-mono">
                           {outcome.last.toFixed(2)}
                         </span> : null}
                     </button>)}

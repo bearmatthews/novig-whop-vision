@@ -86,10 +86,10 @@ export function MarketTable({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {marketsWithPrices.map((market) => (
-        <Card key={market.id} className="p-4 space-y-3">
-          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+        <Card key={market.id} className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+          <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wide">
             {market.description}
           </h3>
           
@@ -107,23 +107,23 @@ export function MarketTable({
                     key={outcome.id}
                     ref={(el) => outcomeRefs.current[outcome.id] = el}
                     onClick={() => handleOutcomeClick(outcome.id)}
-                    className="bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all hover:border-primary hover:bg-secondary/50 cursor-pointer group"
+                    className="bg-secondary/30 border border-border rounded-md p-2.5 sm:p-3 space-y-1 text-left w-full transition-all hover:border-primary hover:bg-secondary/50 cursor-pointer group"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{outcome.description}</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-xs sm:text-sm line-clamp-2 flex-1">{outcome.description}</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px] sm:text-xs px-1.5 py-0.5">
                           Available
                         </Badge>
                         <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <div className="text-xs text-muted-foreground">
                         Price: <span className="font-semibold text-foreground">{price?.toFixed(2)}</span>
                       </div>
-                      <div className="text-lg font-bold font-mono group-hover:text-primary transition-colors">
+                      <div className="text-base sm:text-lg font-bold font-mono group-hover:text-primary transition-colors">
                         {price ? priceToAmericanOdds(price) : '-'}
                       </div>
                     </div>

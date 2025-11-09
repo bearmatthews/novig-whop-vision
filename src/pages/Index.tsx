@@ -109,11 +109,12 @@ const Index = () => {
   return <div className="min-h-screen bg-background">
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 glass-effect">
-        <div className="container mx-auto px-6 py-5">
-          <div className="flex items-center justify-between gap-6 flex-wrap">
-            <div className="flex items-center gap-6">
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-5">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {/* Top Row: Profile and League Selector */}
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
               <WhopUserProfile />
-              <div className="flex-shrink-0">
+              <div className="flex-1 overflow-x-auto scrollbar-hide">
                 <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
                 setSelectedLeague(league);
                 setSelectedEvent(null);
@@ -121,26 +122,29 @@ const Index = () => {
               }} />
               </div>
             </div>
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="w-full sm:w-auto sm:max-w-md">
+            
+            {/* Bottom Row: Search and AI Button */}
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex-1">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
               </div>
-              <Button variant="default" size="default" onClick={() => setShowAIChat(!showAIChat)} className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all">
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={() => setShowAIChat(!showAIChat)} 
+                className="gap-1.5 sm:gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap px-3 sm:px-4"
+              >
                 <Bot className="w-4 h-4" />
-                Ask Bear
+                <span className="hidden xs:inline">Ask Bear</span>
               </Button>
-              <div className="flex items-center gap-3">
-                
-                
-              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        <div className="space-y-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="space-y-4 sm:space-y-6">
           {isLoading && !data && <EmptyState icon={RefreshCw} title="Loading betting data" description="Fetching live markets from Novig..." />}
 
           {error && <EmptyState icon={AlertCircle} title="Failed to load data" description="There was an error fetching betting data. Please try refreshing." action={<Button onClick={handleRefresh} variant="default">
@@ -154,20 +158,20 @@ const Index = () => {
           {!isLoading && !error && data && filteredEvents.length === 0 && !searchQuery && <EmptyState icon={TrendingUp} title="No Active Events" description={selectedLeague === 'ALL' ? "There are no active events with open markets at the moment." : `There are no active ${selectedLeague} events with open markets at the moment.`} />}
 
           {filteredEvents.length > 0 && !selectedEvent && <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full max-w-md grid-cols-3">
-                <TabsTrigger value="all">
-                  All <span className="ml-1.5 text-xs">({filteredEvents.length})</span>
+              <TabsList className="grid w-full max-w-md grid-cols-3 h-auto">
+                <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-4">
+                  All <span className="ml-1 sm:ml-1.5 text-xs">({filteredEvents.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="live">
-                  Live <span className="ml-1.5 text-xs">({liveEvents.length})</span>
+                <TabsTrigger value="live" className="text-xs sm:text-sm px-2 sm:px-4">
+                  Live <span className="ml-1 sm:ml-1.5 text-xs">({liveEvents.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="pregame">
-                  Pre-Game <span className="ml-1.5 text-xs">({pregameEvents.length})</span>
+                <TabsTrigger value="pregame" className="text-xs sm:text-sm px-2 sm:px-4">
+                  Pre-Game <span className="ml-1 sm:ml-1.5 text-xs hidden xs:inline">({pregameEvents.length})</span>
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="all" className="mt-6">
-                <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+              <TabsContent value="all" className="mt-4 sm:mt-6">
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                   {filteredEvents.map((event: any) => <EventCard 
                     key={event.id} 
                     event={event} 
@@ -181,8 +185,8 @@ const Index = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="live" className="mt-6">
-                {liveEvents.length === 0 ? <EmptyState icon={Activity} title="No Live Events" description="There are no live games at the moment. Check back during game time!" /> : <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+              <TabsContent value="live" className="mt-4 sm:mt-6">
+                {liveEvents.length === 0 ? <EmptyState icon={Activity} title="No Live Events" description="There are no live games at the moment. Check back during game time!" /> : <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                     {liveEvents.map((event: any) => <EventCard 
                       key={event.id} 
                       event={event} 
@@ -196,8 +200,8 @@ const Index = () => {
                   </div>}
               </TabsContent>
 
-              <TabsContent value="pregame" className="mt-6">
-                {pregameEvents.length === 0 ? <EmptyState icon={TrendingUp} title="No Upcoming Games" description="All games are currently live or there are no scheduled games with open markets." /> : <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+              <TabsContent value="pregame" className="mt-4 sm:mt-6">
+                {pregameEvents.length === 0 ? <EmptyState icon={TrendingUp} title="No Upcoming Games" description="All games are currently live or there are no scheduled games with open markets." /> : <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                     {pregameEvents.map((event: any) => <EventCard 
                       key={event.id} 
                       event={event} 
