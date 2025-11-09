@@ -17,6 +17,14 @@ interface Outcome {
   last?: number;
   available?: number;
   orders?: Order[];
+  bestOdds?: number;
+  bestSource?: string;
+  novigOdds?: number;
+  allOdds?: Array<{
+    source: string;
+    odds: number;
+    americanOdds?: number;
+  }>;
 }
 
 interface Order {
@@ -95,9 +103,11 @@ export function MarketTable({
           
           <div className="grid gap-2">
             {market.outcomes
-              .filter((outcome) => outcome.available)
+              .filter((outcome) => outcome.available || outcome.bestOdds)
               .map((outcome) => {
-                const price = outcome.available || outcome.last;
+                const price = outcome.bestOdds || outcome.available || outcome.last;
+                const hasBetterOdds = outcome.bestSource && outcome.bestSource !== 'Novig';
+                const hasMultipleSources = outcome.allOdds && outcome.allOdds.length > 1;
                 const hasOrders = outcome.orders && outcome.orders.length > 0;
                 const totalLiquidity = hasOrders 
                   ? outcome.orders.reduce((sum, order) => sum + order.qty, 0)
@@ -107,8 +117,16 @@ export function MarketTable({
                     key={outcome.id}
                     ref={(el) => outcomeRefs.current[outcome.id] = el}
                     onClick={() => handleOutcomeClick(outcome.id)}
-                    className="bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all hover:border-primary hover:bg-secondary/50 cursor-pointer group"
+                    className="bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all hover:border-primary hover:bg-secondary/50 cursor-pointer group relative"
                   >
+                    {hasBetterOdds && (
+                      <div className="absolute -top-2 -right-2 z-10">
+                        <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-success">
+                          {outcome.bestSource}
+                        </Badge>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-sm">{outcome.description}</span>
                       <div className="flex items-center gap-2">
@@ -120,8 +138,15 @@ export function MarketTable({
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">
-                        Price: <span className="font-semibold text-foreground">{price?.toFixed(2)}</span>
+                      <div className="text-xs text-muted-foreground space-y-0.5">
+                        <div>
+                          Price: <span className="font-semibold text-foreground">{price?.toFixed(2)}</span>
+                        </div>
+                        {hasMultipleSources && (
+                          <div className="text-muted-foreground">
+                            {outcome.allOdds!.length} sportsbooks
+                          </div>
+                        )}
                       </div>
                       <div className="text-lg font-bold font-mono group-hover:text-primary transition-colors">
                         {price ? priceToAmericanOdds(price) : '-'}
