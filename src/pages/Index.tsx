@@ -112,35 +112,37 @@ const Index = () => {
   return <div className="min-h-screen bg-background">
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 glass-effect">
-        <div className="container mx-auto px-3 md:px-6 py-3 md:py-5">
+        <div className="container mx-auto px-3 md:px-6 py-2 md:py-5">
           {isMobile ? (
-            // Mobile Layout - Stacked
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+            // Mobile Layout - Compact
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
                 <WhopUserProfile />
+                <LeagueSelector 
+                  selectedLeague={selectedLeague} 
+                  onLeagueChange={league => {
+                    setSelectedLeague(league);
+                    setSelectedEvent(null);
+                    setSearchQuery("");
+                  }} 
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <SearchBar 
+                  value={searchQuery} 
+                  onChange={setSearchQuery} 
+                  placeholder="Search games..." 
+                />
                 <Button 
                   variant="default" 
                   size="sm" 
                   onClick={() => setShowAIChat(!showAIChat)} 
-                  className="gap-1.5 rounded-lg"
+                  className="gap-1.5 rounded-lg shrink-0 px-3"
                 >
                   <Bot className="w-3.5 h-3.5" />
-                  <span className="text-xs">Ask Bear</span>
+                  <span className="text-xs">Bear</span>
                 </Button>
               </div>
-              <SearchBar 
-                value={searchQuery} 
-                onChange={setSearchQuery} 
-                placeholder="Search teams or games..." 
-              />
-              <LeagueSelector 
-                selectedLeague={selectedLeague} 
-                onLeagueChange={league => {
-                  setSelectedLeague(league);
-                  setSelectedEvent(null);
-                  setSearchQuery("");
-                }} 
-              />
             </div>
           ) : (
             // Desktop Layout - Horizontal
