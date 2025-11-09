@@ -1,15 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWhopAuth } from "@/contexts/WhopAuthContext";
 import { User } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function WhopUserProfile() {
   const { user, loading } = useWhopAuth();
+  const isMobile = useIsMobile();
 
   // Show loading state briefly
   if (loading) {
     return (
-      <div className="flex items-center gap-2 mr-4">
-        <div className="w-10 h-10 rounded-full border-2 border-primary animate-pulse bg-secondary" />
+      <div className={`flex items-center gap-2 ${isMobile ? '' : 'mr-4'}`}>
+        <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} rounded-full border-2 border-primary animate-pulse bg-secondary`} />
       </div>
     );
   }
@@ -25,15 +27,15 @@ export function WhopUserProfile() {
     : 'U';
 
   return (
-    <div className="flex items-center gap-2 mr-4">
-      <Avatar className="w-10 h-10 border-2 border-primary">
+    <div className={`flex items-center gap-2 ${isMobile ? '' : 'mr-4'}`}>
+      <Avatar className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} border-2 border-primary`}>
         <AvatarImage src={user.profile_picture_url} alt={user.username || 'User'} />
         <AvatarFallback className="bg-primary text-primary-foreground font-bold">
           {initials}
         </AvatarFallback>
       </Avatar>
-      {user.username && (
-        <span className="text-sm font-medium hidden sm:inline">{user.username}</span>
+      {user.username && !isMobile && (
+        <span className="text-sm font-medium">{user.username}</span>
       )}
     </div>
   );
