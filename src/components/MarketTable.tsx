@@ -72,13 +72,57 @@ export function MarketTable({
       }, 300);
     }
   }, [targetOutcomeId, onOutcomeHighlighted]);
-  const handleOutcomeClick = (outcomeId: string) => {
+  const handleOutcomeClick = (outcome: Outcome, marketDescription: string) => {
     if (!eventId) return;
     
-    // Open Novig with the event markets
-    const novigUrl = `https://app.novig.us/event-markets/${eventId}`;
-    window.open(novigUrl, '_blank');
-    toast.success("Opening in Novig...");
+    // Determine which sportsbook to open based on best odds
+    const bestSource = outcome.bestSource;
+    
+    if (bestSource && bestSource !== 'Novig') {
+      // Generate sportsbook-specific URLs
+      let sportsbookUrl = '';
+      const sportsbookName = bestSource.toLowerCase();
+      
+      if (sportsbookName.includes('draftkings')) {
+        sportsbookUrl = 'https://sportsbook.draftkings.com/';
+        toast.success(`Opening ${bestSource}...`, {
+          description: 'Navigate to the game manually'
+        });
+      } else if (sportsbookName.includes('fanduel')) {
+        sportsbookUrl = 'https://sportsbook.fanduel.com/';
+        toast.success(`Opening ${bestSource}...`, {
+          description: 'Navigate to the game manually'
+        });
+      } else if (sportsbookName.includes('betmgm')) {
+        sportsbookUrl = 'https://sports.betmgm.com/';
+        toast.success(`Opening ${bestSource}...`, {
+          description: 'Navigate to the game manually'
+        });
+      } else if (sportsbookName.includes('caesars')) {
+        sportsbookUrl = 'https://sportsbook.caesars.com/';
+        toast.success(`Opening ${bestSource}...`, {
+          description: 'Navigate to the game manually'
+        });
+      } else if (sportsbookName.includes('pointsbet')) {
+        sportsbookUrl = 'https://pointsbet.com/';
+        toast.success(`Opening ${bestSource}...`, {
+          description: 'Navigate to the game manually'
+        });
+      } else {
+        // Fallback for unknown sportsbooks
+        toast.info(`Best odds at ${bestSource}`, {
+          description: 'Visit their sportsbook to place this bet'
+        });
+        return;
+      }
+      
+      window.open(sportsbookUrl, '_blank');
+    } else {
+      // Open Novig if it has the best odds or is the only option
+      const novigUrl = `https://app.novig.us/event-markets/${eventId}`;
+      window.open(novigUrl, '_blank');
+      toast.success("Opening in Novig...");
+    }
   };
   // Filter to only show markets with available prices
   const marketsWithPrices = markets.filter((market) =>
@@ -116,7 +160,7 @@ export function MarketTable({
                   <button
                     key={outcome.id}
                     ref={(el) => outcomeRefs.current[outcome.id] = el}
-                    onClick={() => handleOutcomeClick(outcome.id)}
+                    onClick={() => handleOutcomeClick(outcome, market.description)}
                     className="bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all hover:border-primary hover:bg-secondary/50 cursor-pointer group relative"
                   >
                     {hasBetterOdds && (

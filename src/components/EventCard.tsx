@@ -5,6 +5,7 @@ import { getEventLogos } from "@/lib/team-logos";
 import { Clock, ChevronRight, DollarSign } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 interface Event {
   id: string;
   description: string;
@@ -179,7 +180,35 @@ export function EventCard({
                         className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer relative"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onOutcomeClick?.(outcome.id);
+                          const bestSource = outcome.bestSource;
+                          
+                          if (bestSource && bestSource !== 'Novig') {
+                            // Open specific sportsbook
+                            let sportsbookUrl = '';
+                            const sportsbookName = bestSource.toLowerCase();
+                            
+                            if (sportsbookName.includes('draftkings')) {
+                              sportsbookUrl = 'https://sportsbook.draftkings.com/';
+                            } else if (sportsbookName.includes('fanduel')) {
+                              sportsbookUrl = 'https://sportsbook.fanduel.com/';
+                            } else if (sportsbookName.includes('betmgm')) {
+                              sportsbookUrl = 'https://sports.betmgm.com/';
+                            } else if (sportsbookName.includes('caesars')) {
+                              sportsbookUrl = 'https://sportsbook.caesars.com/';
+                            } else if (sportsbookName.includes('pointsbet')) {
+                              sportsbookUrl = 'https://pointsbet.com/';
+                            }
+                            
+                            if (sportsbookUrl) {
+                              window.open(sportsbookUrl, '_blank');
+                              toast.success(`Opening ${bestSource}...`, {
+                                description: 'Navigate to the game manually'
+                              });
+                            }
+                          } else {
+                            // Open Novig
+                            onOutcomeClick?.(outcome.id);
+                          }
                         }}
                       >
                         {hasBetterOdds && (
