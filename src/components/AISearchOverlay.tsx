@@ -61,20 +61,23 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
     const questions: string[] = [];
     const leagues = [...new Set(events.map(e => e.game.league))];
     
-    if (leagues.includes('NBA')) {
-      questions.push("Show me NBA games with the best underdog odds");
+    // Only suggest questions if we have relevant data
+    if (leagues.includes('NBA') && events.some(e => e.game.league === 'NBA')) {
+      questions.push("Show me tonight's NBA games");
     }
-    if (leagues.includes('NFL')) {
-      questions.push("Find NFL games with high over/under totals");
+    if (leagues.includes('NFL') && events.some(e => e.game.league === 'NFL')) {
+      questions.push("What NFL games are coming up?");
     }
-    if (leagues.includes('NHL')) {
-      questions.push("What are the best NHL home team bets tonight?");
+    if (leagues.includes('NHL') && events.some(e => e.game.league === 'NHL')) {
+      questions.push("Show me NHL games");
     }
     
-    // Add generic questions
-    questions.push("Show me all live games right now");
-    questions.push("Find games starting in the next 2 hours");
-    questions.push("What are the best value bets available?");
+    // Generic questions that work with any data
+    if (events.some(e => e.status === 'OPEN_INGAME')) {
+      questions.push("Show me all live games right now");
+    }
+    questions.push("What games are starting soon?");
+    questions.push("Show me games with high betting volume");
     
     return questions.slice(0, 6);
   };

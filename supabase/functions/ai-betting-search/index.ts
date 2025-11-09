@@ -26,7 +26,15 @@ serve(async (req) => {
 
 Events: ${JSON.stringify(events)}
 
-Analyze the user's query and return matching event IDs with reasoning and relevant market info for each event.
+CRITICAL: Each event contains markets with outcomes. The outcomes have odds stored in the "last" or "available" fields (these are decimal odds). 
+- Higher decimal odds (e.g., 2.5, 3.0) = underdog = better payout
+- Lower decimal odds (e.g., 1.5, 1.3) = favorite = worse payout
+
+When users ask about:
+- "Best underdog odds" → Look for outcomes with HIGHER decimal values (2.0+)
+- "Favorites" → Look for outcomes with LOWER decimal values (1.8 or less)
+- "High-scoring games" → Look for Over/Under markets with high totals
+- Specific teams → Search event descriptions for team names
 
 Response format (JSON):
 {
@@ -34,13 +42,13 @@ Response format (JSON):
   "results": [
     {
       "eventId": "id1",
-      "reasoning": "Short 1-sentence reason why this matches (max 15 words)",
-      "relevantMarket": "market description if relevant to search"
+      "reasoning": "Short 1-sentence reason (max 15 words)",
+      "relevantMarket": "market description if relevant"
     }
   ]
 }
 
-Be concise and focus on the most relevant matches.`;
+ALWAYS provide results if there are matching events. Use the odds data you have.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
