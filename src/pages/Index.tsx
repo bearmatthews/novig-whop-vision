@@ -45,18 +45,18 @@ const Index = () => {
         throw new Error(response.errors[0].message);
       }
       
-      // Enhance with Polymarket odds
+      // Enhance with odds comparison
       try {
-        const polymarketResponse = await supabase.functions.invoke('polymarket-odds', {
+        const oddsResponse = await supabase.functions.invoke('polymarket-odds', {
           body: { novigEvents: response.data.event }
         });
         
-        if (polymarketResponse.data?.events) {
-          console.log(`Enhanced ${polymarketResponse.data.events.length} events with Polymarket data`);
-          return { event: polymarketResponse.data.events };
+        if (oddsResponse.data?.events) {
+          console.log(`Enhanced ${oddsResponse.data.events.length} events with sportsbook odds`);
+          return { event: oddsResponse.data.events };
         }
-      } catch (polyError) {
-        console.error('Failed to fetch Polymarket odds:', polyError);
+      } catch (oddsError) {
+        console.error('Failed to fetch sportsbook odds:', oddsError);
       }
       
       return response.data;
@@ -210,16 +210,16 @@ const Index = () => {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Polymarket Integration Info */}
-              {data?.event?.some((e: any) => e.polymarketData?.markets?.length > 0) && (
+              {/* Odds Comparison Info */}
+              {data?.event?.some((e: any) => e.oddsComparison?.bookmakers?.length > 0) && (
                 <div className="mt-4 mb-6 p-4 bg-success/10 border border-success/20 rounded-xl">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="bg-success text-success-foreground">
-                      Polymarket
+                      Best Odds
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      Showing best odds across Novig and Polymarket •{' '}
-                      {data.event.filter((e: any) => e.polymarketData?.markets?.length > 0).length} games with multiple lines
+                      Comparing odds across DraftKings, FanDuel, BetMGM, and more •{' '}
+                      {data.event.filter((e: any) => e.oddsComparison?.bookmakers?.length > 0).length} games with multiple sportsbooks
                     </span>
                   </div>
                 </div>

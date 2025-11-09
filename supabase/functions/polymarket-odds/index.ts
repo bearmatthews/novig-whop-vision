@@ -5,40 +5,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Polymarket uses a different API structure than expected
-// Let's adjust to handle their actual response format
-interface PolymarketMarket {
-  condition_id?: string;
-  question: string;
-  description?: string;
-  end_date_iso?: string;
-  game_start_time?: string;
-  question_id?: string;
-  market_slug?: string;
-  outcomes?: string[];
-  outcomePrices?: string[];
-  outcome_prices?: string[];
-  clob_token_ids?: string[];
-  tokens?: Array<{
-    token_id: string;
-    outcome: string;
-    price?: number;
+const THE_ODDS_API_KEY = Deno.env.get('THE_ODDS_API_KEY');
+const THE_ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
+
+interface OddsAPIBookmaker {
+  key: string;
+  title: string;
+  markets: Array<{
+    key: string;
+    outcomes: Array<{
+      name: string;
+      price: number;
+    }>;
   }>;
-  volume?: string;
-  active?: boolean;
-  closed?: boolean;
-  enable_order_book?: boolean;
-  tags?: string[];
-  events?: any[];
 }
 
-interface PolymarketEvent {
+interface OddsAPIEvent {
   id: string;
-  title: string;
-  slug: string;
-  markets: PolymarketMarket[];
-  tags?: string[];
+  sport_key: string;
+  commence_time: string;
+  home_team: string;
+  away_team: string;
+  bookmakers: OddsAPIBookmaker[];
 }
+
+const SPORT_MAPPINGS: Record<string, string> = {
+  'NBA': 'basketball_nba',
+  'NFL': 'americanfootball_nfl',
+  'MLB': 'baseball_mlb',
+  'NHL': 'icehockey_nhl',
+};
 
 // Normalize team names for matching
 function normalizeTeamName(name: string): string {
@@ -55,7 +51,6 @@ function extractTeams(description: string): { away: string; home: string } | nul
     return { away: parts[0], home: parts[1] };
   }
   
-  // Try with "vs" separator
   const vsParts = description.split(/\svs?\s/i).map(p => p.trim());
   if (vsParts.length === 2) {
     return { away: vsParts[0], home: vsParts[1] };
@@ -64,33 +59,51 @@ function extractTeams(description: string): { away: string; home: string } | nul
   return null;
 }
 
-// Match Novig game with Polymarket market
-function matchGame(novigDescription: string, polymarketQuestion: string): boolean {
+// Match Novig game with Odds API event
+function matchGame(novigDescription: string, awayTeam: string, homeTeam: string): boolean {
   const novigTeams = extractTeams(novigDescription);
-  const polyTeams = extractTeams(polymarketQuestion);
-  
-  if (!novigTeams || !polyTeams) return false;
+  if (!novigTeams) return false;
   
   const novigAwayNorm = normalizeTeamName(novigTeams.away);
   const novigHomeNorm = normalizeTeamName(novigTeams.home);
-  const polyAwayNorm = normalizeTeamName(polyTeams.away);
-  const polyHomeNorm = normalizeTeamName(polyTeams.home);
+  const oddsAwayNorm = normalizeTeamName(awayTeam);
+  const oddsHomeNorm = normalizeTeamName(homeTeam);
   
-  // Check if teams match in either order
   return (
-    (novigAwayNorm === polyAwayNorm && novigHomeNorm === polyHomeNorm) ||
-    (novigAwayNorm === polyHomeNorm && novigHomeNorm === polyAwayNorm)
+    (novigAwayNorm === oddsAwayNorm && novigHomeNorm === oddsHomeNorm) ||
+    (novigAwayNorm === oddsHomeNorm && novigHomeNorm === oddsAwayNorm)
   );
 }
 
-// Convert Polymarket probability to decimal odds
-function probabilityToOdds(probability: number): number {
-  if (probability <= 0 || probability >= 1) return 1.01;
-  return 1 / probability;
+// Convert American odds to decimal odds
+function americanToDecimal(americanOdds: number): number {
+  if (americanOdds > 0) {
+    return (americanOdds / 100) + 1;
+  } else {
+    return (100 / Math.abs(americanOdds)) + 1;
+  }
+}
+
+async function fetchOddsForSport(sportKey: string): Promise<OddsAPIEvent[]> {
+  try {
+    const response = await fetch(
+      `${THE_ODDS_API_BASE}/sports/${sportKey}/odds?apiKey=${THE_ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch odds for ${sportKey}: ${response.status}`);
+      return [];
+    }
+    
+    return await response.json();
+  } catch (err) {
+    console.error(`Error fetching odds for ${sportKey}:`, err);
+    return [];
+  }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -98,109 +111,65 @@ serve(async (req) => {
   try {
     const { novigEvents } = await req.json();
     
-    console.log(`Fetching Polymarket sports markets for ${novigEvents?.length || 0} Novig events`);
+    if (!THE_ODDS_API_KEY) {
+      throw new Error('THE_ODDS_API_KEY not configured');
+    }
 
-    // Fetch Polymarket markets - try multiple endpoints
-    let polymarketMarkets: any[] = [];
-    let fetchSuccess = false;
+    console.log(`Fetching odds for ${novigEvents?.length || 0} Novig events`);
+
+    // Get unique leagues from Novig events
+    const leagues = [...new Set(novigEvents.map((e: any) => e.game?.league).filter(Boolean))] as string[];
+    console.log(`Fetching odds for leagues: ${leagues.join(', ')}`);
+
+    // Fetch odds for all relevant sports in parallel
+    const oddsPromises = leagues
+      .filter(league => SPORT_MAPPINGS[league])
+      .map(league => fetchOddsForSport(SPORT_MAPPINGS[league]));
     
-    try {
-      // Try the simplified markets endpoint first
-      const simplifiedResponse = await fetch(
-        'https://gamma-api.polymarket.com/markets?limit=100&closed=false',
-        { headers: { 'Accept': 'application/json' } }
-      );
-      
-      if (simplifiedResponse.ok) {
-        const data = await simplifiedResponse.json();
-        polymarketMarkets = Array.isArray(data) ? data : data.data || [];
-        fetchSuccess = true;
-        console.log(`Fetched ${polymarketMarkets.length} Polymarket markets`);
-        
-        // Log structure of first market to understand the format
-        if (polymarketMarkets.length > 0) {
-          console.log('First Polymarket market structure:', JSON.stringify(polymarketMarkets[0], null, 2));
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching from Polymarket:', err);
-    }
+    const oddsResults = await Promise.all(oddsPromises);
+    const allOddsEvents = oddsResults.flat();
+    
+    console.log(`Fetched ${allOddsEvents.length} total odds events from The Odds API`);
 
-    if (!fetchSuccess || polymarketMarkets.length === 0) {
-      console.log('No Polymarket markets found or API error, returning Novig data only');
-      return new Response(
-        JSON.stringify({
-          events: novigEvents,
-          polymarketMarketsCount: 0,
-          matchedEventsCount: 0,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Match and enhance Novig events with Polymarket odds
+    // Match and enhance Novig events with odds from multiple sportsbooks
     const enhancedEvents = novigEvents.map((novigEvent: any) => {
-      // Find matching Polymarket markets
-      const matchingMarkets = polymarketMarkets.filter(market => 
-        matchGame(novigEvent.description, market.question)
+      const matchingOddsEvent = allOddsEvents.find(oddsEvent =>
+        matchGame(novigEvent.description, oddsEvent.away_team, oddsEvent.home_team)
       );
 
-      if (matchingMarkets.length > 0) {
-        console.log(`Found ${matchingMarkets.length} Polymarket matches for: ${novigEvent.description}`);
-        console.log('Matched markets:', matchingMarkets.map(m => m.question));
+      if (!matchingOddsEvent) {
+        return { ...novigEvent, oddsComparison: null };
       }
 
-      if (matchingMarkets.length === 0) {
-        return {
-          ...novigEvent,
-          polymarketData: null,
-        };
-      }
+      console.log(`Matched ${novigEvent.description} with ${matchingOddsEvent.bookmakers.length} bookmakers`);
 
-      // Process matching markets to extract comparable odds
-      const polymarketOdds = matchingMarkets.map(market => {
-        // Handle different possible structures from Polymarket
-        const outcomes = (market.tokens || market.outcomes || []).map((outcome: any, index: number) => {
-          let probability = 0.5; // default
-          
-          // Try to get price from different possible fields
-          if (typeof outcome === 'object' && outcome.price) {
-            probability = outcome.price;
-          } else if (market.outcomePrices && market.outcomePrices[index]) {
-            probability = parseFloat(market.outcomePrices[index]);
-          } else if (market.outcome_prices && market.outcome_prices[index]) {
-            probability = parseFloat(market.outcome_prices[index]);
-          }
-          
-          const outcomeLabel = typeof outcome === 'string' ? outcome : (outcome.outcome || outcome.name || `Outcome ${index + 1}`);
-          
-          return {
-            description: outcomeLabel,
-            odds: probabilityToOdds(probability),
-            probability,
-            source: 'polymarket',
-            marketId: market.condition_id || market.question_id || market.market_slug,
-          };
-        });
-
-        return {
-          marketId: market.condition_id || market.question_id || market.market_slug,
-          question: market.question,
-          outcomes,
-          volume: market.volume || '0',
-        };
-      });
+      // Extract odds from all bookmakers
+      const bookmakerOdds = matchingOddsEvent.bookmakers.map(bookmaker => ({
+        name: bookmaker.title,
+        key: bookmaker.key,
+        markets: bookmaker.markets.map(market => ({
+          type: market.key,
+          outcomes: market.outcomes.map(outcome => ({
+            name: outcome.name,
+            price: outcome.price,
+            decimalOdds: americanToDecimal(outcome.price),
+          })),
+        })),
+      }));
 
       return {
         ...novigEvent,
-        polymarketData: {
-          markets: polymarketOdds,
-          matchCount: matchingMarkets.length,
+        oddsComparison: {
+          bookmakers: bookmakerOdds,
+          matchedEvent: {
+            id: matchingOddsEvent.id,
+            commence_time: matchingOddsEvent.commence_time,
+          },
         },
       };
     });
 
-    // Calculate best odds for each outcome across both platforms
+    // Calculate best odds for each outcome across all platforms
     const eventsWithBestOdds = enhancedEvents.map((event: any) => {
       if (!event.markets || !Array.isArray(event.markets)) {
         return event;
@@ -214,21 +183,32 @@ serve(async (req) => {
         const enhancedOutcomes = market.outcomes.map((outcome: any) => {
           const novigOdds = outcome.available || outcome.last;
           let bestOdds = novigOdds;
-          let bestSource = 'novig';
+          let bestSource = 'Novig';
+          const allOdds: any[] = [{ source: 'Novig', odds: novigOdds }];
 
-          // Compare with Polymarket odds if available
-          if (event.polymarketData?.markets) {
-            for (const polyMarket of event.polymarketData.markets) {
-              // Try to match outcome by description similarity
-              const matchingPolyOutcome = polyMarket.outcomes.find((po: any) => {
-                const outcomeLower = outcome.description.toLowerCase();
-                const polyLower = po.description.toLowerCase();
-                return polyLower.includes(outcomeLower) || outcomeLower.includes(polyLower);
-              });
+          // Compare with other sportsbooks if available
+          if (event.oddsComparison?.bookmakers) {
+            for (const bookmaker of event.oddsComparison.bookmakers) {
+              for (const bmMarket of bookmaker.markets) {
+                // Match market type (h2h for moneyline, spreads, totals)
+                const matchingOutcome = bmMarket.outcomes.find((bmo: any) => {
+                  const outcomeName = outcome.description.toLowerCase();
+                  const bookmakerName = bmo.name.toLowerCase();
+                  return bookmakerName.includes(outcomeName) || outcomeName.includes(bookmakerName);
+                });
 
-              if (matchingPolyOutcome && matchingPolyOutcome.odds > bestOdds) {
-                bestOdds = matchingPolyOutcome.odds;
-                bestSource = 'polymarket';
+                if (matchingOutcome && matchingOutcome.decimalOdds > bestOdds) {
+                  bestOdds = matchingOutcome.decimalOdds;
+                  bestSource = bookmaker.name;
+                }
+
+                if (matchingOutcome) {
+                  allOdds.push({
+                    source: bookmaker.name,
+                    odds: matchingOutcome.decimalOdds,
+                    americanOdds: matchingOutcome.price,
+                  });
+                }
               }
             }
           }
@@ -238,11 +218,7 @@ serve(async (req) => {
             novigOdds,
             bestOdds,
             bestSource,
-            polymarketOdds: event.polymarketData?.markets?.[0]?.outcomes?.find((po: any) => {
-              const outcomeLower = outcome.description.toLowerCase();
-              const polyLower = po.description.toLowerCase();
-              return polyLower.includes(outcomeLower) || outcomeLower.includes(polyLower);
-            })?.odds,
+            allOdds: allOdds.sort((a, b) => b.odds - a.odds),
           };
         });
 
@@ -258,20 +234,20 @@ serve(async (req) => {
       };
     });
 
-    const matchedCount = eventsWithBestOdds.filter((e: any) => e.polymarketData?.markets?.length > 0).length;
-    console.log(`Successfully matched ${matchedCount} events with Polymarket data`);
+    const matchedCount = eventsWithBestOdds.filter((e: any) => e.oddsComparison?.bookmakers?.length > 0).length;
+    console.log(`Successfully matched ${matchedCount} events with sportsbook odds`);
 
     return new Response(
       JSON.stringify({
         events: eventsWithBestOdds,
-        polymarketMarketsCount: polymarketMarkets.length,
+        totalBookmakers: allOddsEvents.reduce((sum, e) => sum + e.bookmakers.length, 0),
         matchedEventsCount: matchedCount,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in polymarket-odds function:', error);
+    console.error('Error in odds comparison function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({ 
