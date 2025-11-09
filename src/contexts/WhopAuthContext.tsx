@@ -58,7 +58,7 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           const vercelUrl = 'https://novig-whop-vision.vercel.app/whop-auth';
           const res = await fetch(vercelUrl, {
             method: 'POST',
-            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
           });
 
           if (res.ok) {
