@@ -47,6 +47,31 @@ export function ShareBetDialog({
   const fetchChannels = async () => {
     setLoadingChannels(true);
     try {
+      // Try Vercel proxy endpoint first (production/Whop iframe)
+      try {
+        const vercelUrl = '/whop-list-channels';
+        const res = await fetch(vercelUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (res.ok) {
+          const payload = await res.json();
+          if (payload?.channels) {
+            console.log('Fetched channels via Vercel proxy:', payload.channels.length);
+            setChannels(payload.channels);
+            if (payload.channels.length === 1) {
+              setChannelId(payload.channels[0].id);
+            }
+            setLoadingChannels(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.log('Vercel proxy failed, trying fallback:', e);
+      }
+
+      // Fallback to direct Supabase function call
       const { data, error } = await supabase.functions.invoke('whop-list-channels', {
         method: 'POST',
       });
@@ -54,6 +79,7 @@ export function ShareBetDialog({
       if (error) throw error;
 
       if (data?.channels) {
+        console.log('Fetched channels via fallback:', data.channels.length);
         setChannels(data.channels);
         if (data.channels.length === 1) {
           setChannelId(data.channels[0].id);

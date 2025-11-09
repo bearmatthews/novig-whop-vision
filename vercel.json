@@ -5,6 +5,10 @@
       "destination": "/api/whop-auth"
     },
     {
+      "source": "/whop-list-channels",
+      "destination": "/api/whop-list-channels"
+    },
+    {
       "source": "/(.*)",
       "destination": "https://8c2962a5-84d3-461a-9ee6-6b646684606d.lovableproject.com/$1"
     }
