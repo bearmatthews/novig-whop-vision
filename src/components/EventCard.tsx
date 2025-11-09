@@ -201,11 +201,6 @@ export function EventCard({
                               {outcome.allOdds!.length} books
                             </span>
                           )}
-                          {hasBetterOdds && outcome.novigOdds && (
-                            <span className="text-xs text-muted-foreground line-through">
-                              Novig: {outcome.novigOdds.toFixed(2)}
-                            </span>
-                          )}
                         </div>
                       </button>
                     );
