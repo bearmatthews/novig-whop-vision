@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Share2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+
+interface Channel {
+  id: string;
+  name: string;
+  type: string;
+}
 
 interface ShareBetDialogProps {
   open: boolean;
@@ -25,10 +31,45 @@ export function ShareBetDialog({
   outcomeName,
   odds,
 }: ShareBetDialogProps) {
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [channelId, setChannelId] = useState('');
   const [customMessage, setCustomMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingChannels, setLoadingChannels] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      fetchChannels();
+    }
+  }, [open]);
+
+  const fetchChannels = async () => {
+    setLoadingChannels(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('whop-list-channels', {
+        method: 'POST',
+      });
+
+      if (error) throw error;
+
+      if (data?.channels) {
+        setChannels(data.channels);
+        if (data.channels.length === 1) {
+          setChannelId(data.channels[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch channels:', error);
+      toast({
+        title: 'Failed to load channels',
+        description: 'Could not fetch your available chat channels',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingChannels(false);
+    }
+  };
 
   const generateDefaultMessage = () => {
     let message = `🎯 **Check out this bet!**\n\n`;
@@ -97,16 +138,34 @@ export function ShareBetDialog({
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="channel-id">Channel ID</Label>
-            <Input
-              id="channel-id"
-              placeholder="exp_xxxxxxxxxxxxx or channel_xxxxxxxxxxxxx"
-              value={channelId}
-              onChange={(e) => setChannelId(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter the Whop channel or experience ID where you want to share this bet
-            </p>
+            <Label htmlFor="channel-select">Select Channel</Label>
+            {loadingChannels ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : channels.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center py-8">
+                No accessible channels found. Make sure you have memberships with chat access.
+              </div>
+            ) : (
+              <>
+                <Select value={channelId} onValueChange={setChannelId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a channel..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {channels.map((channel) => (
+                      <SelectItem key={channel.id} value={channel.id}>
+                        {channel.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Select the chat where you want to share this bet
+                </p>
+              </>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -135,7 +194,7 @@ export function ShareBetDialog({
           </Button>
           <Button
             onClick={handleShare}
-            disabled={loading || !channelId.trim()}
+            disabled={loading || !channelId.trim() || loadingChannels}
           >
             {loading ? (
               <>
