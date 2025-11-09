@@ -17,7 +17,6 @@ import { GET_ALL_EVENTS_QUERY, GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
 import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -44,21 +43,6 @@ const Index = () => {
       if (response.errors) {
         throw new Error(response.errors[0].message);
       }
-      
-      // Enhance with odds comparison
-      try {
-        const oddsResponse = await supabase.functions.invoke('polymarket-odds', {
-          body: { novigEvents: response.data.event }
-        });
-        
-        if (oddsResponse.data?.events) {
-          console.log(`Enhanced ${oddsResponse.data.events.length} events with sportsbook odds`);
-          return { event: oddsResponse.data.events };
-        }
-      } catch (oddsError) {
-        console.error('Failed to fetch sportsbook odds:', oddsError);
-      }
-      
       return response.data;
     },
     refetchInterval: 30000 // Poll every 30 seconds
@@ -120,23 +104,7 @@ const Index = () => {
       if (response.errors) {
         throw new Error(response.errors[0].message);
       }
-      const detail = response.data?.event?.[0];
-      if (!detail) return null;
-
-      // Enhance the selected event with sportsbook odds
-      try {
-        const { data: oddsData, error } = await supabase.functions.invoke('polymarket-odds', {
-          body: { novigEvents: [detail] }
-        });
-        if (error) throw error;
-        if (oddsData?.events?.[0]) {
-          return oddsData.events[0];
-        }
-      } catch (err) {
-        console.error('Failed to enhance event with sportsbook odds:', err);
-      }
-
-      return detail;
+      return response.data?.event?.[0];
     },
     enabled: !!selectedEvent?.id
   });
@@ -225,21 +193,6 @@ const Index = () => {
                   Pre-Game <span className="ml-1.5 text-xs">({pregameEvents.length})</span>
                 </TabsTrigger>
               </TabsList>
-
-              {/* Odds Comparison Info */}
-              {data?.event?.some((e: any) => e.oddsComparison?.bookmakers?.length > 0) && (
-                <div className="mt-4 mb-6 p-4 bg-success/10 border border-success/20 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="bg-success text-success-foreground">
-                      Best Odds
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      Comparing odds across DraftKings, FanDuel, BetMGM, and more •{' '}
-                      {data.event.filter((e: any) => e.oddsComparison?.bookmakers?.length > 0).length} games with multiple sportsbooks
-                    </span>
-                  </div>
-                </div>
-              )}
 
               <TabsContent value="all" className="mt-6">
                 <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">

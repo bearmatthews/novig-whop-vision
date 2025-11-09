@@ -5,7 +5,6 @@ import { getEventLogos } from "@/lib/team-logos";
 import { Clock, ChevronRight, DollarSign } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
 interface Event {
   id: string;
   description: string;
@@ -26,14 +25,6 @@ interface Outcome {
   description: string;
   last?: number;
   available?: number;
-  bestOdds?: number;
-  bestSource?: string;
-  novigOdds?: number;
-  allOdds?: Array<{
-    source: string;
-    odds: number;
-    americanOdds?: number;
-  }>;
 }
 interface EventCardProps {
   event: Event;
@@ -171,69 +162,23 @@ export function EventCard({
                   {market.description}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {market.outcomes.filter(o => o.available || o.last).map(outcome => {
-                    const hasBetterOdds = outcome.bestSource && outcome.bestSource !== 'Novig';
-                    const hasMultipleSources = outcome.allOdds && outcome.allOdds.length > 1;
-                    return (
-                      <button 
-                        key={outcome.id} 
-                        className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer relative"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const bestSource = outcome.bestSource;
-                          
-                          if (bestSource && bestSource !== 'Novig') {
-                            // Open specific sportsbook
-                            let sportsbookUrl = '';
-                            const sportsbookName = bestSource.toLowerCase();
-                            
-                            if (sportsbookName.includes('draftkings')) {
-                              sportsbookUrl = 'https://sportsbook.draftkings.com/';
-                            } else if (sportsbookName.includes('fanduel')) {
-                              sportsbookUrl = 'https://sportsbook.fanduel.com/';
-                            } else if (sportsbookName.includes('betmgm')) {
-                              sportsbookUrl = 'https://sports.betmgm.com/';
-                            } else if (sportsbookName.includes('caesars')) {
-                              sportsbookUrl = 'https://sportsbook.caesars.com/';
-                            } else if (sportsbookName.includes('pointsbet')) {
-                              sportsbookUrl = 'https://pointsbet.com/';
-                            }
-                            
-                            if (sportsbookUrl) {
-                              window.open(sportsbookUrl, '_blank');
-                              toast.success(`Opening ${bestSource}...`, {
-                                description: 'Navigate to the game manually'
-                              });
-                            }
-                          } else {
-                            // Open Novig
-                            onOutcomeClick?.(outcome.id);
-                          }
-                        }}
-                      >
-                        {hasBetterOdds && (
-                          <div className="absolute -top-2 -right-2 z-10">
-                            <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-success">
-                              {outcome.bestSource}
-                            </Badge>
-                          </div>
-                        )}
-                        <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
-                          {outcome.description}
-                        </span>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-lg font-black text-success font-mono">
-                            {(outcome.bestOdds || outcome.available || outcome.last || 0).toFixed(2)}
-                          </span>
-                          {hasMultipleSources && (
-                            <span className="text-xs text-muted-foreground">
-                              {outcome.allOdds!.length} books
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
+                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button 
+                      key={outcome.id} 
+                      className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOutcomeClick?.(outcome.id);
+                      }}
+                    >
+                      <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
+                        {outcome.description}
+                      </span>
+                      {outcome.available ? <span className="text-lg font-black text-success font-mono">
+                          {outcome.available.toFixed(2)}
+                        </span> : outcome.last ? <span className="text-lg font-black text-warning font-mono">
+                          {outcome.last.toFixed(2)}
+                        </span> : null}
+                    </button>)}
                 </div>
               </div>)}
           </div>
