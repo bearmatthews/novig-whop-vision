@@ -67,13 +67,10 @@ export function MarketTable({
   const handleOutcomeClick = (outcomeId: string) => {
     if (!eventId) return;
     
-    // Open Novig with the specific outcome autofilled
-    const novigUrl = `https://app.novig.us/autofill/${outcomeId}?event_id=${eventId}`;
-    console.log('Opening Novig URL:', novigUrl);
-    console.log('Outcome ID:', outcomeId);
-    console.log('Event ID:', eventId);
+    // Open Novig with the event markets
+    const novigUrl = `https://app.novig.us/event-markets/${eventId}`;
     window.open(novigUrl, '_blank');
-    toast.success("Opening bet in Novig...");
+    toast.success("Opening in Novig...");
   };
   // Filter to only show markets with at least one outcome that has a price
   const marketsWithPrices = markets.filter((market) =>
