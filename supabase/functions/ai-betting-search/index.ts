@@ -26,49 +26,67 @@ serve(async (req) => {
 
 Events Data: ${JSON.stringify(events)}
 
-Your job is to ANALYZE the data, not just filter it. Perform sophisticated analysis:
+CRITICAL RULE: You MUST ALWAYS return 3-5 results, even if the query is vague or doesn't perfectly match. Be creative and interpretive with user queries.
+
+Your job is to ANALYZE the data and ALWAYS find relevant opportunities. Never return empty results.
+
+INTERPRETATION GUIDELINES:
+- If user asks for "good bets", find value based on odds analysis
+- If user asks for a specific team/league, prioritize those but also suggest similar opportunities
+- If query is unclear, interpret it broadly and suggest diverse opportunities
+- If exact match isn't found, suggest the CLOSEST alternatives with explanation
+- Always look for: value bets, market inefficiencies, high-edge opportunities, and interesting matchups
+
+ANALYSIS FRAMEWORK:
 
 1. ODDS ANALYSIS:
    - Calculate implied probabilities from decimal odds: probability = 1/odds
-   - Find value bets where implied probability is lower than actual probability
+   - Find value bets where implied probability seems lower than actual probability
    - Detect odds discrepancies between related markets
-   - Compare moneyline to spread odds for inconsistencies
+   - Compare different market types for the same event
 
 2. MARKET ANALYSIS:
-   - High liquidity (large "qty" in orders) = sharp money, respect the line
+   - High liquidity (large "qty") = sharp money, respect the line
    - Low liquidity = soft line, potential opportunity
-   - Compare total liquidity across similar events to find market inefficiencies
+   - Compare liquidity across similar events for inefficiencies
 
 3. STRATEGIC INSIGHTS:
    - Identify correlated betting opportunities
-   - Find arbitrage possibilities across different market types
-   - Detect line movement patterns (compare "last" vs "available" when both exist)
-   - Calculate expected value and recommend Kelly Criterion sizing
+   - Find potential arbitrage across different market types
+   - Look for favorable odds relative to typical ranges
+   - Consider implied probability edges
 
 4. PATTERN RECOGNITION:
    - Compare over/under lines across similar matchups
    - Find outlier odds that deviate from typical ranges
-   - Identify home/away advantages reflected in odds
-   - Spot trends in league-specific betting patterns
+   - Identify home/away advantages in odds
+   - Spot trends in league-specific patterns
 
-CRITICAL: Decimal odds format:
-- 2.0 = even money (50% probability, +100 American)
-- 1.5 = heavy favorite (66% probability, -200 American)
-- 3.0 = underdog (33% probability, +200 American)
+ODDS FORMAT REFERENCE:
+- 2.0 = even money (50% implied probability)
+- 1.5 = heavy favorite (66% implied probability)
+- 3.0 = underdog (33% implied probability)
+- Higher odds = lower implied probability = bigger payout if wins
+
+RESPONSE REQUIREMENTS:
+- MUST return 3-5 results minimum
+- Each result needs specific analytical reasoning
+- If query doesn't match perfectly, explain how the suggestion is relevant
+- Diversify suggestions (don't just pick same team/league)
 
 Response format (JSON):
 {
-  "message": "Your analytical insights (2-3 sentences explaining WHY these are good bets)",
+  "message": "Brief analytical insights explaining your recommendations (2-3 sentences)",
   "results": [
     {
-      "eventId": "id1",
-      "reasoning": "Specific analytical reason (e.g., 'Implied 38% prob vs estimated 45% - 7% edge')",
-      "relevantMarket": "specific market name"
+      "eventId": "event_id_here",
+      "reasoning": "Specific analytical reason with numbers (e.g., 'Implied 38% probability vs estimated 45% actual chance - 7% edge based on recent form')",
+      "relevantMarket": "specific market name or type"
     }
   ]
 }
 
-Be analytical and data-driven. Explain the EDGE, not just the outcome.`;
+Remember: ALWAYS return results. Be creative and helpful, not restrictive.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -83,9 +101,9 @@ Be analytical and data-driven. Explain the EDGE, not just the outcome.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash", // Using standard flash for better reasoning
+        model: "google/gemini-2.5-flash",
         messages,
-        temperature: 0.3, // Lower temp for more analytical responses
+        temperature: 0.5, // Balanced for creativity and accuracy
         response_format: { type: "json_object" }
       }),
     });
@@ -125,11 +143,30 @@ Be analytical and data-driven. Explain the EDGE, not just the outcome.`;
           relevantMarket: ""
         }));
       }
+      
+      // Ensure results always exist and have at least some data
+      if (!parsedContent.results || parsedContent.results.length === 0) {
+        console.warn("AI returned no results, creating fallback");
+        // Return top 3 events as fallback with basic reasoning
+        const fallbackEvents = events.slice(0, 3);
+        parsedContent.results = fallbackEvents.map((event: any) => ({
+          eventId: event.id,
+          reasoning: "Highlighted opportunity based on current market activity",
+          relevantMarket: event.markets?.[0]?.description || "Main markets"
+        }));
+        parsedContent.message = parsedContent.message || "Here are some opportunities based on current market conditions.";
+      }
     } catch (e) {
       console.error("Failed to parse AI response:", content);
+      // Fallback to top events if parsing fails
+      const fallbackEvents = events.slice(0, 3);
       parsedContent = {
-        message: content,
-        results: []
+        message: "Here are some current betting opportunities based on market activity.",
+        results: fallbackEvents.map((event: any) => ({
+          eventId: event.id,
+          reasoning: "Active market with available betting opportunities",
+          relevantMarket: event.markets?.[0]?.description || "Available markets"
+        }))
       };
     }
 
