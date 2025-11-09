@@ -34,11 +34,11 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const verifyWhopToken = async () => {
+    const authenticateUser = async () => {
       try {
         const isInIframe = window.self !== window.top;
         
-        // For development/preview: Use mock user
+        // For development/preview outside Whop: Use mock user
         if (!isInIframe) {
           console.log('Not in iframe: Using mock Whop user');
           setUser({
@@ -51,45 +51,33 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // When in Whop iframe: Try to get token from URL params or postMessage
-        console.log('In Whop iframe: Attempting to authenticate...');
+        console.log('In Whop iframe: Attempting authentication...');
         
-        // Check if Whop passed token via URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const tokenFromUrl = urlParams.get('token');
-        
-        if (tokenFromUrl) {
-          console.log('Found token in URL parameters');
-          // Call edge function with the token
-          const { data, error: fnError } = await supabase.functions.invoke('whop-auth', {
-            method: 'POST',
-            headers: {
-              'x-whop-user-token': tokenFromUrl,
-            },
-          });
+        // Call the edge function directly - Whop should inject the header
+        // when the app is properly configured in Whop dashboard
+        const { data, error: authError } = await supabase.functions.invoke('whop-auth', {
+          method: 'POST',
+        });
 
-          if (fnError) {
-            console.error('Whop auth error:', fnError);
-            setError(fnError.message);
-          } else if (data?.user) {
-            console.log('Whop user authenticated via URL token:', data.user);
-            setUser(data.user);
-          } else {
-            console.log('No Whop user data returned');
-          }
+        if (authError) {
+          console.error('Authentication error:', authError);
+          setError(authError.message);
+        } else if (data?.user) {
+          console.log('User authenticated:', data.user);
+          setUser(data.user);
         } else {
-          console.log('No token found - Whop app may need additional configuration');
-          setError('Unable to authenticate: No Whop token found');
+          console.log('No user data received');
+          setError('Authentication incomplete - check Whop app configuration');
         }
       } catch (err) {
-        console.error('Error verifying Whop token:', err);
+        console.error('Authentication exception:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
       } finally {
         setLoading(false);
       }
     };
 
-    verifyWhopToken();
+    authenticateUser();
   }, []);
 
   return (
