@@ -69,6 +69,9 @@ export function MarketTable({
     
     // Open Novig with the specific outcome autofilled
     const novigUrl = `https://app.novig.us/autofill/${outcomeId}?event_id=${eventId}`;
+    console.log('Opening Novig URL:', novigUrl);
+    console.log('Outcome ID:', outcomeId);
+    console.log('Event ID:', eventId);
     window.open(novigUrl, '_blank');
     toast.success("Opening bet in Novig...");
   };
