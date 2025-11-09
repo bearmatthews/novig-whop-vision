@@ -234,7 +234,7 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       {/* Backdrop with blur */}
       <div 
         className="absolute inset-0 bg-background/95 backdrop-blur-2xl"
@@ -242,68 +242,68 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
       />
 
       {/* Main Content */}
-      <div className="relative w-full max-w-5xl max-h-[95vh] sm:max-h-[92vh] flex flex-col animate-scale-in">
+      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col animate-scale-in">
         {!hasSearched ? (
           <Card className="glass-effect border-0 shadow-2xl">
-            <CardContent className="p-4 sm:p-8 md:p-12">
-              <div className="flex items-center justify-between mb-6 sm:mb-8">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <div className="p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-foreground/5 to-foreground/10">
-                    <Bot className="w-5 h-5 sm:w-7 sm:h-7" />
+            <CardContent className="p-12">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-foreground/5 to-foreground/10">
+                    <Bot className="w-7 h-7" />
                   </div>
                   <div>
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-0 sm:mb-1">AI Betting Assistant</h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Ask me anything about betting opportunities</p>
+                    <h2 className="text-3xl font-semibold mb-1">AI Betting Assistant</h2>
+                    <p className="text-muted-foreground">Ask me anything about betting opportunities</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full flex-shrink-0">
-                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
 
               {/* Search Input */}
-              <div className="mb-6 sm:mb-10">
-                <div className="flex gap-2 sm:gap-3">
+              <div className="mb-10">
+                <div className="flex gap-3">
                   <Input
                     ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="What are you looking for?"
+                    placeholder="What betting opportunities are you looking for?"
                     disabled={isLoading}
-                    className="flex-1 h-12 sm:h-14 md:h-16 text-sm sm:text-base md:text-lg border-2 rounded-xl sm:rounded-2xl px-4 sm:px-6 focus-visible:ring-2 focus-visible:ring-foreground/20 transition-all"
+                    className="flex-1 h-16 text-lg border-2 rounded-2xl px-6 focus-visible:ring-2 focus-visible:ring-foreground/20 transition-all"
                   />
                   <Button
                     onClick={() => handleSearch(input)}
                     disabled={isLoading || !input.trim()}
                     size="lg"
-                    className="px-4 sm:px-6 md:px-8 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all flex-shrink-0"
+                    className="px-8 h-16 rounded-2xl shadow-lg hover:shadow-xl transition-all"
                   >
                     {isLoading ? (
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Send className="w-5 h-5" />
                     )}
                   </Button>
                 </div>
               </div>
 
               {/* Example Questions */}
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="text-xs sm:text-sm font-medium">Try these examples</span>
+                  <Sparkles className="w-4 h-4" />
+                  <span className="text-sm font-medium">Try these examples</span>
                 </div>
-                <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {exampleQuestions.map((question, index) => (
                     <Button
                       key={index}
                       variant="outline"
-                      className="justify-between h-auto py-3 sm:py-4 px-3 sm:px-5 text-left border-2 hover:border-foreground hover:bg-foreground/5 rounded-lg sm:rounded-xl transition-all group"
+                      className="justify-between h-auto py-4 px-5 text-left border-2 hover:border-foreground hover:bg-foreground/5 rounded-xl transition-all group"
                       onClick={() => handleSearch(question)}
                     >
-                      <span className="text-xs sm:text-sm font-medium line-clamp-2">{question}</span>
-                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all flex-shrink-0" />
+                      <span className="text-sm font-medium">{question}</span>
+                      <ArrowRight className="w-4 h-4 ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     </Button>
                   ))}
                 </div>
@@ -311,40 +311,40 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
             </CardContent>
           </Card>
         ) : (
-          <Card className="glass-effect border-0 shadow-2xl flex flex-col h-[95vh] sm:h-[88vh]">
+          <Card className="glass-effect border-0 shadow-2xl flex flex-col h-[88vh]">
             {/* Header with Query */}
-            <div className="p-4 sm:p-6 md:p-8 border-b border-border/50">
-              <div className="flex items-start justify-between gap-2 sm:gap-4">
-                <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
+            <div className="p-8 border-b border-border/50">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Bot className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="text-xs sm:text-sm font-medium">Your question</span>
+                    <Bot className="w-4 h-4" />
+                    <span className="text-sm font-medium">Your question</span>
                   </div>
-                  <h3 className="text-base sm:text-xl md:text-2xl font-semibold text-balance line-clamp-3">{currentQuery}</h3>
+                  <h3 className="text-2xl font-semibold text-balance">{currentQuery}</h3>
                   {messages[messages.length - 1]?.role === "assistant" && (
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                    <p className="text-muted-foreground leading-relaxed">
                       {messages[messages.length - 1].content}
                     </p>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full flex-shrink-0">
-                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
             </div>
 
             {/* Recommended Events */}
-            <ScrollArea className="flex-1 p-4 sm:p-6 md:p-8" ref={scrollRef}>
+            <ScrollArea className="flex-1 p-8" ref={scrollRef}>
               {isLoading && messages.length <= 2 ? (
-                <div className="flex items-center justify-center h-64 sm:h-96">
-                  <div className="text-center space-y-3 sm:space-y-4">
-                    <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin mx-auto" />
-                    <p className="text-muted-foreground text-sm sm:text-base md:text-lg">Finding the best matches...</p>
+                <div className="flex items-center justify-center h-96">
+                  <div className="text-center space-y-4">
+                    <Loader2 className="w-10 h-10 animate-spin mx-auto" />
+                    <p className="text-muted-foreground text-lg">Finding the best matches...</p>
                   </div>
                 </div>
               ) : recommendedEvents.length > 0 ? (
-                <div className="space-y-4 sm:space-y-5">
-                  <h4 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">Recommended Matches</h4>
+                <div className="space-y-5">
+                  <h4 className="text-lg font-semibold mb-6">Recommended Matches</h4>
                   {recommendedEvents.map((result) => (
                     <div key={result.event.id} className="card-hover">
                       <EventCard
@@ -365,36 +365,36 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
                   ))}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-64 sm:h-96">
-                  <div className="text-center space-y-2 px-4">
-                    <p className="text-sm sm:text-base md:text-lg text-muted-foreground">No matches found for your query</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Try asking something different below</p>
+                <div className="flex items-center justify-center h-96">
+                  <div className="text-center space-y-2">
+                    <p className="text-lg text-muted-foreground">No matches found for your query</p>
+                    <p className="text-sm text-muted-foreground">Try asking something different below</p>
                   </div>
                 </div>
               )}
             </ScrollArea>
 
             {/* Chat Input at Bottom */}
-            <div className="p-3 sm:p-4 md:p-6 border-t border-border/50 bg-background/50">
-              <div className="flex gap-2 sm:gap-3">
+            <div className="p-6 border-t border-border/50 bg-background/50">
+              <div className="flex gap-3">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask a follow-up..."
+                  placeholder="Ask a follow-up question..."
                   disabled={isLoading}
-                  className="flex-1 h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 text-sm"
+                  className="flex-1 h-12 rounded-xl border-2"
                 />
                 <Button
                   onClick={() => handleSearch(input)}
                   disabled={isLoading || !input.trim()}
                   size="icon"
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl flex-shrink-0"
+                  className="h-12 w-12 rounded-xl"
                 >
                   {isLoading ? (
-                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Send className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <Send className="w-4 h-4" />
                   )}
                 </Button>
               </div>

@@ -109,9 +109,9 @@ const Index = () => {
   return <div className="min-h-screen bg-background">
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 glass-effect">
-        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
-          <div className="flex items-center justify-between gap-4 sm:gap-6 flex-wrap">
-            <div className="flex items-center gap-4 sm:gap-6">
+        <div className="container mx-auto px-6 py-5">
+          <div className="flex items-center justify-between gap-6 flex-wrap">
+            <div className="flex items-center gap-6">
               <WhopUserProfile />
               <div className="flex-shrink-0">
                 <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
@@ -121,14 +121,18 @@ const Index = () => {
               }} />
               </div>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
-              <div className="flex-1 sm:flex-initial sm:w-auto sm:max-w-md w-full">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="w-full sm:w-auto sm:max-w-md">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
               </div>
-              <Button variant="default" size="default" onClick={() => setShowAIChat(!showAIChat)} className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap">
+              <Button variant="default" size="default" onClick={() => setShowAIChat(!showAIChat)} className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all">
                 <Bot className="w-4 h-4" />
-                <span className="hidden sm:inline">Ask Bear</span>
+                Ask Bear
               </Button>
+              <div className="flex items-center gap-3">
+                
+                
+              </div>
             </div>
           </div>
         </div>

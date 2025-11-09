@@ -8,8 +8,8 @@ export function WhopUserProfile() {
   // Show loading state briefly
   if (loading) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-primary animate-pulse bg-secondary" />
+      <div className="flex items-center gap-2 mr-4">
+        <div className="w-10 h-10 rounded-full border-2 border-primary animate-pulse bg-secondary" />
       </div>
     );
   }
@@ -25,15 +25,15 @@ export function WhopUserProfile() {
     : 'U';
 
   return (
-    <div className="flex items-center gap-2">
-      <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-primary flex-shrink-0">
+    <div className="flex items-center gap-2 mr-4">
+      <Avatar className="w-10 h-10 border-2 border-primary">
         <AvatarImage src={user.profile_picture_url} alt={user.username || 'User'} />
-        <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs sm:text-sm">
+        <AvatarFallback className="bg-primary text-primary-foreground font-bold">
           {initials}
         </AvatarFallback>
       </Avatar>
       {user.username && (
-        <span className="text-xs sm:text-sm font-medium hidden sm:inline truncate max-w-[100px] md:max-w-[150px]">{user.username}</span>
+        <span className="text-sm font-medium hidden sm:inline">{user.username}</span>
       )}
     </div>
   );

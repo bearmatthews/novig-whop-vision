@@ -24,7 +24,7 @@ export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelecto
           className="gap-2"
         >
           <span className="text-lg">{league.icon}</span>
-          <span className="hidden sm:inline">{league.name}</span>
+          {league.name}
         </Button>
       ))}
     </div>
