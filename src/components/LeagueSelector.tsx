@@ -15,17 +15,16 @@ export const LEAGUES = [
 
 export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelectorProps) {
   return (
-    <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+    <div className="flex gap-2 flex-wrap">
       {LEAGUES.map((league) => (
         <Button
           key={league.id}
           variant={selectedLeague === league.id ? "default" : "secondary"}
           onClick={() => onLeagueChange(league.id)}
-          size="sm"
-          className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4"
+          className="gap-2"
         >
-          <span className="text-base sm:text-lg">{league.icon}</span>
-          <span className="hidden xs:inline">{league.name}</span>
+          <span className="text-lg">{league.icon}</span>
+          <span className="hidden sm:inline">{league.name}</span>
         </Button>
       ))}
     </div>
