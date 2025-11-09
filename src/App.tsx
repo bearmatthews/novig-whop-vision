@@ -17,13 +17,17 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+<BrowserRouter>
+  <Routes>
+    <Route path="/" element={<Index />} />
+    {/* Whop app standard paths */}
+    <Route path="/experience" element={<Index />} />
+    <Route path="/dashboard" element={<Index />} />
+    <Route path="/discover" element={<Index />} />
+    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+</BrowserRouter>
         </TooltipProvider>
       </WhopAuthProvider>
     </ThemeProvider>
