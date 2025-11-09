@@ -138,78 +138,107 @@ export function MarketTable({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-1">
       {marketsWithPrices.map((market) => (
-        <Card key={market.id} className="p-4 space-y-3">
-          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+        <Card key={market.id} className="p-6 space-y-4">
+          <h3 className="font-bold text-lg text-foreground">
             {market.description}
           </h3>
           
-          <div className="grid gap-2">
+          <div className="space-y-3">
             {market.outcomes
               .filter((outcome) => outcome.available || outcome.bestOdds)
               .map((outcome) => {
-                const price = outcome.bestOdds || outcome.available || outcome.last;
-                const hasBetterOdds = outcome.bestSource && outcome.bestSource !== 'Novig';
                 const hasMultipleSources = outcome.allOdds && outcome.allOdds.length > 1;
-                const hasOrders = outcome.orders && outcome.orders.length > 0;
-                const totalLiquidity = hasOrders 
-                  ? outcome.orders.reduce((sum, order) => sum + order.qty, 0)
-                  : 0;
+                
                 return (
-                  <button
-                    key={outcome.id}
-                    ref={(el) => outcomeRefs.current[outcome.id] = el}
-                    onClick={() => handleOutcomeClick(outcome, market.description)}
-                    className="bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all hover:border-primary hover:bg-secondary/50 cursor-pointer group relative"
-                  >
-                    {hasBetterOdds && (
-                      <div className="absolute -top-2 -right-2 z-10">
-                        <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-success">
-                          {outcome.bestSource}
+                  <div key={outcome.id} className="space-y-2">
+                    <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                      <span className="font-semibold text-base">{outcome.description}</span>
+                      {hasMultipleSources && (
+                        <Badge variant="outline" className="text-xs">
+                          {outcome.allOdds!.length} books
                         </Badge>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{outcome.description}</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
-                          Available
-                        </Badge>
-                        <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
+                      )}
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground space-y-0.5">
-                        <div>
-                          Price: <span className="font-semibold text-foreground">{price?.toFixed(2)}</span>
-                        </div>
-                        {hasMultipleSources && (
-                          <div className="text-muted-foreground">
-                            {outcome.allOdds!.length} sportsbooks
+                    {hasMultipleSources ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {outcome.allOdds!.map((bookOdds, idx) => {
+                          const isBest = idx === 0; // allOdds is already sorted by best odds
+                          return (
+                            <button
+                              key={`${bookOdds.source}-${idx}`}
+                              ref={(el) => {
+                                if (isBest) {
+                                  outcomeRefs.current[outcome.id] = el;
+                                }
+                              }}
+                              onClick={() => handleOutcomeClick(outcome, market.description)}
+                              className={`relative p-3 rounded-lg border transition-all text-left ${
+                                isBest 
+                                  ? 'bg-success/10 border-success/30 hover:bg-success/20' 
+                                  : 'bg-secondary/30 border-border hover:bg-secondary/50'
+                              }`}
+                            >
+                              {isBest && (
+                                <div className="absolute -top-2 -right-2">
+                                  <Badge className="text-xs px-1.5 py-0.5 bg-success">
+                                    Best
+                                  </Badge>
+                                </div>
+                              )}
+                              
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-medium text-muted-foreground truncate">
+                                    {bookOdds.source}
+                                  </span>
+                                  <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                </div>
+                                
+                                <div className="space-y-0.5">
+                                  <div className="text-lg font-bold font-mono">
+                                    {bookOdds.americanOdds ? priceToAmericanOdds(bookOdds.odds) : bookOdds.odds.toFixed(2)}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {bookOdds.odds.toFixed(2)} decimal
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <button
+                        ref={(el) => outcomeRefs.current[outcome.id] = el}
+                        onClick={() => handleOutcomeClick(outcome, market.description)}
+                        className="w-full p-4 rounded-lg border border-border bg-secondary/30 hover:bg-secondary/50 transition-all text-left"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-muted-foreground">Novig</span>
+                              <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                                Available
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Price: <span className="font-semibold text-foreground">{outcome.available?.toFixed(2)}</span>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="text-lg font-bold font-mono group-hover:text-primary transition-colors">
-                        {price ? priceToAmericanOdds(price) : '-'}
-                      </div>
-                    </div>
-
-                    {showLiquidity && hasOrders && (
-                      <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
-                        <div className="flex items-center gap-1 text-success">
-                          <DollarSign className="w-3 h-3" />
-                          {formatCurrency(totalLiquidity)}
+                          
+                          <div className="flex items-center gap-3">
+                            <div className="text-2xl font-bold font-mono">
+                              {outcome.available ? priceToAmericanOdds(outcome.available) : '-'}
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <TrendingUp className="w-3 h-3" />
-                          {outcome.orders.length} orders
-                        </div>
-                      </div>
+                      </button>
                     )}
-                  </button>
+                  </div>
                 );
               })}
           </div>
