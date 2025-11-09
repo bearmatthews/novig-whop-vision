@@ -235,8 +235,172 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
     }
   };
 
+  if (isMobile) {
+    // Mobile: Console below header
+    return (
+      <div className="fixed top-[57px] left-0 right-0 bottom-0 z-40 bg-background animate-slide-in-right flex flex-col">
+        {!hasSearched ? (
+          <div className="flex flex-col h-full p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-foreground/5 to-foreground/10">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <h2 className="text-lg font-semibold">AI Search</h2>
+              </div>
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Search Input */}
+            <div className="mb-4">
+              <div className="flex gap-2">
+                <Input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask about betting opportunities..."
+                  disabled={isLoading}
+                  className="flex-1 h-10 text-sm border-2 rounded-lg px-3"
+                />
+                <Button
+                  onClick={() => handleSearch(input)}
+                  disabled={isLoading || !input.trim()}
+                  size="default"
+                  className="h-10 px-4 rounded-lg"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Example Questions */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Sparkles className="w-3 h-3" />
+                  <span className="text-xs font-medium">Try these examples</span>
+                </div>
+                <div className="grid gap-2">
+                  {exampleQuestions.map((question, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="justify-start h-auto py-2.5 px-3 text-xs text-left border-2 hover:border-foreground hover:bg-foreground/5 rounded-lg transition-all"
+                      onClick={() => handleSearch(question)}
+                    >
+                      {question}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="p-4 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Bot className="w-3 h-3" />
+                    <span className="text-xs font-medium">Your question</span>
+                  </div>
+                  <h3 className="text-sm font-semibold">{currentQuery}</h3>
+                </div>
+                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full shrink-0">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Results */}
+            <ScrollArea className="flex-1 p-3" ref={scrollRef}>
+              {isLoading && messages.length <= 2 ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center space-y-3">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto" />
+                    <p className="text-muted-foreground text-sm">Finding matches...</p>
+                  </div>
+                </div>
+              ) : recommendedEvents.length > 0 ? (
+                <div className="space-y-3">
+                  {messages[messages.length - 1]?.role === "assistant" && (
+                    <div className="p-3 rounded-lg bg-muted/30 mb-3">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {messages[messages.length - 1].content}
+                      </p>
+                    </div>
+                  )}
+                  {recommendedEvents.map((result) => (
+                    <div key={result.event.id}>
+                      <EventCard
+                        event={result.event}
+                        onClick={() => {
+                          onEventSelect(result.event);
+                          onClose();
+                        }}
+                        onOutcomeClick={(outcomeId) => {
+                          onEventSelect(result.event, outcomeId);
+                          onClose();
+                        }}
+                        showMarkets={true}
+                        aiReasoning={result.reasoning}
+                        relevantMarket={result.relevantMarket}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center space-y-2">
+                    <p className="text-base text-muted-foreground">No matches found</p>
+                    <p className="text-xs text-muted-foreground">Try a different question</p>
+                  </div>
+                </div>
+              )}
+            </ScrollArea>
+
+            {/* Input at Bottom */}
+            <div className="p-3 border-t border-border/50 bg-background/95 backdrop-blur-sm">
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask a follow-up..."
+                  disabled={isLoading}
+                  className="flex-1 h-10 text-sm rounded-lg border-2"
+                />
+                <Button
+                  onClick={() => handleSearch(input)}
+                  disabled={isLoading || !input.trim()}
+                  size="icon"
+                  className="h-10 w-10 rounded-lg"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Send className="w-3 h-3" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop: Full overlay
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       {/* Backdrop with blur */}
       <div 
         className="absolute inset-0 bg-background/95 backdrop-blur-2xl"
@@ -244,68 +408,68 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
       />
 
       {/* Main Content */}
-      <div className={`relative w-full ${isMobile ? 'max-w-full h-full' : 'max-w-5xl max-h-[92vh]'} flex flex-col animate-scale-in`}>
+      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col animate-scale-in">
         {!hasSearched ? (
           <Card className="glass-effect border-0 shadow-2xl">
-            <CardContent className={isMobile ? "p-4" : "p-12"}>
-              <div className={`flex items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'}`}>
-                <div className="flex items-center gap-3 md:gap-4">
-                  <div className={`${isMobile ? 'p-2' : 'p-4'} rounded-2xl bg-gradient-to-br from-foreground/5 to-foreground/10`}>
-                    <Bot className={isMobile ? "w-5 h-5" : "w-7 h-7"} />
+            <CardContent className="p-12">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-foreground/5 to-foreground/10">
+                    <Bot className="w-7 h-7" />
                   </div>
                   <div>
-                    <h2 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-semibold mb-1`}>AI Betting Assistant</h2>
-                    <p className={`text-muted-foreground ${isMobile ? 'text-xs' : ''}`}>Ask me anything about betting opportunities</p>
+                    <h2 className="text-3xl font-semibold mb-1">AI Betting Assistant</h2>
+                    <p className="text-muted-foreground">Ask me anything about betting opportunities</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
-                  <X className={isMobile ? "w-4 h-4" : "w-5 h-5"} />
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
 
               {/* Search Input */}
-              <div className={isMobile ? "mb-6" : "mb-10"}>
-                <div className="flex gap-2 md:gap-3">
+              <div className="mb-10">
+                <div className="flex gap-3">
                   <Input
                     ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={isMobile ? "What are you looking for?" : "What betting opportunities are you looking for?"}
+                    placeholder="What betting opportunities are you looking for?"
                     disabled={isLoading}
-                    className={`flex-1 ${isMobile ? 'h-11 text-sm' : 'h-16 text-lg'} border-2 rounded-2xl ${isMobile ? 'px-3' : 'px-6'} focus-visible:ring-2 focus-visible:ring-foreground/20 transition-all`}
+                    className="flex-1 h-16 text-lg border-2 rounded-2xl px-6 focus-visible:ring-2 focus-visible:ring-foreground/20 transition-all"
                   />
                   <Button
                     onClick={() => handleSearch(input)}
                     disabled={isLoading || !input.trim()}
-                    size={isMobile ? "default" : "lg"}
-                    className={`${isMobile ? 'px-4 h-11' : 'px-8 h-16'} rounded-2xl shadow-lg hover:shadow-xl transition-all`}
+                    size="lg"
+                    className="px-8 h-16 rounded-2xl shadow-lg hover:shadow-xl transition-all"
                   >
                     {isLoading ? (
-                      <Loader2 className={isMobile ? "w-4 h-4 animate-spin" : "w-5 h-5 animate-spin"} />
+                      <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      <Send className={isMobile ? "w-4 h-4" : "w-5 h-5"} />
+                      <Send className="w-5 h-5" />
                     )}
                   </Button>
                 </div>
               </div>
 
               {/* Example Questions */}
-              <div className="space-y-3 md:space-y-4">
+              <div className="space-y-4">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Sparkles className={isMobile ? "w-3 h-3" : "w-4 h-4"} />
-                  <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Try these examples</span>
+                  <Sparkles className="w-4 h-4" />
+                  <span className="text-sm font-medium">Try these examples</span>
                 </div>
-                <div className="grid gap-2 md:gap-3 grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-3 md:grid-cols-2">
                   {exampleQuestions.map((question, index) => (
                     <Button
                       key={index}
                       variant="outline"
-                      className={`justify-between h-auto ${isMobile ? 'py-2.5 px-3 text-xs' : 'py-4 px-5 text-sm'} text-left border-2 hover:border-foreground hover:bg-foreground/5 rounded-xl transition-all group`}
+                      className="justify-between h-auto py-4 px-5 text-sm text-left border-2 hover:border-foreground hover:bg-foreground/5 rounded-xl transition-all group"
                       onClick={() => handleSearch(question)}
                     >
                       <span className="font-medium">{question}</span>
-                      <ArrowRight className={`${isMobile ? 'w-3 h-3 ml-1' : 'w-4 h-4 ml-2'} opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all`} />
+                      <ArrowRight className="w-4 h-4 ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     </Button>
                   ))}
                 </div>
@@ -313,40 +477,40 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
             </CardContent>
           </Card>
         ) : (
-          <Card className={`glass-effect border-0 shadow-2xl flex flex-col ${isMobile ? 'h-full' : 'h-[88vh]'}`}>
+          <Card className="glass-effect border-0 shadow-2xl flex flex-col h-[88vh]">
             {/* Header with Query */}
-            <div className={isMobile ? "p-4 border-b border-border/50" : "p-8 border-b border-border/50"}>
-              <div className="flex items-start justify-between gap-3 md:gap-4">
-                <div className="flex-1 space-y-2 md:space-y-3">
+            <div className="p-8 border-b border-border/50">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Bot className={isMobile ? "w-3 h-3" : "w-4 h-4"} />
-                    <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Your question</span>
+                    <Bot className="w-4 h-4" />
+                    <span className="text-sm font-medium">Your question</span>
                   </div>
-                  <h3 className={`${isMobile ? 'text-base' : 'text-2xl'} font-semibold text-balance`}>{currentQuery}</h3>
+                  <h3 className="text-2xl font-semibold text-balance">{currentQuery}</h3>
                   {messages[messages.length - 1]?.role === "assistant" && (
-                    <p className={`text-muted-foreground leading-relaxed ${isMobile ? 'text-xs' : ''}`}>
+                    <p className="text-muted-foreground leading-relaxed">
                       {messages[messages.length - 1].content}
                     </p>
                   )}
                 </div>
                 <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
-                  <X className={isMobile ? "w-4 h-4" : "w-5 h-5"} />
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
             </div>
 
             {/* Recommended Events */}
-            <ScrollArea className={`flex-1 ${isMobile ? 'p-3' : 'p-8'}`} ref={scrollRef}>
+            <ScrollArea className="flex-1 p-8" ref={scrollRef}>
               {isLoading && messages.length <= 2 ? (
-                <div className={`flex items-center justify-center ${isMobile ? 'h-64' : 'h-96'}`}>
-                  <div className="text-center space-y-3 md:space-y-4">
-                    <Loader2 className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} animate-spin mx-auto`} />
-                    <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-lg'}`}>Finding the best matches...</p>
+                <div className="flex items-center justify-center h-96">
+                  <div className="text-center space-y-4">
+                    <Loader2 className="w-10 h-10 animate-spin mx-auto" />
+                    <p className="text-muted-foreground text-lg">Finding the best matches...</p>
                   </div>
                 </div>
               ) : recommendedEvents.length > 0 ? (
-                <div className="space-y-3 md:space-y-5">
-                  <h4 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold ${isMobile ? 'mb-3' : 'mb-6'}`}>Recommended Matches</h4>
+                <div className="space-y-5">
+                  <h4 className="text-lg font-semibold mb-6">Recommended Matches</h4>
                   {recommendedEvents.map((result) => (
                     <div key={result.event.id} className="card-hover">
                       <EventCard
@@ -367,36 +531,36 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
                   ))}
                 </div>
               ) : (
-                <div className={`flex items-center justify-center ${isMobile ? 'h-64' : 'h-96'}`}>
+                <div className="flex items-center justify-center h-96">
                   <div className="text-center space-y-2">
-                    <p className={`${isMobile ? 'text-base' : 'text-lg'} text-muted-foreground`}>No matches found for your query</p>
-                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>Try asking something different below</p>
+                    <p className="text-lg text-muted-foreground">No matches found for your query</p>
+                    <p className="text-sm text-muted-foreground">Try asking something different below</p>
                   </div>
                 </div>
               )}
             </ScrollArea>
 
             {/* Chat Input at Bottom */}
-            <div className={`${isMobile ? 'p-3' : 'p-6'} border-t border-border/50 bg-background/50`}>
-              <div className="flex gap-2 md:gap-3">
+            <div className="p-6 border-t border-border/50 bg-background/50">
+              <div className="flex gap-3">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder={isMobile ? "Ask a follow-up..." : "Ask a follow-up question..."}
+                  placeholder="Ask a follow-up question..."
                   disabled={isLoading}
-                  className={`flex-1 ${isMobile ? 'h-10 text-sm' : 'h-12'} rounded-xl border-2`}
+                  className="flex-1 h-12 rounded-xl border-2"
                 />
                 <Button
                   onClick={() => handleSearch(input)}
                   disabled={isLoading || !input.trim()}
                   size="icon"
-                  className={`${isMobile ? 'h-10 w-10' : 'h-12 w-12'} rounded-xl`}
+                  className="h-12 w-12 rounded-xl"
                 >
                   {isLoading ? (
-                    <Loader2 className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} animate-spin`} />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Send className={isMobile ? "w-3 h-3" : "w-4 h-4"} />
+                    <Send className="w-4 h-4" />
                   )}
                 </Button>
               </div>

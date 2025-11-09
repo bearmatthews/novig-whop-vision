@@ -167,7 +167,7 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 relative">
         <div className="space-y-6">
           {isLoading && !data && <EmptyState icon={RefreshCw} title="Loading betting data" description="Fetching live markets from Novig..." />}
 
