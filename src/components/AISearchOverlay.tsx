@@ -59,25 +59,79 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
 
   const generateExampleQuestions = (events: any[]): string[] => {
     const questions: string[] = [];
+    
+    if (events.length === 0) return questions;
+    
     const leagues = [...new Set(events.map(e => e.game.league))];
+    const liveGames = events.filter(e => e.status === 'OPEN_INGAME');
     
-    // Only suggest questions if we have relevant data
-    if (leagues.includes('NBA') && events.some(e => e.game.league === 'NBA')) {
-      questions.push("Show me tonight's NBA games");
-    }
-    if (leagues.includes('NFL') && events.some(e => e.game.league === 'NFL')) {
-      questions.push("What NFL games are coming up?");
-    }
-    if (leagues.includes('NHL') && events.some(e => e.game.league === 'NHL')) {
-      questions.push("Show me NHL games");
+    // Analyze odds to find interesting markets
+    const eventsWithOdds = events.filter(e => 
+      e.markets?.some((m: any) => 
+        m.outcomes?.some((o: any) => o.available)
+      )
+    );
+    
+    // Find high underdog odds (decimal odds > 2.5)
+    const hasHighUnderdogs = eventsWithOdds.some(e =>
+      e.markets?.some((m: any) =>
+        m.outcomes?.some((o: any) => o.available && o.available > 2.5)
+      )
+    );
+    
+    // Find close games (odds between 1.8-2.2 for both sides)
+    const hasCloseGames = eventsWithOdds.some(e =>
+      e.markets?.some((m: any) => {
+        const odds = m.outcomes?.filter((o: any) => o.available).map((o: any) => o.available) || [];
+        return odds.length >= 2 && odds.every((odd: number) => odd >= 1.8 && odd <= 2.2);
+      })
+    );
+    
+    // Find over/under markets
+    const hasOverUnder = eventsWithOdds.some(e =>
+      e.markets?.some((m: any) => 
+        m.description?.toLowerCase().includes('total') || 
+        m.description?.toLowerCase().includes('over/under')
+      )
+    );
+    
+    // Generate smart questions based on available data
+    if (liveGames.length > 0) {
+      questions.push(`Show me all ${liveGames.length} live games`);
     }
     
-    // Generic questions that work with any data
-    if (events.some(e => e.status === 'OPEN_INGAME')) {
-      questions.push("Show me all live games right now");
+    if (hasHighUnderdogs) {
+      const league = leagues[0];
+      questions.push(`Find ${league} underdogs with high payouts`);
     }
-    questions.push("What games are starting soon?");
-    questions.push("Show me games with high betting volume");
+    
+    if (hasCloseGames) {
+      questions.push("Show me the most competitive matchups");
+    }
+    
+    if (hasOverUnder) {
+      questions.push("What are the highest over/under totals?");
+    }
+    
+    // Add league-specific questions only if that league has games
+    leagues.slice(0, 2).forEach(league => {
+      const leagueGames = events.filter(e => e.game.league === league);
+      if (leagueGames.length > 0) {
+        questions.push(`Show me all ${league} games`);
+      }
+    });
+    
+    // Add time-based question if we have upcoming games
+    const upcomingGames = events.filter(e => {
+      const startTime = new Date(e.game.scheduled_start);
+      const now = new Date();
+      const hoursUntil = (startTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      return hoursUntil > 0 && hoursUntil <= 3;
+    });
+    
+    if (upcomingGames.length > 0) {
+      questions.push("What games start in the next 3 hours?");
+    }
     
     return questions.slice(0, 6);
   };
