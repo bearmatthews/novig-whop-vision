@@ -1,0 +1,6 @@
+name = "whop-app-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Update this to your custom domain or use the cloudflare worker URL
+# route = "your-domain.com/*"
