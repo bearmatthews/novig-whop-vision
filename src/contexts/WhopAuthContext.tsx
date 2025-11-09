@@ -53,8 +53,30 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
 
         console.log('In Whop iframe: Attempting authentication...');
         
-        // Call the edge function directly - Whop should inject the header
-        // when the app is properly configured in Whop dashboard
+        // 1) Prefer same-origin endpoint so Whop injects x-whop-user-token
+        try {
+          const res = await fetch('/whop-auth', {
+            method: 'POST',
+            credentials: 'include',
+          });
+
+          if (res.ok) {
+            const payload = await res.json().catch(() => null);
+            if (payload?.user) {
+              console.log('Whop user via same-origin endpoint');
+              setUser(payload.user);
+              setLoading(false);
+              return;
+            }
+            console.log('Same-origin /whop-auth returned no user:', payload);
+          } else {
+            console.log('Same-origin /whop-auth non-200:', res.status);
+          }
+        } catch (e) {
+          console.log('Same-origin /whop-auth failed:', e);
+        }
+
+        // 2) Fallback to Supabase edge function (header may not be present cross-origin)
         const { data, error: authError } = await supabase.functions.invoke('whop-auth', {
           method: 'POST',
         });
@@ -63,7 +85,7 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           console.error('Authentication error:', authError);
           setError(authError.message);
         } else if (data?.user) {
-          console.log('User authenticated:', data.user);
+          console.log('User authenticated via fallback:', data.user);
           setUser(data.user);
         } else {
           console.log('No user data received');
