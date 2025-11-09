@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatGameTime, calculateEventLiquidity, formatLargeCurrency } from "@/lib/betting-utils";
 import { getEventLogos } from "@/lib/team-logos";
-import { Clock, ChevronRight, DollarSign } from "lucide-react";
+import { Clock, ChevronRight, DollarSign, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ShareBetDialog } from "@/components/ShareBetDialog";
 interface Event {
   id: string;
   description: string;
@@ -43,6 +45,7 @@ export function EventCard({
   onOutcomeClick
 }: EventCardProps) {
   const isMobile = useIsMobile();
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
   const logos = getEventLogos(event);
@@ -136,6 +139,17 @@ export function EventCard({
                   <div className={`${isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'} bg-destructive-foreground rounded-full animate-pulse`} />
                   LIVE
                 </Badge>}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShareDialogOpen(true);
+                }}
+                className="h-8 w-8 p-0 hover:bg-primary/10"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
               <ChevronRight className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all`} />
             </div>
           </div>
@@ -197,5 +211,11 @@ export function EventCard({
             </div>}
         </div>
       </CardContent>
+      
+      <ShareBetDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        eventName={event.description}
+      />
     </Card>;
 }
