@@ -75,8 +75,8 @@ export function EventCard({
     }
     prevLiquidityRef.current = totalLiquidity;
   }, [totalLiquidity]);
-  return <Card className={`${onClick ? 'hover:shadow-2xl transition-all duration-300 cursor-pointer group border-2 hover:border-foreground/20' : 'border-2 border-border/50 shadow-lg'} rounded-2xl overflow-hidden`} onClick={onClick}>
-      <CardHeader className={onClick ? "pb-4" : "pb-6 pt-8"}>
+  return <Card className={`${onClick ? 'hover:shadow-xl transition-all duration-200 cursor-pointer group border border-border/50 hover:border-border' : 'border border-border/50 shadow-sm'} rounded-xl overflow-hidden bg-card`} onClick={onClick}>
+      <CardHeader className={onClick ? "pb-3 pt-4" : "pb-6 pt-8"}>
         {!onClick ? (
           // Detail view - centered layout with large logos
           <div className="flex flex-col items-center gap-6 text-center">
@@ -119,48 +119,118 @@ export function EventCard({
             </div>
           </div>
         ) : (
-          // List view - horizontal compact layout
-          <div className="flex items-center gap-2 md:gap-4">
-            {(logos.away || logos.home) && <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'} flex-shrink-0`}>
-                {logos.away && <img src={logos.away} alt="Away team" className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} object-contain`} onError={e => {
-              e.currentTarget.style.display = 'none';
-            }} />}
-                <span className={`text-muted-foreground ${isMobile ? 'text-base' : 'text-lg'} font-bold`}>@</span>
-                {logos.home && <img src={logos.home} alt="Home team" className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} object-contain`} onError={e => {
-              e.currentTarget.style.display = 'none';
-            }} />}
-              </div>}
-            
-            <div className="flex-1 min-w-0">
-              <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} font-bold leading-tight group-hover:text-primary transition-colors`}>
-                {event.description}
-              </CardTitle>
+          // List view - modern horizontal layout inspired by Polymarket
+          <div className="space-y-3">
+            {/* Top row: Time, Volume, Actions */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>{formatGameTime(event.game.scheduled_start)}</span>
+                </div>
+                {totalLiquidity > 0 && (
+                  <div className={`flex items-center gap-1.5 text-muted-foreground transition-colors ${flashClass}`}>
+                    <span>{formatLargeCurrency(totalLiquidity)} Vol.</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {activeMarkets.length > 0 && (
+                  <Badge variant="secondary" className="text-xs px-2 py-0.5 font-medium">
+                    {activeMarkets.length}
+                  </Badge>
+                )}
+                {isLive && (
+                  <Badge variant="destructive" className="gap-1 text-xs px-2 py-0.5">
+                    <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
+                    LIVE
+                  </Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShareDialogOpen(true);
+                  }}
+                  className="h-7 w-7 p-0 hover:bg-accent"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 md:gap-3">
-              {isLive && <Badge variant="destructive" className={`gap-1.5 whitespace-nowrap ${isMobile ? 'text-xs px-2 py-1' : 'text-sm px-3 py-1.5'}`}>
-                  <div className={`${isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'} bg-destructive-foreground rounded-full animate-pulse`} />
-                  LIVE
-                </Badge>}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShareDialogOpen(true);
-                }}
-                className="h-8 w-8 p-0 hover:bg-primary/10"
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
-              <ChevronRight className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all`} />
+
+            {/* Main content row: Teams on left, outcomes on right */}
+            <div className="flex items-center justify-between gap-4">
+              {/* Teams section */}
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                {logos.away && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-secondary/30 flex items-center justify-center p-1.5">
+                      <img 
+                        src={logos.away} 
+                        alt="Away team" 
+                        className="w-full h-full object-contain" 
+                        onError={e => { e.currentTarget.style.display = 'none'; }} 
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                    {event.description}
+                  </div>
+                </div>
+                {logos.home && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-secondary/30 flex items-center justify-center p-1.5">
+                      <img 
+                        src={logos.home} 
+                        alt="Home team" 
+                        className="w-full h-full object-contain" 
+                        onError={e => { e.currentTarget.style.display = 'none'; }} 
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Outcomes section - show first market's top 2 outcomes */}
+              {showMarkets && displayMarkets.length > 0 && displayMarkets[0].outcomes.filter(o => o.available || o.last).length > 0 && (
+                <div className="flex items-center gap-2 shrink-0">
+                  {displayMarkets[0].outcomes
+                    .filter(o => o.available || o.last)
+                    .slice(0, 2)
+                    .map(outcome => {
+                      const price = outcome.available || outcome.last;
+                      return (
+                        <button
+                          key={outcome.id}
+                          className="px-4 py-2.5 rounded-lg font-bold text-sm transition-all hover:scale-105 min-w-[90px] bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 text-foreground hover:shadow-md"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOutcomeClick?.(outcome.id);
+                          }}
+                        >
+                          <div className="text-xs font-medium opacity-80 mb-0.5 truncate">
+                            {outcome.description}
+                          </div>
+                          <div className="text-lg font-black">
+                            {price && formatOdds(price, format)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              )}
             </div>
           </div>
         )}
       </CardHeader>
       
       {aiReasoning && (
-        <CardContent className="pt-0 pb-3 border-b border-border/50">
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-primary/5 border border-primary/10">
+        <CardContent className="pt-0 pb-3 border-t border-border/50">
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
             <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-0 font-semibold shrink-0">
               AI Match
             </Badge>
@@ -171,29 +241,31 @@ export function EventCard({
         </CardContent>
       )}
       
-      {showMarkets && displayMarkets.length > 0 && <CardContent className="pt-0 pb-3">
+      {showMarkets && displayMarkets.length > 1 && (
+        <CardContent className="pt-0 pb-4 border-t border-border/50">
           <div className="space-y-3">
-            {displayMarkets.slice(0, 2).map(market => <div key={market.id}>
+            {displayMarkets.slice(1, 3).map(market => (
+              <div key={market.id}>
                 <div className="font-semibold text-muted-foreground mb-2 text-xs uppercase tracking-wide">
                   {market.description}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {market.outcomes.filter(o => o.available || o.last).map(outcome => {
+                  {market.outcomes.filter(o => o.available || o.last).slice(0, 2).map(outcome => {
                     const price = outcome.available || outcome.last;
                     return (
                       <button 
                         key={outcome.id} 
-                        className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
+                        className="bg-secondary/30 border border-border rounded-lg p-2.5 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           onOutcomeClick?.(outcome.id);
                         }}
                       >
-                        <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
+                        <span className="text-xs font-medium text-foreground/80 group-hover:text-primary transition-colors truncate">
                           {outcome.description}
                         </span>
                         {price && (
-                          <span className={`text-lg font-black font-mono ${outcome.available ? 'text-success' : 'text-warning'}`}>
+                          <span className={`text-base font-black font-mono ${outcome.available ? 'text-success' : 'text-warning'}`}>
                             {formatOdds(price, format)}
                           </span>
                         )}
@@ -201,23 +273,29 @@ export function EventCard({
                     );
                   })}
                 </div>
-              </div>)}
+              </div>
+            ))}
           </div>
-        </CardContent>}
+        </CardContent>
+      )}
       
-      {/* Game Info Footer */}
-      <CardContent className="pt-2.5 pb-3 border-t border-border/50">
-        <div className={`flex items-center gap-3 text-sm text-muted-foreground flex-wrap ${!onClick ? 'justify-center' : 'justify-between'}`}>
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
-            <span>{formatGameTime(event.game.scheduled_start)}</span>
+      {/* Detail view footer */}
+      {!onClick && (
+        <CardContent className="pt-2.5 pb-3 border-t border-border/50">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground justify-center">
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              <span>{formatGameTime(event.game.scheduled_start)}</span>
+            </div>
+            {totalLiquidity > 0 && (
+              <div className={`flex items-center gap-1.5 text-success font-semibold rounded-md px-2 py-1 -mx-2 -my-1 transition-colors ${flashClass}`}>
+                <DollarSign className="w-3.5 h-3.5" />
+                <span>{formatLargeCurrency(totalLiquidity)} volume</span>
+              </div>
+            )}
           </div>
-          {totalLiquidity > 0 && <div className={`flex items-center gap-1.5 text-success font-semibold rounded-md px-2 py-1 -mx-2 -my-1 transition-colors ${flashClass}`}>
-              <DollarSign className="w-3.5 h-3.5" />
-              <span>{formatLargeCurrency(totalLiquidity)} volume</span>
-            </div>}
-        </div>
-      </CardContent>
+        </CardContent>
+      )}
       
       <ShareBetDialog
         open={shareDialogOpen}
