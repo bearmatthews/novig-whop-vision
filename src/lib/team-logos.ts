@@ -789,17 +789,26 @@ export function getEventLogos(event: any): { away: string | null; home: string |
   const teams = parseTeamNames(event.description);
   if (!teams || !league) return { away: null, home: null };
   
-  // For college sports, fetch from Supabase storage cache
+  // For college sports, use ESPN CDN
   if (league === 'NCAAB' || league === 'NCAAF') {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    return {
-      away: `${supabaseUrl}/storage/v1/object/public/team-logos/${league}/${teams.away.toLowerCase().replace(/\s+/g, '-')}.png`,
-      home: `${supabaseUrl}/storage/v1/object/public/team-logos/${league}/${teams.home.toLowerCase().replace(/\s+/g, '-')}.png`,
-    };
+    const awayLogo = getTeamLogo(teams.away, league);
+    const homeLogo = getTeamLogo(teams.home, league);
+    
+    // If either logo is missing, return null for both
+    if (!awayLogo || !homeLogo) {
+      return { away: null, home: null };
+    }
+    
+    return { away: awayLogo, home: homeLogo };
   }
   
   const awayLogo = getTeamLogo(teams.away, league);
   const homeLogo = getTeamLogo(teams.home, league);
+  
+  // If either logo is missing, return null for both
+  if (!awayLogo || !homeLogo) {
+    return { away: null, home: null };
+  }
   
   return {
     away: awayLogo,
@@ -813,6 +822,13 @@ export function getEventLogos(event: any): { away: string | null; home: string |
  */
 export function getEventColors(event: any): { away: string | null; home: string | null } {
   const teams = parseTeamNames(event.description);
+  const logos = getEventLogos(event);
+  
+  // If either logo is missing, return null for both colors (use default styling)
+  if (!logos.away || !logos.home) {
+    return { away: null, home: null };
+  }
+  
   if (!teams) return { away: null, home: null };
   
   const league = event.game?.league;
