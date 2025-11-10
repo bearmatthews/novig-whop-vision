@@ -1,3 +1,139 @@
+// Team brand colors (primary color)
+const TEAM_COLORS: Record<string, Record<string, string>> = {
+  MLB: {
+    'Arizona Diamondbacks': '#A71930',
+    'Atlanta Braves': '#CE1141',
+    'Baltimore Orioles': '#DF4601',
+    'Boston Red Sox': '#BD3039',
+    'Chicago White Sox': '#27251F',
+    'Chicago Cubs': '#0E3386',
+    'Cincinnati Reds': '#C6011F',
+    'Cleveland Guardians': '#E31937',
+    'Colorado Rockies': '#33006F',
+    'Detroit Tigers': '#0C2C56',
+    'Houston Astros': '#EB6E1F',
+    'Kansas City Royals': '#004687',
+    'Los Angeles Angels': '#BA0021',
+    'Los Angeles Dodgers': '#005A9C',
+    'Miami Marlins': '#00A3E0',
+    'Milwaukee Brewers': '#12284B',
+    'Minnesota Twins': '#002B5C',
+    'New York Yankees': '#0C2340',
+    'New York Mets': '#002D72',
+    'Oakland Athletics': '#003831',
+    'Philadelphia Phillies': '#E81828',
+    'Pittsburgh Pirates': '#27251F',
+    'San Diego Padres': '#2F241D',
+    'San Francisco Giants': '#FD5A1E',
+    'Seattle Mariners': '#0C2C56',
+    'St. Louis Cardinals': '#C41E3A',
+    'Tampa Bay Rays': '#092C5C',
+    'Texas Rangers': '#003278',
+    'Toronto Blue Jays': '#134A8E',
+    'Washington Nationals': '#AB0003',
+  },
+  NBA: {
+    'Atlanta Hawks': '#E03A3E',
+    'Boston Celtics': '#007A33',
+    'Brooklyn Nets': '#000000',
+    'Charlotte Hornets': '#1D1160',
+    'Chicago Bulls': '#CE1141',
+    'Cleveland Cavaliers': '#860038',
+    'Dallas Mavericks': '#00538C',
+    'Denver Nuggets': '#0E2240',
+    'Detroit Pistons': '#C8102E',
+    'Golden State Warriors': '#1D428A',
+    'Houston Rockets': '#CE1141',
+    'Indiana Pacers': '#002D62',
+    'Los Angeles Clippers': '#C8102E',
+    'Los Angeles Lakers': '#552583',
+    'Memphis Grizzlies': '#5D76A9',
+    'Miami Heat': '#98002E',
+    'Milwaukee Bucks': '#00471B',
+    'Minnesota Timberwolves': '#0C2340',
+    'New Orleans Pelicans': '#0C2340',
+    'New York Knicks': '#006BB6',
+    'Oklahoma City Thunder': '#007AC1',
+    'Orlando Magic': '#0077C0',
+    'Philadelphia 76ers': '#006BB6',
+    'Phoenix Suns': '#1D1160',
+    'Portland Trail Blazers': '#E03A3E',
+    'Sacramento Kings': '#5A2D81',
+    'San Antonio Spurs': '#C4CED4',
+    'Toronto Raptors': '#CE1141',
+    'Utah Jazz': '#002B5C',
+    'Washington Wizards': '#002B5C',
+  },
+  NFL: {
+    'Arizona Cardinals': '#97233F',
+    'Atlanta Falcons': '#A71930',
+    'Baltimore Ravens': '#241773',
+    'Buffalo Bills': '#00338D',
+    'Carolina Panthers': '#0085CA',
+    'Chicago Bears': '#0B162A',
+    'Cincinnati Bengals': '#FB4F14',
+    'Cleveland Browns': '#311D00',
+    'Dallas Cowboys': '#041E42',
+    'Denver Broncos': '#FB4F14',
+    'Detroit Lions': '#0076B6',
+    'Green Bay Packers': '#203731',
+    'Houston Texans': '#03202F',
+    'Indianapolis Colts': '#002C5F',
+    'Jacksonville Jaguars': '#006778',
+    'Kansas City Chiefs': '#E31837',
+    'Las Vegas Raiders': '#000000',
+    'Los Angeles Chargers': '#0080C6',
+    'Los Angeles Rams': '#003594',
+    'Miami Dolphins': '#008E97',
+    'Minnesota Vikings': '#4F2683',
+    'New England Patriots': '#002244',
+    'New Orleans Saints': '#D3BC8D',
+    'New York Giants': '#0B2265',
+    'New York Jets': '#125740',
+    'Philadelphia Eagles': '#004C54',
+    'Pittsburgh Steelers': '#FFB612',
+    'San Francisco 49ers': '#AA0000',
+    'Seattle Seahawks': '#002244',
+    'Tampa Bay Buccaneers': '#D50A0A',
+    'Tennessee Titans': '#0C2340',
+    'Washington Commanders': '#5A1414',
+  },
+  NHL: {
+    'Anaheim Ducks': '#F47A38',
+    'Arizona Coyotes': '#8C2633',
+    'Boston Bruins': '#FFB81C',
+    'Buffalo Sabres': '#002654',
+    'Calgary Flames': '#C8102E',
+    'Carolina Hurricanes': '#CC0000',
+    'Chicago Blackhawks': '#CF0A2C',
+    'Colorado Avalanche': '#6F263D',
+    'Columbus Blue Jackets': '#002654',
+    'Dallas Stars': '#006847',
+    'Detroit Red Wings': '#CE1126',
+    'Edmonton Oilers': '#041E42',
+    'Florida Panthers': '#041E42',
+    'Los Angeles Kings': '#111111',
+    'Minnesota Wild': '#A6192E',
+    'Montreal Canadiens': '#AF1E2D',
+    'Nashville Predators': '#FFB81C',
+    'New Jersey Devils': '#CE1126',
+    'New York Islanders': '#00539B',
+    'New York Rangers': '#0038A8',
+    'Ottawa Senators': '#C52032',
+    'Philadelphia Flyers': '#F74902',
+    'Pittsburgh Penguins': '#000000',
+    'San Jose Sharks': '#006D75',
+    'Seattle Kraken': '#001628',
+    'St. Louis Blues': '#002F87',
+    'Tampa Bay Lightning': '#002868',
+    'Toronto Maple Leafs': '#00205B',
+    'Vancouver Canucks': '#00205B',
+    'Vegas Golden Knights': '#B4975A',
+    'Washington Capitals': '#C8102E',
+    'Winnipeg Jets': '#041E42',
+  },
+};
+
 // Team name to abbreviation mapping for ESPN CDN
 const TEAM_ABBREVIATIONS: Record<string, Record<string, string>> = {
   MLB: {
@@ -191,5 +327,25 @@ export function getEventLogos(event: any): { away: string | null; home: string |
   return {
     away: getTeamLogo(teams.away, league),
     home: getTeamLogo(teams.home, league),
+  };
+}
+
+/**
+ * Get team colors for an event
+ * Returns both away and home team colors
+ */
+export function getEventColors(event: any): { away: string | null; home: string | null } {
+  const teams = parseTeamNames(event.description);
+  if (!teams) return { away: null, home: null };
+  
+  const league = event.game?.league;
+  if (!league) return { away: null, home: null };
+  
+  const colors = TEAM_COLORS[league];
+  if (!colors) return { away: null, home: null };
+  
+  return {
+    away: colors[teams.away] || null,
+    home: colors[teams.home] || null,
   };
 }

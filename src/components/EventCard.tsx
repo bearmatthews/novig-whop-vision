@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatGameTime, calculateEventLiquidity, formatLargeCurrency, formatOdds } from "@/lib/betting-utils";
-import { getEventLogos } from "@/lib/team-logos";
+import { getEventLogos, getEventColors } from "@/lib/team-logos";
 import { Clock, DollarSign } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -48,6 +48,7 @@ export function EventCard({
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
   const logos = getEventLogos(event);
+  const colors = getEventColors(event);
   const totalLiquidity = calculateEventLiquidity(event);
   
   // Filter markets to show relevant one first if specified
@@ -182,12 +183,22 @@ export function EventCard({
                 {displayMarkets[0].outcomes
                   .filter(o => o.available || o.last)
                   .slice(0, 2)
-                  .map(outcome => {
+                  .map((outcome, index) => {
                     const price = outcome.available || outcome.last;
+                    // Use team colors for the buttons - away team for first outcome, home team for second
+                    const teamColor = index === 0 ? colors.away : colors.home;
+                    const bgStyle = teamColor 
+                      ? { backgroundColor: `${teamColor}15`, borderColor: `${teamColor}40` }
+                      : {};
+                    const hoverStyle = teamColor
+                      ? { '--hover-bg': `${teamColor}25`, '--hover-border': `${teamColor}60` } as React.CSSProperties
+                      : {};
+                    
                     return (
                       <button
                         key={outcome.id}
-                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] bg-gradient-to-b from-background to-secondary/30 border border-border/50 hover:border-primary/30 hover:shadow-lg text-foreground"
+                        style={{ ...bgStyle, ...hoverStyle }}
+                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border hover:shadow-lg text-foreground [&:hover]:bg-[var(--hover-bg)] [&:hover]:border-[var(--hover-border)]"
                         onClick={(e) => {
                           e.stopPropagation();
                           onOutcomeClick?.(outcome.id);
