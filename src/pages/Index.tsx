@@ -28,6 +28,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAIChat, setShowAIChat] = useState(false);
   const [aiFilteredEventIds, setAiFilteredEventIds] = useState<string[]>([]);
+  const [espnScores, setEspnScores] = useState<any[]>([]);
   const [targetOutcomeId, setTargetOutcomeId] = useState<string | null>(null);
 
   // Fetch all sports from cached data
@@ -51,12 +52,28 @@ const Index = () => {
 
   // Trigger cache refresh on mount and periodically
   useEffect(() => {
-    refreshNovigCache(); // Initial refresh
+    refreshNovigCache();
+    refreshESPNScores();
     
     const interval = setInterval(() => {
-      refreshNovigCache(); // Refresh cache every 2 minutes in background
-    }, 120000);
+      refreshNovigCache();
+      refreshESPNScores();
+    }, 120000); // 2 minutes
     
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch ESPN scores
+  useEffect(() => {
+    const fetchScores = async () => {
+      const scores = await getCachedScores();
+      setEspnScores(scores);
+    };
+    
+    fetchScores();
+    
+    // Refresh scores every 30 seconds
+    const interval = setInterval(fetchScores, 30 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -222,7 +239,8 @@ const Index = () => {
                       setSelectedEvent(event);
                       setTargetOutcomeId(outcomeId);
                     }}
-                    showMarkets 
+                    showMarkets
+                    espnScore={findScoreForEvent(espnScores, event.description, event.game.league)}
                   />)}
                 </div>
               </TabsContent>
@@ -237,7 +255,8 @@ const Index = () => {
                         setSelectedEvent(event);
                         setTargetOutcomeId(outcomeId);
                       }}
-                      showMarkets 
+                      showMarkets
+                      espnScore={findScoreForEvent(espnScores, event.description, event.game.league)}
                     />)}
                   </div>}
               </TabsContent>
@@ -252,7 +271,8 @@ const Index = () => {
                         setSelectedEvent(event);
                         setTargetOutcomeId(outcomeId);
                       }}
-                      showMarkets 
+                      showMarkets
+                      espnScore={findScoreForEvent(espnScores, event.description, event.game.league)}
                     />)}
                   </div>}
               </TabsContent>
@@ -267,7 +287,10 @@ const Index = () => {
                   <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Loading event details and liquidity...</p>
                 </div> : <>
-                  <EventCard event={eventWithLiquidity} />
+                  <EventCard 
+                    event={eventWithLiquidity}
+                    espnScore={findScoreForEvent(espnScores, eventWithLiquidity.description, eventWithLiquidity.game.league)}
+                  />
 
                   <Tabs defaultValue="markets" className="w-full">
                     <TabsList>
