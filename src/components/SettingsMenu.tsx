@@ -66,7 +66,7 @@ export function SettingsMenu() {
           <DropdownMenuItem
             key={formatOption}
             onClick={() => setFormat(formatOption)}
-            className={format === formatOption ? 'bg-accent' : ''}
+            className={format === formatOption ? 'bg-accent text-accent-foreground' : ''}
           >
             <div className="flex items-center justify-between w-full">
               <span>{formatLabels[formatOption]}</span>
