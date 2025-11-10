@@ -140,17 +140,28 @@ export function EventCard({
                 <div className="text-base font-semibold text-foreground leading-tight tracking-tight">
                   {event.description}
                 </div>
-                <div className="flex items-center justify-center gap-3 mt-1.5">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span className="font-medium">{formatGameTime(event.game.scheduled_start)}</span>
+                
+                {/* Show date/time only when NOT live, or show LIVE badge when live */}
+                {isLive ? (
+                  <div className="flex items-center justify-center mt-2">
+                    <Badge variant="destructive" className="gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium">
+                      <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
+                      LIVE
+                    </Badge>
                   </div>
-                  {totalLiquidity > 0 && (
-                    <div className={`flex items-center gap-1 text-xs text-muted-foreground font-medium transition-colors ${flashClass}`}>
-                      <span>{formatLargeCurrency(totalLiquidity)} Vol.</span>
+                ) : (
+                  <div className="flex items-center justify-center gap-3 mt-1.5">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span className="font-medium">{formatGameTime(event.game.scheduled_start)}</span>
                     </div>
-                  )}
-                </div>
+                    {totalLiquidity > 0 && (
+                      <div className={`flex items-center gap-1 text-xs text-muted-foreground font-medium transition-colors ${flashClass}`}>
+                        <span>{formatLargeCurrency(totalLiquidity)} Vol.</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {logos.home && (
@@ -164,16 +175,6 @@ export function EventCard({
                 </div>
               )}
             </div>
-
-            {/* Actions row */}
-            {isLive && (
-              <div className="flex items-center justify-center">
-                <Badge variant="destructive" className="gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium">
-                  <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
-                  LIVE
-                </Badge>
-              </div>
-            )}
 
             {/* Outcomes - prominent betting options */}
             {showMarkets && displayMarkets.length > 0 && displayMarkets[0].outcomes.filter(o => o.available || o.last).length > 0 && (
