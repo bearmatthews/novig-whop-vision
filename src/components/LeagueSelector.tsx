@@ -83,24 +83,25 @@ export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelecto
   }
   
   return (
-    <div className="relative w-full max-w-4xl">
+    <div className="relative w-full max-w-2xl">
       {/* Left fade */}
       <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
       
       {/* Scrollable container */}
       <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex gap-2 pb-1 min-w-max">
+        <div className="flex gap-1.5 pb-1 min-w-max">
           {LEAGUES.map((league) => (
             <Button
               key={league.id}
               variant={selectedLeague === league.id ? "default" : "secondary"}
               onClick={() => onLeagueChange(league.id)}
-              className="gap-2.5 shrink-0"
+              size="sm"
+              className="gap-2 shrink-0 px-2.5 text-xs"
             >
               {league.logo ? (
-                <img src={league.logo} alt={league.name} className="w-5 h-5 object-contain" />
+                <img src={league.logo} alt={league.name} className="w-4 h-4 object-contain" />
               ) : league.icon ? (
-                <league.icon className="w-5 h-5" />
+                <league.icon className="w-4 h-4" />
               ) : null}
               {league.name}
             </Button>

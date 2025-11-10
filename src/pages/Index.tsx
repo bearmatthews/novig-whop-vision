@@ -141,9 +141,9 @@ const Index = () => {
               </Button>
             </div>
           ) : (
-            // Desktop Layout - Horizontal
-            <div className="flex items-center justify-between gap-6 flex-wrap">
-              <div className="flex items-center gap-6">
+          // Desktop Layout - Horizontal
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
                 <WhopUserProfile />
                 <div className="flex-shrink-0">
                   <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
@@ -153,11 +153,11 @@ const Index = () => {
                 }} />
                 </div>
               </div>
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="w-full sm:w-auto sm:max-w-md">
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="w-auto max-w-xs">
                   <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
                 </div>
-                <Button variant="default" size="default" onClick={() => setShowAIChat(!showAIChat)} className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                <Button variant="default" size="default" onClick={() => setShowAIChat(!showAIChat)} className="gap-2 rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap">
                   <Bot className="w-4 h-4" />
                   Ask Bear
                 </Button>
