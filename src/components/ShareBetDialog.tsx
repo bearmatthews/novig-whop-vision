@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -31,6 +32,7 @@ export function ShareBetDialog({
   outcomeName,
   odds,
 }: ShareBetDialogProps) {
+  const location = useLocation();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [channelId, setChannelId] = useState('');
   const [customMessage, setCustomMessage] = useState('');
@@ -43,6 +45,12 @@ export function ShareBetDialog({
       fetchChannels();
     }
   }, [open]);
+
+  const getExperienceIdFromPath = () => {
+    // Extract experienceId from path like /experience/:experienceId
+    const match = location.pathname.match(/\/experience\/([^\/]+)/);
+    return match ? match[1] : null;
+  };
 
   const fetchChannels = async () => {
     setLoadingChannels(true);
@@ -57,11 +65,12 @@ export function ShareBetDialog({
         host.endsWith('.apps.whop.com')
       );
 
+      const experienceId = getExperienceIdFromPath();
+
       // Dev/preview: show mock channels
       if (!isWhopEmbed || isLovablePreview) {
         const mock = [
-          { id: 'exp_demo_1', name: 'Demo Experience', type: 'experience' },
-          { id: 'channel_demo_1', name: 'Demo Chat #general', type: 'chat_channel' },
+          { id: experienceId || 'exp_demo', name: 'Current Experience', type: 'experience' },
         ];
         setChannels(mock);
         setChannelId(mock[0].id);
@@ -69,49 +78,41 @@ export function ShareBetDialog({
         return;
       }
 
-      // Try Vercel proxy endpoint first (production/Whop iframe)
-      try {
-        const vercelUrl = '/whop-list-channels';
-        const res = await fetch(vercelUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
+      // In Whop: Use current experience as default channel
+      if (experienceId) {
+        const defaultChannel = {
+          id: experienceId,
+          name: 'Current Experience',
+          type: 'experience',
+        };
+        setChannels([defaultChannel]);
+        setChannelId(experienceId);
+      } else {
+        // Fallback: try to fetch channels via API
+        try {
+          const vercelUrl = '/whop-list-channels';
+          const res = await fetch(vercelUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
 
-        if (res.ok) {
-          const payload = await res.json();
-          if (payload?.channels) {
-            console.log('Fetched channels via Vercel proxy:', payload.channels.length);
-            setChannels(payload.channels);
-            if (payload.channels.length === 1) {
+          if (res.ok) {
+            const payload = await res.json();
+            if (payload?.channels && payload.channels.length > 0) {
+              console.log('Fetched channels via Vercel proxy:', payload.channels.length);
+              setChannels(payload.channels);
               setChannelId(payload.channels[0].id);
             }
-            setLoadingChannels(false);
-            return;
           }
-        }
-      } catch (e) {
-        console.log('Vercel proxy failed, trying fallback:', e);
-      }
-
-      // Fallback to direct Supabase function call
-      const { data, error } = await supabase.functions.invoke('whop-list-channels', {
-        method: 'POST',
-      });
-
-      if (error) throw error;
-
-      if (data?.channels) {
-        console.log('Fetched channels via fallback:', data.channels.length);
-        setChannels(data.channels);
-        if (data.channels.length === 1) {
-          setChannelId(data.channels[0].id);
+        } catch (e) {
+          console.error('Failed to fetch channels:', e);
         }
       }
     } catch (error) {
-      console.error('Failed to fetch channels:', error);
+      console.error('Failed to load channels:', error);
       toast({
         title: 'Failed to load channels',
-        description: 'Could not fetch your available chat channels',
+        description: 'Using current experience as default',
         variant: 'destructive',
       });
     } finally {
@@ -186,14 +187,21 @@ export function ShareBetDialog({
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="channel-select">Select Channel</Label>
+            <Label htmlFor="channel-select">Share To</Label>
             {loadingChannels ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : channels.length === 0 ? (
               <div className="text-sm text-muted-foreground text-center py-8">
-                No accessible channels found. Make sure you have memberships with chat access.
+                No channels available
+              </div>
+            ) : channels.length === 1 ? (
+              <div className="p-3 bg-secondary rounded-md">
+                <p className="text-sm font-medium">{channels[0].name}</p>
+                <p className="text-xs text-muted-foreground">
+                  Sharing to current experience
+                </p>
               </div>
             ) : (
               <>
@@ -210,7 +218,7 @@ export function ShareBetDialog({
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Select the chat where you want to share this bet
+                  Select where to share this bet
                 </p>
               </>
             )}
