@@ -187,14 +187,19 @@ export function EventCard({
                   // Show multiple markets: Moneyline, Spread, Total
                   <>
                     {/* Moneyline */}
-                    {activeMarkets.find(m => m.description.toLowerCase().includes('moneyline') || m.description.toLowerCase().includes('money line'))?.outcomes.filter(o => o.available || o.last).length === 2 && (
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-1.5 font-medium">Moneyline</div>
-                        <div className="flex items-center gap-2">
-                          {activeMarkets.find(m => m.description.toLowerCase().includes('moneyline') || m.description.toLowerCase().includes('money line'))!.outcomes
-                            .filter(o => o.available || o.last)
-                            .slice(0, 2)
-                            .map((outcome, index) => {
+                    {(() => {
+                      const moneylineMarket = activeMarkets.find(m => 
+                        m.description.toLowerCase().includes('moneyline') || 
+                        m.description.toLowerCase().includes('money line') ||
+                        m.description.toLowerCase().includes('winner')
+                      );
+                      const moneylineOutcomes = moneylineMarket?.outcomes.filter(o => o.available || o.last) || [];
+                      
+                      return moneylineOutcomes.length === 2 && (
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1.5 font-medium">Moneyline</div>
+                          <div className="flex items-center gap-2">
+                            {moneylineOutcomes.slice(0, 2).map((outcome, index) => {
                               const price = outcome.available || outcome.last;
                               const teamColor = index === 0 ? colors.away : colors.home;
                               const teamName = index === 0 ? teams?.away : teams?.home;
@@ -221,57 +226,28 @@ export function EventCard({
                                 </button>
                               );
                             })}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* Spread */}
-                    {activeMarkets.find(m => m.description.toLowerCase().includes('spread'))?.outcomes.filter(o => o.available || o.last).length === 2 && (
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-1.5 font-medium">Spread</div>
-                        <div className="flex items-center gap-2">
-                          {activeMarkets.find(m => m.description.toLowerCase().includes('spread'))!.outcomes
-                            .filter(o => o.available || o.last)
-                            .slice(0, 2)
-                            .map((outcome, index) => {
+                    {(() => {
+                      const spreadMarket = activeMarkets.find(m => m.description.toLowerCase().includes('spread'));
+                      const spreadOutcomes = spreadMarket?.outcomes.filter(o => o.available || o.last) || [];
+                      
+                      return spreadOutcomes.length === 2 && (
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1.5 font-medium">Spread</div>
+                          <div className="flex items-center gap-2">
+                            {spreadOutcomes.slice(0, 2).map((outcome, index) => {
                               const price = outcome.available || outcome.last;
-                              const teamColor = index === 0 ? colors.away : colors.home;
+                              const teamName = index === 0 ? teams?.away : teams?.home;
+                              const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
                               
-                              return (
-                                <button
-                                  key={outcome.id}
-                                  style={{ backgroundColor: teamColor || undefined, borderColor: teamColor || undefined }}
-                                  className="flex-1 px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onOutcomeClick?.(outcome.id);
-                                  }}
-                                >
-                                  <div className="flex items-center justify-center gap-1.5">
-                                    <span className="text-xs font-semibold">
-                                      {outcome.description}
-                                    </span>
-                                    <span className="text-base font-bold">
-                                      {price && formatOdds(price, format)}
-                                    </span>
-                                  </div>
-                                </button>
-                              );
-                            })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Total */}
-                    {activeMarkets.find(m => m.description.toLowerCase().includes('total') || m.description.toLowerCase().includes('over/under'))?.outcomes.filter(o => o.available || o.last).length >= 2 && (
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-1.5 font-medium">Total</div>
-                        <div className="flex items-center gap-2">
-                          {activeMarkets.find(m => m.description.toLowerCase().includes('total') || m.description.toLowerCase().includes('over/under'))!.outcomes
-                            .filter(o => o.available || o.last)
-                            .slice(0, 2)
-                            .map((outcome) => {
-                              const price = outcome.available || outcome.last;
+                              // Extract spread value from description (e.g., "+3.5" or "-3.5")
+                              const spreadMatch = outcome.description.match(/([+-]?\d+\.?\d*)/);
+                              const spreadValue = spreadMatch ? spreadMatch[1] : '';
                               
                               return (
                                 <button
@@ -283,8 +259,8 @@ export function EventCard({
                                   }}
                                 >
                                   <div className="flex items-center justify-center gap-1.5">
-                                    <span className="text-xs font-semibold">
-                                      {outcome.description}
+                                    <span className="text-xs font-bold uppercase">
+                                      {teamAbbr} {spreadValue}
                                     </span>
                                     <span className="text-base font-bold">
                                       {price && formatOdds(price, format)}
@@ -293,9 +269,55 @@ export function EventCard({
                                 </button>
                               );
                             })}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
+
+                    {/* Total */}
+                    {(() => {
+                      const totalMarket = activeMarkets.find(m => 
+                        m.description.toLowerCase().includes('total') || 
+                        m.description.toLowerCase().includes('over/under')
+                      );
+                      const totalOutcomes = totalMarket?.outcomes.filter(o => o.available || o.last) || [];
+                      
+                      return totalOutcomes.length >= 2 && (
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1.5 font-medium">Total</div>
+                          <div className="flex items-center gap-2">
+                            {totalOutcomes.slice(0, 2).map((outcome) => {
+                              const price = outcome.available || outcome.last;
+                              
+                              // Extract Over/Under and total value from description
+                              const isOver = outcome.description.toLowerCase().includes('over');
+                              const totalMatch = outcome.description.match(/(\d+\.?\d*)/);
+                              const totalValue = totalMatch ? totalMatch[1] : '';
+                              
+                              return (
+                                <button
+                                  key={outcome.id}
+                                  className="flex-1 px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border border-border bg-muted/50 hover:bg-muted text-foreground shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOutcomeClick?.(outcome.id);
+                                  }}
+                                >
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-xs font-bold uppercase">
+                                      {isOver ? 'O' : 'U'} {totalValue}
+                                    </span>
+                                    <span className="text-base font-bold">
+                                      {price && formatOdds(price, format)}
+                                    </span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </>
                 ) : (
                   // Show only moneyline (default view)
