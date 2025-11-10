@@ -9,29 +9,62 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// TheSportsDB free API key (use "3" for testing, or get a free key)
-const SPORTSDB_API_KEY = '3';
+// TheSportsDB API key (use env if set, otherwise free key '123')
+const SPORTSDB_API_KEY = Deno.env.get('THESPORTSDB_API_KEY') || '123';
+
+function normalizeName(name: string): string {
+  return name
+    .replace(/\s+/g, ' ')
+    .replace(/University of /i, '')
+    .trim();
+}
+
+function getCandidateNames(teamName: string, league: string): string[] {
+  const base = normalizeName(teamName);
+  const variants = new Set<string>([base]);
+
+  const replacements: Record<string, string> = {
+    'UConn': 'Connecticut',
+    'UNC': 'North Carolina',
+    'NC State': 'North Carolina State',
+    'Ole Miss': 'Mississippi',
+    'BYU': 'Brigham Young',
+    'USC': 'Southern California',
+    'UCF': 'Central Florida',
+    'UTEP': 'Texas El Paso',
+    'TCU': 'Texas Christian',
+    'SMU': 'Southern Methodist',
+  };
+
+  for (const [k, v] of Object.entries(replacements)) {
+    if (base.startsWith(k + ' ')) variants.add(base.replace(k, v));
+    if (base.includes(' ' + k + ' ')) variants.add(base.replace(' ' + k + ' ', ' ' + v + ' '));
+  }
+
+  // Strip nicknames if needed (e.g., "Cardinal" vs "Stanford Cardinal")
+  if (base.includes(' ')) {
+    const school = base.split(' ').slice(0, -1).join(' ');
+    variants.add(school);
+  }
+
+  return Array.from(variants);
+}
 
 async function searchTeamOnSportsDB(teamName: string): Promise<any> {
   try {
     const searchUrl = `https://www.thesportsdb.com/api/v1/json/${SPORTSDB_API_KEY}/searchteams.php?t=${encodeURIComponent(teamName)}`;
     console.log(`Searching TheSportsDB: ${searchUrl}`);
-    
     const response = await fetch(searchUrl);
     if (!response.ok) {
       console.error(`TheSportsDB API error: ${response.status}`);
       return null;
     }
-
     const data = await response.json();
-    
     if (data.teams && data.teams.length > 0) {
-      // Return first matching team
       const team = data.teams[0];
       console.log(`Found team on TheSportsDB: ${team.strTeam}`);
       return team;
     }
-    
     return null;
   } catch (error) {
     console.error('Error searching TheSportsDB:', error);
@@ -140,11 +173,40 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Search for team on TheSportsDB
-    const teamData = await searchTeamOnSportsDB(teamName);
-    
+    // Helper to pick the best available logo field
+    const pickLogoUrl = (t: any): string | null => {
+      const candidates = [
+        t?.strTeamBadge,
+        t?.strLogo,
+        t?.strTeamLogo,
+        t?.strTeamBadge1,
+        t?.strTeamBadge2,
+        t?.strTeamWideBadge,
+        t?.strTeamJersey,
+        t?.strFanart1,
+        t?.strTeamFanart1,
+      ].filter(Boolean);
+      return candidates.length ? candidates[0] : null;
+    };
+
+    // Try multiple name variants to improve hit-rate for colleges
+    const variants = getCandidateNames(teamName, league);
+    let teamData: any = null;
+    let logoUrl: string | null = null;
+
+    for (const v of variants) {
+      teamData = await searchTeamOnSportsDB(v);
+      if (teamData) {
+        logoUrl = pickLogoUrl(teamData);
+        if (logoUrl) {
+          console.log(`Using logo from TheSportsDB for variant: ${v}`);
+          break;
+        }
+      }
+    }
+
     if (!teamData) {
-      console.log(`Team not found on TheSportsDB: ${teamName}`);
+      console.log(`Team not found on TheSportsDB for any variant: ${variants.join(', ')}`);
       return new Response(
         JSON.stringify({ error: 'Team not found on TheSportsDB' }),
         { 
@@ -154,10 +216,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get team badge/logo URL from TheSportsDB
-    // Priority: strTeamBadge (primary logo) > strTeamLogo (alternative)
-    const logoUrl = teamData.strTeamBadge || teamData.strTeamLogo;
-    
     if (!logoUrl) {
       console.log(`No logo URL found for team: ${teamName}`);
       return new Response(
