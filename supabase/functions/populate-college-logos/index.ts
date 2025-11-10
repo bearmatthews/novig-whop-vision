@@ -9,29 +9,34 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Major college teams to pre-populate
+// Major college teams to pre-populate (will be searched on TheSportsDB)
 const TEAMS_TO_CACHE = {
   NCAAF: [
-    'Alabama', 'Georgia', 'Ohio State', 'Michigan', 'Notre Dame', 'Oklahoma', 
-    'Texas', 'LSU', 'Florida', 'Penn State', 'Oregon', 'USC', 'Clemson', 
-    'Auburn', 'Miami Florida', 'Florida State', 'Wisconsin', 'Iowa', 
-    'Michigan State', 'Nebraska', 'Tennessee', 'Ole Miss', 'Arkansas', 
-    'Mississippi State', 'Kentucky', 'South Carolina', 'Missouri', 'Vanderbilt',
-    'UCLA', 'Washington', 'Stanford', 'Utah', 'Colorado', 'Arizona', 
-    'Arizona State', 'Oregon State', 'California', 'Washington State',
-    'Oklahoma State', 'TCU', 'Baylor', 'Kansas', 'Kansas State', 
-    'Iowa State', 'West Virginia', 'Texas Tech', 'North Carolina', 
-    'North Carolina State', 'Duke', 'Virginia', 'Virginia Tech', 
-    'Pittsburgh', 'Louisville', 'Syracuse', 'Boston College', 'Wake Forest',
-    'Georgia Tech', 'Northwestern', 'Purdue', 'Illinois', 'Minnesota',
-    'Indiana', 'Maryland', 'Rutgers', 'North Texas', 'SMU', 'Houston',
-    'BYU', 'Cincinnati', 'UCF',
+    'Alabama Crimson Tide', 'Georgia Bulldogs', 'Ohio State Buckeyes', 'Michigan Wolverines', 
+    'Notre Dame Fighting Irish', 'Oklahoma Sooners', 'Texas Longhorns', 'LSU Tigers', 
+    'Florida Gators', 'Penn State Nittany Lions', 'Oregon Ducks', 'USC Trojans', 
+    'Clemson Tigers', 'Auburn Tigers', 'Miami Hurricanes', 'Florida State Seminoles', 
+    'Wisconsin Badgers', 'Iowa Hawkeyes', 'Michigan State Spartans', 'Nebraska Cornhuskers', 
+    'Tennessee Volunteers', 'Ole Miss Rebels', 'Arkansas Razorbacks', 'Mississippi State Bulldogs',
+    'Kentucky Wildcats', 'South Carolina Gamecocks', 'Missouri Tigers', 'Vanderbilt Commodores',
+    'UCLA Bruins', 'Washington Huskies', 'Stanford Cardinal', 'Utah Utes', 'Colorado Buffaloes',
+    'Arizona Wildcats', 'Arizona State Sun Devils', 'Oregon State Beavers', 'California Golden Bears',
+    'Washington State Cougars', 'Oklahoma State Cowboys', 'TCU Horned Frogs', 'Baylor Bears',
+    'Kansas Jayhawks', 'Kansas State Wildcats', 'Iowa State Cyclones', 'West Virginia Mountaineers',
+    'Texas Tech Red Raiders', 'North Carolina Tar Heels', 'NC State Wolfpack', 'Duke Blue Devils',
+    'Virginia Cavaliers', 'Virginia Tech Hokies', 'Pittsburgh Panthers', 'Louisville Cardinals',
+    'Syracuse Orange', 'Boston College Eagles', 'Wake Forest Demon Deacons', 'Georgia Tech Yellow Jackets',
+    'Northwestern Wildcats', 'Purdue Boilermakers', 'Illinois Fighting Illini', 'Minnesota Golden Gophers',
+    'Indiana Hoosiers', 'Maryland Terrapins', 'Rutgers Scarlet Knights', 'North Texas Mean Green',
+    'SMU Mustangs', 'Houston Cougars', 'BYU Cougars', 'Cincinnati Bearcats', 'UCF Knights',
   ],
   NCAAB: [
-    'Duke', 'North Carolina', 'Kentucky', 'Kansas', 'UCLA', 'Gonzaga',
-    'Villanova', 'Michigan', 'Arizona', 'UConn', 'Syracuse', 'Louisville',
-    'Indiana', 'Michigan State', 'Ohio State', 'Florida', 'Texas',
-    'Purdue', 'Wisconsin', 'Illinois', 'Virginia', 'Pittsburgh',
+    'Duke Blue Devils', 'North Carolina Tar Heels', 'Kentucky Wildcats', 'Kansas Jayhawks',
+    'UCLA Bruins', 'Gonzaga Bulldogs', 'Villanova Wildcats', 'Michigan Wolverines',
+    'Arizona Wildcats', 'UConn Huskies', 'Syracuse Orange', 'Louisville Cardinals',
+    'Indiana Hoosiers', 'Michigan State Spartans', 'Ohio State Buckeyes', 'Florida Gators',
+    'Texas Longhorns', 'Purdue Boilermakers', 'Wisconsin Badgers', 'Illinois Fighting Illini',
+    'Virginia Cavaliers', 'Pittsburgh Panthers', 'Marquette Golden Eagles', 'Creighton Bluejays',
   ]
 };
 
