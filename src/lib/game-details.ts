@@ -17,6 +17,58 @@ export interface PlayerLeader {
   };
 }
 
+export interface Player {
+  id: string;
+  name: string;
+  position: string;
+  jersey: string;
+  headshot?: string;
+  age?: number;
+  experience?: number;
+  college?: string;
+  height?: string;
+  weight?: string;
+}
+
+export interface InjuryReport {
+  athlete: {
+    id: string;
+    name: string;
+    position: string;
+    headshot?: string;
+  };
+  status: string;
+  date: string;
+  details: {
+    type: string;
+    detail: string;
+    side?: string;
+    returnDate?: string;
+  };
+}
+
+export interface HeadToHeadGame {
+  id: string;
+  date: string;
+  name: string;
+  shortName: string;
+  completed: boolean;
+  home_team: {
+    id: string;
+    name: string;
+    abbreviation: string;
+    score: string;
+    winner: boolean;
+  };
+  away_team: {
+    id: string;
+    name: string;
+    abbreviation: string;
+    score: string;
+    winner: boolean;
+  };
+}
+
 export interface TeamGameDetails {
   id: string;
   name: string;
@@ -29,6 +81,8 @@ export interface TeamGameDetails {
     displayName: string;
     leaders: PlayerLeader[];
   }[];
+  roster?: Player[] | null;
+  injuries?: InjuryReport[] | null;
 }
 
 export interface GameDetails {
@@ -51,6 +105,18 @@ export interface GameDetails {
     highTemperature?: number;
   };
   headlines: any[];
+  predictor?: {
+    homeTeam: {
+      gameProjection: string;
+      teamChanceLoss: string;
+    };
+    awayTeam: {
+      gameProjection: string;
+      teamChanceLoss: string;
+    };
+  };
+  win_probability?: any[];
+  head_to_head?: HeadToHeadGame[] | null;
   last_updated: string;
 }
 
