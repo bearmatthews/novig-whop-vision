@@ -28,14 +28,18 @@ export const useWhopAuth = () => {
   return context;
 };
 
-// Normalize Whop user payloads to our internal shape
-const normalizeWhopUser = (raw: any): WhopUser => ({
-  id: raw?.id,
-  email: raw?.email ?? undefined,
-  username: raw?.username ?? raw?.name ?? undefined,
-  // Support multiple possible fields from Whop API / SDKs
-  profile_pic_url: raw?.profile_pic_url ?? raw?.profile_picture?.url ?? raw?.profile_picture_url ?? undefined,
-});
+const normalizeWhopUser = (raw: any): WhopUser => {
+  const profilePicUrl = raw?.profile_picture?.url ?? raw?.profile_pic_url ?? raw?.profile_picture_url;
+  console.log('Normalizing user - profile_picture object:', raw?.profile_picture);
+  console.log('Extracted profile_pic_url:', profilePicUrl);
+  
+  return {
+    id: raw?.id,
+    email: raw?.email ?? undefined,
+    username: raw?.username ?? raw?.name ?? undefined,
+    profile_pic_url: profilePicUrl ?? undefined,
+  };
+};
 
 export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<WhopUser | null>(null);

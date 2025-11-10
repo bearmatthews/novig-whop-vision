@@ -72,8 +72,10 @@ Deno.serve(async (req) => {
 
     const userData = await response.json();
     console.log('Whop user data retrieved successfully');
+    console.log('Full user data:', JSON.stringify(userData, null, 2));
     console.log('User ID:', userData.id);
     console.log('User username:', userData.username);
+    console.log('Profile picture object:', userData.profile_picture);
     
     return new Response(
       JSON.stringify({ user: userData }),
