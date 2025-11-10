@@ -159,6 +159,38 @@ export function ShareBetDialog({
     try {
       const content = customMessage.trim() || generateDefaultMessage();
       
+      // Try Vercel proxy first
+      try {
+        const vercelUrl = '/whop-share-message';
+        const res = await fetch(vercelUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channel_id: channelId.trim(),
+            content,
+          }),
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success) {
+            toast({
+              title: 'Shared successfully!',
+              description: 'Your bet has been shared to the chat',
+            });
+            
+            onOpenChange(false);
+            setChannelId('');
+            setCustomMessage('');
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Proxy share failed, trying fallback:', e);
+      }
+
+      // Fallback to direct Supabase function call
       const { data, error } = await supabase.functions.invoke('whop-share-message', {
         body: {
           channel_id: channelId.trim(),

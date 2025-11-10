@@ -9,6 +9,10 @@
       "destination": "/api/whop-list-channels"
     },
     {
+      "source": "/whop-share-message",
+      "destination": "/api/whop-share-message"
+    },
+    {
       "source": "/(.*)",
       "destination": "https://8c2962a5-84d3-461a-9ee6-6b646684606d.lovableproject.com/$1"
     }
