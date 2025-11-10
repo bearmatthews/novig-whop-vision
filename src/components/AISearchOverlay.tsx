@@ -263,7 +263,8 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
                   onKeyPress={handleKeyPress}
                   placeholder="Ask about betting opportunities..."
                   disabled={isLoading}
-                  className="flex-1 h-10 text-sm border-2 rounded-lg px-3"
+                  className="flex-1 h-10 text-base border-2 rounded-lg px-3"
+                  style={{ fontSize: '16px' }}
                 />
                 <Button
                   onClick={() => handleSearch(input)}
@@ -376,7 +377,8 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
                   onKeyPress={handleKeyPress}
                   placeholder="Ask a follow-up..."
                   disabled={isLoading}
-                  className="flex-1 h-10 text-sm rounded-lg border-2"
+                  className="flex-1 h-10 text-base rounded-lg border-2"
+                  style={{ fontSize: '16px' }}
                 />
                 <Button
                   onClick={() => handleSearch(input)}
