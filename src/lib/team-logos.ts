@@ -705,50 +705,10 @@ export function getTeamLogo(teamName: string, league: string): string | null {
   const abbreviations = TEAM_ABBREVIATIONS[league];
   if (!abbreviations) return null;
   
-  let abbr = abbreviations[teamName];
+  const abbr = abbreviations[teamName];
   
-  // If we don't have the abbreviation, try intelligent fallbacks for college teams
-  if (!abbr && (league === 'NCAAB' || league === 'NCAAF')) {
-    // Try common patterns first
-    const cleanName = teamName.trim();
-    
-    // Handle common variations
-    const variations = [
-      cleanName,
-      cleanName.replace(' State', ''),
-      cleanName.replace('State', ''),
-      cleanName.split(' ')[0], // First word only
-    ];
-    
-    // Try to find a match in variations
-    for (const variation of variations) {
-      if (abbreviations[variation]) {
-        abbr = abbreviations[variation];
-        break;
-      }
-    }
-    
-    // If still no match, generate abbreviation from team name
-    if (!abbr) {
-      // Remove common words and create abbreviation
-      abbr = cleanName.toLowerCase()
-        .replace(/university|college|state university|polytechnic|institute|tech$/gi, '')
-        .trim()
-        .split(' ')
-        .map(word => word.charAt(0))
-        .join('')
-        .substring(0, 5);
-      
-      // If it's too short, try using the first word
-      if (abbr.length < 2) {
-        abbr = cleanName.toLowerCase()
-          .split(' ')[0]
-          .replace(/[^a-z]/g, '')
-          .substring(0, 6);
-      }
-    }
-  }
-  
+  // Only return logo if we have a confirmed abbreviation in our mapping
+  // Don't generate abbreviations for unknown teams
   if (!abbr) return null;
   
   // College sports use different CDN path
