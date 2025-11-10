@@ -366,13 +366,20 @@ export function EventCard({
                           <div className="flex items-center gap-2">
                             {moneylineOutcomes.slice(0, 2).map((outcome, index) => {
                       const price = outcome.available || outcome.last;
-                      const teamColor = index === 0 ? colors.away : colors.home;
-                      const teamName = index === 0 ? teams?.away : teams?.home;
+                      const isAway = index === 0;
+                      const teamColor = isAway ? colors.away : colors.home;
+                      const teamName = isAway ? teams?.away : teams?.home;
                       const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
-                      return <button key={outcome.id} style={{
-                        backgroundColor: teamColor || undefined,
-                        borderColor: teamColor || undefined
-                      }} className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]" onClick={e => {
+                      
+                      // Apply random colors when logos are hidden
+                      const finalColor = !displayLogos 
+                        ? (isAway ? randomColors.away : randomColors.home)
+                        : teamColor;
+                      
+                      return <button key={outcome.id} style={finalColor ? {
+                        backgroundColor: finalColor,
+                        borderColor: finalColor
+                      } : {}} className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border ${finalColor ? 'text-white' : 'text-foreground'} hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]`} onClick={e => {
                         e.stopPropagation();
                         onOutcomeClick?.(outcome.id);
                       }}>
