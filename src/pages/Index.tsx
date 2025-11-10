@@ -9,7 +9,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
 import { WhopUserProfile } from "@/components/WhopUserProfile";
 import { AISearchOverlay } from "@/components/AISearchOverlay";
-import { OddsFormatSelector } from "@/components/OddsFormatSelector";
+import { SettingsMenu } from "@/components/SettingsMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -195,7 +195,7 @@ const Index = () => {
                     Pre-Game <span className="ml-1.5 text-xs">({pregameEvents.length})</span>
                   </TabsTrigger>
                 </TabsList>
-                <OddsFormatSelector />
+                <SettingsMenu />
               </div>
 
               <TabsContent value="all" className="mt-6">

@@ -6,6 +6,7 @@ import { Clock, DollarSign } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOddsFormat } from "@/hooks/use-odds-format";
+import { useMarketView } from "@/components/SettingsMenu";
 interface Event {
   id: string;
   description: string;
@@ -45,6 +46,7 @@ export function EventCard({
 }: EventCardProps) {
   const isMobile = useIsMobile();
   const { format } = useOddsFormat();
+  const { showSpreadsAndTotals } = useMarketView();
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
   const logos = getEventLogos(event);
@@ -179,47 +181,159 @@ export function EventCard({
             </div>
 
             {/* Outcomes - prominent betting options */}
-            {showMarkets && displayMarkets.length > 0 && displayMarkets[0].outcomes.filter(o => o.available || o.last).length > 0 && (
-              <div className="flex items-center gap-2">
-                {displayMarkets[0].outcomes
-                  .filter(o => o.available || o.last)
-                  .slice(0, 2)
-                  .map((outcome, index) => {
-                    const price = outcome.available || outcome.last;
-                    // Use team colors for the buttons - away team for first outcome, home team for second
-                    const teamColor = index === 0 ? colors.away : colors.home;
-                    const bgStyle = teamColor 
-                      ? { backgroundColor: teamColor, borderColor: teamColor }
-                      : {};
-                    const hoverStyle = teamColor
-                      ? { '--hover-brightness': '1.1' } as React.CSSProperties
-                      : {};
-                    
-                    // Get team abbreviation
-                    const teamName = index === 0 ? teams?.away : teams?.home;
-                    const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
-                    
-                    return (
-                      <button
-                        key={outcome.id}
-                        style={{ ...bgStyle, ...hoverStyle }}
-                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-[var(--hover-brightness,1.1)] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onOutcomeClick?.(outcome.id);
-                        }}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-sm font-bold uppercase tracking-wide">
-                            {teamAbbr || outcome.description}
-                          </span>
-                          <span className="text-xl font-bold tracking-tight">
-                            {price && formatOdds(price, format)}
-                          </span>
+            {showMarkets && activeMarkets.length > 0 && (
+              <div className="space-y-3">
+                {showSpreadsAndTotals ? (
+                  // Show multiple markets: Moneyline, Spread, Total
+                  <>
+                    {/* Moneyline */}
+                    {activeMarkets.find(m => m.description.toLowerCase().includes('moneyline') || m.description.toLowerCase().includes('money line'))?.outcomes.filter(o => o.available || o.last).length === 2 && (
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1.5 font-medium">Moneyline</div>
+                        <div className="flex items-center gap-2">
+                          {activeMarkets.find(m => m.description.toLowerCase().includes('moneyline') || m.description.toLowerCase().includes('money line'))!.outcomes
+                            .filter(o => o.available || o.last)
+                            .slice(0, 2)
+                            .map((outcome, index) => {
+                              const price = outcome.available || outcome.last;
+                              const teamColor = index === 0 ? colors.away : colors.home;
+                              const teamName = index === 0 ? teams?.away : teams?.home;
+                              const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
+                              
+                              return (
+                                <button
+                                  key={outcome.id}
+                                  style={{ backgroundColor: teamColor || undefined, borderColor: teamColor || undefined }}
+                                  className="flex-1 px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOutcomeClick?.(outcome.id);
+                                  }}
+                                >
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-xs font-bold uppercase tracking-wide">
+                                      {teamAbbr || outcome.description}
+                                    </span>
+                                    <span className="text-base font-bold">
+                                      {price && formatOdds(price, format)}
+                                    </span>
+                                  </div>
+                                </button>
+                              );
+                            })}
                         </div>
-                      </button>
-                    );
-                  })}
+                      </div>
+                    )}
+
+                    {/* Spread */}
+                    {activeMarkets.find(m => m.description.toLowerCase().includes('spread'))?.outcomes.filter(o => o.available || o.last).length === 2 && (
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1.5 font-medium">Spread</div>
+                        <div className="flex items-center gap-2">
+                          {activeMarkets.find(m => m.description.toLowerCase().includes('spread'))!.outcomes
+                            .filter(o => o.available || o.last)
+                            .slice(0, 2)
+                            .map((outcome, index) => {
+                              const price = outcome.available || outcome.last;
+                              const teamColor = index === 0 ? colors.away : colors.home;
+                              
+                              return (
+                                <button
+                                  key={outcome.id}
+                                  style={{ backgroundColor: teamColor || undefined, borderColor: teamColor || undefined }}
+                                  className="flex-1 px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOutcomeClick?.(outcome.id);
+                                  }}
+                                >
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-xs font-semibold">
+                                      {outcome.description}
+                                    </span>
+                                    <span className="text-base font-bold">
+                                      {price && formatOdds(price, format)}
+                                    </span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Total */}
+                    {activeMarkets.find(m => m.description.toLowerCase().includes('total') || m.description.toLowerCase().includes('over/under'))?.outcomes.filter(o => o.available || o.last).length >= 2 && (
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1.5 font-medium">Total</div>
+                        <div className="flex items-center gap-2">
+                          {activeMarkets.find(m => m.description.toLowerCase().includes('total') || m.description.toLowerCase().includes('over/under'))!.outcomes
+                            .filter(o => o.available || o.last)
+                            .slice(0, 2)
+                            .map((outcome) => {
+                              const price = outcome.available || outcome.last;
+                              
+                              return (
+                                <button
+                                  key={outcome.id}
+                                  className="flex-1 px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border border-border bg-muted/50 hover:bg-muted text-foreground shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOutcomeClick?.(outcome.id);
+                                  }}
+                                >
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-xs font-semibold">
+                                      {outcome.description}
+                                    </span>
+                                    <span className="text-base font-bold">
+                                      {price && formatOdds(price, format)}
+                                    </span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Show only moneyline (default view)
+                  displayMarkets.length > 0 && displayMarkets[0].outcomes.filter(o => o.available || o.last).length > 0 && (
+                    <div className="flex items-center gap-2">
+                      {displayMarkets[0].outcomes
+                        .filter(o => o.available || o.last)
+                        .slice(0, 2)
+                        .map((outcome, index) => {
+                          const price = outcome.available || outcome.last;
+                          const teamColor = index === 0 ? colors.away : colors.home;
+                          const teamName = index === 0 ? teams?.away : teams?.home;
+                          const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
+                          
+                          return (
+                            <button
+                              key={outcome.id}
+                              style={{ backgroundColor: teamColor || undefined, borderColor: teamColor || undefined }}
+                              className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOutcomeClick?.(outcome.id);
+                              }}
+                            >
+                              <div className="flex items-center justify-center gap-2">
+                                <span className="text-sm font-bold uppercase tracking-wide">
+                                  {teamAbbr || outcome.description}
+                                </span>
+                                <span className="text-xl font-bold tracking-tight">
+                                  {price && formatOdds(price, format)}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  )
+                )}
               </div>
             )}
           </div>
