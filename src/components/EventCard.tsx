@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatGameTime, calculateEventLiquidity, formatLargeCurrency, formatOdds } from "@/lib/betting-utils";
-import { getEventLogos, getEventColors } from "@/lib/team-logos";
+import { getEventLogos, getEventColors, parseTeamNames, getTeamAbbreviation } from "@/lib/team-logos";
 import { Clock, DollarSign } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -49,6 +49,7 @@ export function EventCard({
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
   const logos = getEventLogos(event);
   const colors = getEventColors(event);
+  const teams = parseTeamNames(event.description);
   const totalLiquidity = calculateEventLiquidity(event);
   
   // Helper to lighten hex color while keeping it opaque
@@ -203,6 +204,10 @@ export function EventCard({
                       ? { '--hover-bg': lightenColor(teamColor, 75), '--hover-border': teamColor } as React.CSSProperties
                       : {};
                     
+                    // Get team abbreviation
+                    const teamName = index === 0 ? teams?.away : teams?.home;
+                    const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
+                    
                     return (
                       <button
                         key={outcome.id}
@@ -213,11 +218,13 @@ export function EventCard({
                           onOutcomeClick?.(outcome.id);
                         }}
                       >
-                        <div className="text-xs text-muted-foreground font-medium mb-1 truncate">
-                          {outcome.description}
-                        </div>
-                        <div className="text-xl font-bold tracking-tight">
-                          {price && formatOdds(price, format)}
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-sm font-bold uppercase tracking-wide">
+                            {teamAbbr || outcome.description}
+                          </span>
+                          <span className="text-xl font-bold tracking-tight">
+                            {price && formatOdds(price, format)}
+                          </span>
                         </div>
                       </button>
                     );

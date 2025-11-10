@@ -349,3 +349,13 @@ export function getEventColors(event: any): { away: string | null; home: string 
     home: colors[teams.home] || null,
   };
 }
+
+/**
+ * Get team abbreviation from team name
+ */
+export function getTeamAbbreviation(teamName: string, league: string): string | null {
+  const abbreviations = TEAM_ABBREVIATIONS[league];
+  if (!abbreviations) return null;
+  
+  return abbreviations[teamName] || null;
+}
