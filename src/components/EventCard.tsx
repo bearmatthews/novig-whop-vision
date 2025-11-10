@@ -75,73 +75,105 @@ export function EventCard({
     }
     prevLiquidityRef.current = totalLiquidity;
   }, [totalLiquidity]);
-  return <Card className={`${onClick ? 'hover:shadow-xl transition-all duration-200 cursor-pointer group border border-border/50 hover:border-border' : 'border border-border/50 shadow-sm'} rounded-xl overflow-hidden bg-card`} onClick={onClick}>
-      <CardHeader className={onClick ? "pb-3 pt-4" : "pb-6 pt-8"}>
+  return <Card className={`${onClick ? 'hover:shadow-2xl transition-all duration-300 cursor-pointer group' : 'shadow-xl'} rounded-2xl overflow-hidden bg-card border-0`} onClick={onClick}>
+      <CardHeader className={onClick ? "pb-4 pt-5 px-5" : "pb-6 pt-8"}>
         {!onClick ? (
           // Detail view - centered layout with large logos
           <div className="flex flex-col items-center gap-6 text-center">
             {(logos.away || logos.home) && (
-              <div className="flex items-center justify-center gap-8">
+              <div className="flex items-center justify-center gap-12">
                 {logos.away && (
-                  <div className="flex flex-col items-center gap-3">
-                    <img 
-                      src={logos.away} 
-                      alt="Away team" 
-                      className="w-24 h-24 object-contain drop-shadow-lg" 
-                      onError={e => { e.currentTarget.style.display = 'none'; }} 
-                    />
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-28 h-28 rounded-2xl bg-background shadow-lg flex items-center justify-center p-4">
+                      <img 
+                        src={logos.away} 
+                        alt="Away team" 
+                        className="w-full h-full object-contain" 
+                        onError={e => { e.currentTarget.style.display = 'none'; }} 
+                      />
+                    </div>
                   </div>
                 )}
-                <span className="text-3xl font-black text-muted-foreground">@</span>
+                <span className="text-2xl font-light text-muted-foreground/50">vs</span>
                 {logos.home && (
-                  <div className="flex flex-col items-center gap-3">
-                    <img 
-                      src={logos.home} 
-                      alt="Home team" 
-                      className="w-24 h-24 object-contain drop-shadow-lg" 
-                      onError={e => { e.currentTarget.style.display = 'none'; }} 
-                    />
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-28 h-28 rounded-2xl bg-background shadow-lg flex items-center justify-center p-4">
+                      <img 
+                        src={logos.home} 
+                        alt="Home team" 
+                        className="w-full h-full object-contain" 
+                        onError={e => { e.currentTarget.style.display = 'none'; }} 
+                      />
+                    </div>
                   </div>
                 )}
               </div>
             )}
             
             <div className="space-y-3">
-              <CardTitle className="text-3xl font-black leading-tight">
+              <CardTitle className="text-3xl font-semibold leading-tight tracking-tight">
                 {event.description}
               </CardTitle>
               {isLive && (
-                <Badge variant="destructive" className="gap-2 whitespace-nowrap text-base px-4 py-2">
-                  <div className="w-2.5 h-2.5 bg-destructive-foreground rounded-full animate-pulse" />
+                <Badge variant="destructive" className="gap-2 whitespace-nowrap text-sm px-4 py-1.5 rounded-full font-medium">
+                  <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
                   LIVE
                 </Badge>
               )}
             </div>
           </div>
         ) : (
-          // List view - modern horizontal layout inspired by Polymarket
-          <div className="space-y-3">
-            {/* Top row: Time, Volume, Actions */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1.5 font-semibold">
-                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>{formatGameTime(event.game.scheduled_start)}</span>
+          // List view - clean horizontal layout with prominent logos
+          <div className="space-y-4">
+            {/* Main content: Teams and logos */}
+            <div className="flex items-center gap-4">
+              {/* Team logos */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                {logos.away && (
+                  <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <img 
+                      src={logos.away} 
+                      alt="Away team" 
+                      className="w-full h-full object-contain" 
+                      onError={e => { e.currentTarget.style.display = 'none'; }} 
+                    />
+                  </div>
+                )}
+                
+                {/* Team names and matchup */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-base font-semibold text-foreground leading-tight tracking-tight truncate">
+                    {event.description}
+                  </div>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span className="font-medium">{formatGameTime(event.game.scheduled_start)}</span>
+                    </div>
+                    {totalLiquidity > 0 && (
+                      <div className={`flex items-center gap-1 text-xs text-muted-foreground font-medium transition-colors ${flashClass}`}>
+                        <span>{formatLargeCurrency(totalLiquidity)} Vol.</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {totalLiquidity > 0 && (
-                  <div className={`flex items-center gap-1.5 text-muted-foreground transition-colors ${flashClass}`}>
-                    <span>{formatLargeCurrency(totalLiquidity)} Vol.</span>
+
+                {logos.home && (
+                  <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <img 
+                      src={logos.home} 
+                      alt="Home team" 
+                      className="w-full h-full object-contain" 
+                      onError={e => { e.currentTarget.style.display = 'none'; }} 
+                    />
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                {activeMarkets.length > 0 && (
-                  <Badge variant="secondary" className="text-xs px-2 py-0.5 font-medium">
-                    {activeMarkets.length}
-                  </Badge>
-                )}
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 shrink-0">
                 {isLive && (
-                  <Badge variant="destructive" className="gap-1 text-xs px-2 py-0.5">
+                  <Badge variant="destructive" className="gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium">
                     <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
                     LIVE
                   </Badge>
@@ -153,85 +185,49 @@ export function EventCard({
                     e.stopPropagation();
                     setShareDialogOpen(true);
                   }}
-                  className="h-7 w-7 p-0 hover:bg-accent"
+                  className="h-8 w-8 p-0 rounded-full hover:bg-accent/50"
                 >
                   <Share2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
 
-            {/* Main content row: Teams on left, outcomes on right */}
-            <div className="flex items-center justify-between gap-4">
-              {/* Teams section */}
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                {logos.away && (
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-secondary/30 flex items-center justify-center p-1.5">
-                      <img 
-                        src={logos.away} 
-                        alt="Away team" 
-                        className="w-full h-full object-contain" 
-                        onError={e => { e.currentTarget.style.display = 'none'; }} 
-                      />
-                    </div>
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                    {event.description}
-                  </div>
-                </div>
-                {logos.home && (
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-secondary/30 flex items-center justify-center p-1.5">
-                      <img 
-                        src={logos.home} 
-                        alt="Home team" 
-                        className="w-full h-full object-contain" 
-                        onError={e => { e.currentTarget.style.display = 'none'; }} 
-                      />
-                    </div>
-                  </div>
-                )}
+            {/* Outcomes - prominent betting options */}
+            {showMarkets && displayMarkets.length > 0 && displayMarkets[0].outcomes.filter(o => o.available || o.last).length > 0 && (
+              <div className="flex items-center gap-2">
+                {displayMarkets[0].outcomes
+                  .filter(o => o.available || o.last)
+                  .slice(0, 2)
+                  .map(outcome => {
+                    const price = outcome.available || outcome.last;
+                    return (
+                      <button
+                        key={outcome.id}
+                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] bg-gradient-to-b from-background to-secondary/30 border border-border/50 hover:border-primary/30 hover:shadow-lg text-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOutcomeClick?.(outcome.id);
+                        }}
+                      >
+                        <div className="text-xs text-muted-foreground font-medium mb-1 truncate">
+                          {outcome.description}
+                        </div>
+                        <div className="text-xl font-bold tracking-tight">
+                          {price && formatOdds(price, format)}
+                        </div>
+                      </button>
+                    );
+                  })}
               </div>
-
-              {/* Outcomes section - show first market's top 2 outcomes */}
-              {showMarkets && displayMarkets.length > 0 && displayMarkets[0].outcomes.filter(o => o.available || o.last).length > 0 && (
-                <div className="flex items-center gap-2 shrink-0">
-                  {displayMarkets[0].outcomes
-                    .filter(o => o.available || o.last)
-                    .slice(0, 2)
-                    .map(outcome => {
-                      const price = outcome.available || outcome.last;
-                      return (
-                        <button
-                          key={outcome.id}
-                          className="px-4 py-2.5 rounded-lg font-bold text-sm transition-all hover:scale-105 min-w-[90px] bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 text-foreground hover:shadow-md"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOutcomeClick?.(outcome.id);
-                          }}
-                        >
-                          <div className="text-xs font-medium opacity-80 mb-0.5 truncate">
-                            {outcome.description}
-                          </div>
-                          <div className="text-lg font-black">
-                            {price && formatOdds(price, format)}
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         )}
       </CardHeader>
       
       {aiReasoning && (
-        <CardContent className="pt-0 pb-3 border-t border-border/50">
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
-            <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-0 font-semibold shrink-0">
+        <CardContent className="pt-0 pb-4 px-5">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10">
+            <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-primary/10 text-primary border-0 font-semibold shrink-0 rounded-full">
               AI Match
             </Badge>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -242,11 +238,11 @@ export function EventCard({
       )}
       
       {showMarkets && displayMarkets.length > 1 && (
-        <CardContent className="pt-0 pb-4 border-t border-border/50">
+        <CardContent className="pt-0 pb-5 px-5">
           <div className="space-y-3">
             {displayMarkets.slice(1, 3).map(market => (
-              <div key={market.id}>
-                <div className="font-semibold text-muted-foreground mb-2 text-xs uppercase tracking-wide">
+              <div key={market.id} className="space-y-2">
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {market.description}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -255,17 +251,17 @@ export function EventCard({
                     return (
                       <button 
                         key={outcome.id} 
-                        className="bg-secondary/30 border border-border rounded-lg p-2.5 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
+                        className="bg-background/50 border border-border/50 rounded-xl p-3 flex flex-col gap-1.5 hover:border-primary/30 hover:bg-secondary/30 transition-all duration-200 cursor-pointer hover:shadow-md"
                         onClick={(e) => {
                           e.stopPropagation();
                           onOutcomeClick?.(outcome.id);
                         }}
                       >
-                        <span className="text-xs font-medium text-foreground/80 group-hover:text-primary transition-colors truncate">
+                        <span className="text-xs font-medium text-muted-foreground truncate">
                           {outcome.description}
                         </span>
                         {price && (
-                          <span className={`text-base font-black font-mono ${outcome.available ? 'text-success' : 'text-warning'}`}>
+                          <span className="text-lg font-bold tracking-tight">
                             {formatOdds(price, format)}
                           </span>
                         )}
@@ -281,15 +277,15 @@ export function EventCard({
       
       {/* Detail view footer */}
       {!onClick && (
-        <CardContent className="pt-2.5 pb-3 border-t border-border/50">
-          <div className="flex items-center gap-3 text-sm text-muted-foreground justify-center">
+        <CardContent className="pt-4 pb-4 border-t border-border/30">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground justify-center">
             <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{formatGameTime(event.game.scheduled_start)}</span>
+              <Clock className="w-4 h-4" />
+              <span className="font-medium">{formatGameTime(event.game.scheduled_start)}</span>
             </div>
             {totalLiquidity > 0 && (
-              <div className={`flex items-center gap-1.5 text-success font-semibold rounded-md px-2 py-1 -mx-2 -my-1 transition-colors ${flashClass}`}>
-                <DollarSign className="w-3.5 h-3.5" />
+              <div className={`flex items-center gap-1.5 font-semibold transition-colors ${flashClass}`}>
+                <DollarSign className="w-4 h-4" />
                 <span>{formatLargeCurrency(totalLiquidity)} volume</span>
               </div>
             )}
