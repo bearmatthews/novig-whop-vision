@@ -1,12 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatGameTime, calculateEventLiquidity, formatLargeCurrency, formatOdds } from "@/lib/betting-utils";
 import { getEventLogos } from "@/lib/team-logos";
-import { Clock, ChevronRight, DollarSign, Share2 } from "lucide-react";
+import { Clock, DollarSign } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ShareBetDialog } from "@/components/ShareBetDialog";
 import { useOddsFormat } from "@/hooks/use-odds-format";
 interface Event {
   id: string;
@@ -46,7 +44,6 @@ export function EventCard({
   onOutcomeClick
 }: EventCardProps) {
   const isMobile = useIsMobile();
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const { format } = useOddsFormat();
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
@@ -168,29 +165,15 @@ export function EventCard({
               )}
             </div>
 
-
             {/* Actions row */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {isLive && (
-                  <Badge variant="destructive" className="gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium">
-                    <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
-                    LIVE
-                  </Badge>
-                )}
+            {isLive && (
+              <div className="flex items-center justify-center">
+                <Badge variant="destructive" className="gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium">
+                  <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
+                  LIVE
+                </Badge>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShareDialogOpen(true);
-                }}
-                className="h-8 w-8 p-0 rounded-full hover:bg-accent/50"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+            )}
 
             {/* Outcomes - prominent betting options */}
             {showMarkets && displayMarkets.length > 0 && displayMarkets[0].outcomes.filter(o => o.available || o.last).length > 0 && (
@@ -254,11 +237,5 @@ export function EventCard({
           </div>
         </CardContent>
       )}
-      
-      <ShareBetDialog
-        open={shareDialogOpen}
-        onOpenChange={setShareDialogOpen}
-        eventName={event.description}
-      />
     </Card>;
 }
