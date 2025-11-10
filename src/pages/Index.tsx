@@ -267,6 +267,7 @@ const Index = () => {
                         eventId={selectedEvent.id}
                         targetOutcomeId={targetOutcomeId}
                         onOutcomeHighlighted={() => setTargetOutcomeId(null)}
+                        event={eventWithLiquidity}
                       />
                     </TabsContent>
 

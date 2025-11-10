@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 import { useOddsFormat } from "@/hooks/use-odds-format";
+import { getEventColors, parseTeamNames, getTeamAbbreviation } from "@/lib/team-logos";
 
 interface Market {
   id: string;
@@ -33,6 +34,7 @@ interface MarketTableProps {
   eventId?: string;
   targetOutcomeId?: string | null;
   onOutcomeHighlighted?: () => void;
+  event?: any; // Add event prop for team colors
 }
 
 export function MarketTable({ 
@@ -40,10 +42,15 @@ export function MarketTable({
   showLiquidity = false, 
   eventId,
   targetOutcomeId,
-  onOutcomeHighlighted
+  onOutcomeHighlighted,
+  event
 }: MarketTableProps) {
   const outcomeRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const { format } = useOddsFormat();
+
+  // Get team colors and names
+  const colors = event ? getEventColors(event) : { away: null, home: null };
+  const teams = event ? parseTeamNames(event.description) : null;
 
   useEffect(() => {
     if (targetOutcomeId && outcomeRefs.current[targetOutcomeId]) {
@@ -89,65 +96,106 @@ export function MarketTable({
 
   return (
     <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-      {marketsWithPrices.map((market) => (
-        <Card key={market.id} className="p-4 space-y-3">
-          <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-            {market.description}
-          </h3>
-          
-          <div className="grid gap-2">
-            {market.outcomes
-              .filter((outcome) => outcome.available)
-              .map((outcome) => {
-                const price = outcome.available || outcome.last;
-                const hasOrders = outcome.orders && outcome.orders.length > 0;
-                const totalLiquidity = hasOrders 
-                  ? outcome.orders.reduce((sum, order) => sum + order.qty, 0)
-                  : 0;
-                return (
-                  <button
-                    key={outcome.id}
-                    ref={(el) => outcomeRefs.current[outcome.id] = el}
-                    onClick={() => handleOutcomeClick(outcome.id)}
-                    className="bg-secondary/30 border border-border rounded-md p-3 space-y-1 text-left w-full transition-all hover:border-primary hover:bg-secondary/50 cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{outcome.description}</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
-                          Available
-                        </Badge>
-                        <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
-                    </div>
+      {marketsWithPrices.map((market) => {
+        // Determine if this is a moneyline market (2-way market with team outcomes)
+        const isMoneylineMarket = market.description.toLowerCase().includes('moneyline') || 
+                                  market.description.toLowerCase().includes('money line') ||
+                                  market.description.toLowerCase().includes('winner');
+        const isSpreadMarket = market.description.toLowerCase().includes('spread');
+        const isTotalMarket = market.description.toLowerCase().includes('total') || 
+                              market.description.toLowerCase().includes('over/under');
+        
+        return (
+          <Card key={market.id} className="p-5 space-y-3 border border-border/30 rounded-2xl bg-card">
+            <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">
+              {market.description}
+            </h3>
+            
+            <div className="grid gap-2">
+              {market.outcomes
+                .filter((outcome) => outcome.available)
+                .map((outcome, index) => {
+                  const price = outcome.available || outcome.last;
+                  const hasOrders = outcome.orders && outcome.orders.length > 0;
+                  const totalLiquidity = hasOrders 
+                    ? outcome.orders.reduce((sum, order) => sum + order.qty, 0)
+                    : 0;
+                  
+                  // Determine team color based on market type and outcome position
+                  let teamColor = null;
+                  let teamAbbr = null;
+                  
+                  if (isMoneylineMarket && teams && event) {
+                    // For moneyline, first outcome is away, second is home
+                    teamColor = index === 0 ? colors.away : colors.home;
+                    const teamName = index === 0 ? teams.away : teams.home;
+                    teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
+                  } else if (isSpreadMarket && teams && event) {
+                    // For spread, determine which team based on outcome description
+                    const outcomeDesc = outcome.description.toLowerCase();
+                    const awayTeam = teams.away.toLowerCase();
+                    const homeTeam = teams.home.toLowerCase();
                     
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">
-                        Price: <span className="font-semibold text-foreground">{price?.toFixed(2)}</span>
-                      </div>
-                      <div className="text-lg font-bold font-mono group-hover:text-primary transition-colors">
-                        {price ? formatOdds(price, format) : '-'}
-                      </div>
-                    </div>
+                    if (outcomeDesc.includes(awayTeam) || index === 0) {
+                      teamColor = colors.away;
+                      teamAbbr = getTeamAbbreviation(teams.away, event.game.league);
+                    } else {
+                      teamColor = colors.home;
+                      teamAbbr = getTeamAbbreviation(teams.home, event.game.league);
+                    }
+                  }
+                  
+                  const buttonStyle = teamColor 
+                    ? { backgroundColor: teamColor, borderColor: teamColor }
+                    : {};
+                  
+                  const buttonClasses = teamColor
+                    ? "rounded-xl p-4 space-y-2 text-left w-full transition-all duration-200 hover:scale-[1.02] cursor-pointer group border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
+                    : "bg-muted/50 border border-border rounded-xl p-4 space-y-2 text-left w-full transition-all hover:border-primary hover:bg-muted cursor-pointer group";
 
-                    {showLiquidity && hasOrders && (
-                      <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
-                        <div className="flex items-center gap-1 text-success">
-                          <DollarSign className="w-3 h-3" />
-                          {formatCurrency(totalLiquidity)}
+                  return (
+                    <button
+                      key={outcome.id}
+                      ref={(el) => outcomeRefs.current[outcome.id] = el}
+                      onClick={() => handleOutcomeClick(outcome.id)}
+                      style={buttonStyle}
+                      className={buttonClasses}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm uppercase tracking-wide">
+                          {teamAbbr || outcome.description}
+                        </span>
+                        <ExternalLink className={`w-3.5 h-3.5 transition-colors ${teamColor ? 'text-white/70 group-hover:text-white' : 'text-muted-foreground group-hover:text-primary'}`} />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className={`text-xs ${teamColor ? 'text-white/70' : 'text-muted-foreground'}`}>
+                          Price: <span className={`font-semibold ${teamColor ? 'text-white' : 'text-foreground'}`}>{price?.toFixed(2)}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <TrendingUp className="w-3 h-3" />
-                          {outcome.orders.length} orders
+                        <div className={`text-2xl font-bold font-mono transition-colors ${teamColor ? 'text-white' : 'group-hover:text-primary'}`}>
+                          {price ? formatOdds(price, format) : '-'}
                         </div>
                       </div>
-                    )}
-                  </button>
-                );
-              })}
-          </div>
-        </Card>
-      ))}
+
+                      {showLiquidity && hasOrders && (
+                        <div className={`flex items-center justify-between pt-2 border-t text-xs ${teamColor ? 'border-white/20' : 'border-border/50'}`}>
+                          <div className={`flex items-center gap-1 ${teamColor ? 'text-white/90' : 'text-success'}`}>
+                            <DollarSign className="w-3 h-3" />
+                            {formatCurrency(totalLiquidity)}
+                          </div>
+                          <div className={`flex items-center gap-1 ${teamColor ? 'text-white/70' : 'text-muted-foreground'}`}>
+                            <TrendingUp className="w-3 h-3" />
+                            {outcome.orders.length} orders
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
