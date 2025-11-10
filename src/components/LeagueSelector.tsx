@@ -5,12 +5,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trophy } from "lucide-react";
+import { ChevronDown, Trophy, GraduationCap } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import mlbLogo from "@/assets/leagues/mlb-logo.png";
 import nbaLogo from "@/assets/leagues/nba-logo.png";
 import nflLogo from "@/assets/leagues/nfl-logo.png";
 import nhlLogo from "@/assets/leagues/nhl-logo.png";
+import mlsLogo from "@/assets/leagues/mls-logo.png";
+import wnbaLogo from "@/assets/leagues/wnba-logo.png";
+import ufcLogo from "@/assets/leagues/ufc-logo.png";
 
 interface LeagueSelectorProps {
   selectedLeague: string;
@@ -18,11 +21,16 @@ interface LeagueSelectorProps {
 }
 
 export const LEAGUES = [
-  { id: 'ALL', name: 'All Sports', logo: null },
-  { id: 'MLB', name: 'MLB', logo: mlbLogo },
-  { id: 'NBA', name: 'NBA', logo: nbaLogo },
-  { id: 'NFL', name: 'NFL', logo: nflLogo },
-  { id: 'NHL', name: 'NHL', logo: nhlLogo },
+  { id: 'ALL', name: 'All Sports', logo: null, icon: Trophy },
+  { id: 'MLB', name: 'MLB', logo: mlbLogo, icon: null },
+  { id: 'NBA', name: 'NBA', logo: nbaLogo, icon: null },
+  { id: 'NFL', name: 'NFL', logo: nflLogo, icon: null },
+  { id: 'NHL', name: 'NHL', logo: nhlLogo, icon: null },
+  { id: 'MLS', name: 'MLS', logo: mlsLogo, icon: null },
+  { id: 'WNBA', name: 'WNBA', logo: wnbaLogo, icon: null },
+  { id: 'NCAAB', name: 'NCAAB', logo: null, icon: GraduationCap },
+  { id: 'NCAAF', name: 'NCAAF', logo: null, icon: GraduationCap },
+  { id: 'UFC', name: 'UFC', logo: ufcLogo, icon: null },
 ];
 
 export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelectorProps) {
@@ -40,9 +48,9 @@ export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelecto
           >
             {selectedLeagueData.logo ? (
               <img src={selectedLeagueData.logo} alt={selectedLeagueData.name} className="w-4 h-4 object-contain" />
-            ) : (
-              <Trophy className="w-4 h-4" />
-            )}
+            ) : selectedLeagueData.icon ? (
+              <selectedLeagueData.icon className="w-4 h-4" />
+            ) : null}
             {selectedLeagueData.name}
             <ChevronDown className="w-3 h-3 ml-0.5" />
           </Button>
@@ -63,9 +71,9 @@ export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelecto
             >
               {league.logo ? (
                 <img src={league.logo} alt={league.name} className="w-5 h-5 object-contain" />
-              ) : (
-                <Trophy className="w-5 h-5" />
-              )}
+              ) : league.icon ? (
+                <league.icon className="w-5 h-5" />
+              ) : null}
               {league.name}
             </DropdownMenuItem>
           ))}
@@ -75,22 +83,33 @@ export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelecto
   }
   
   return (
-    <div className="flex gap-2 flex-wrap">
-      {LEAGUES.map((league) => (
-        <Button
-          key={league.id}
-          variant={selectedLeague === league.id ? "default" : "secondary"}
-          onClick={() => onLeagueChange(league.id)}
-          className="gap-2.5"
-        >
-          {league.logo ? (
-            <img src={league.logo} alt={league.name} className="w-5 h-5 object-contain" />
-          ) : (
-            <Trophy className="w-5 h-5" />
-          )}
-          {league.name}
-        </Button>
-      ))}
+    <div className="relative w-full max-w-4xl">
+      {/* Left fade */}
+      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+      
+      {/* Scrollable container */}
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 pb-1 min-w-max">
+          {LEAGUES.map((league) => (
+            <Button
+              key={league.id}
+              variant={selectedLeague === league.id ? "default" : "secondary"}
+              onClick={() => onLeagueChange(league.id)}
+              className="gap-2.5 shrink-0"
+            >
+              {league.logo ? (
+                <img src={league.logo} alt={league.name} className="w-5 h-5 object-contain" />
+              ) : league.icon ? (
+                <league.icon className="w-5 h-5" />
+              ) : null}
+              {league.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Right fade */}
+      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
     </div>
   );
 }
