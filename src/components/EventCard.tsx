@@ -371,25 +371,20 @@ export function EventCard({
                     })()}
                   </>
                 ) : (
-                  // Default view - moneyline two boxes, grey missing
-                  moneylineMarket && (
-                    <div className="col-span-3">
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const allOutcomes = moneylineMarket?.outcomes || [];
-                          const awayName = teams?.away;
-                          const homeName = teams?.home;
-                          const awayAbbr = awayName ? getTeamAbbreviation(awayName, event.game.league) : null;
-                          const homeAbbr = homeName ? getTeamAbbreviation(homeName, event.game.league) : null;
-                          const matchOutcome = (o: any, name?: string | null, abbr?: string | null) => {
-                            const d = (o.description || '').toLowerCase();
-                            return (abbr && d.includes(abbr.toLowerCase())) || (name && d.includes(name.toLowerCase()));
-                          };
-                          const awayOutcome = allOutcomes.find((o: any) => matchOutcome(o, awayName, awayAbbr)) ?? allOutcomes[0];
-                          const homeOutcome = allOutcomes.find((o: any) => matchOutcome(o, homeName, homeAbbr)) ?? allOutcomes[1];
-                          const renderFlexBox = (outcome: any, teamColor?: string | null, label?: string | null) => {
-                            const price = outcome?.available ?? outcome?.last;
-                            if (price) {
+                  // Default view - show best available market
+                  (() => {
+                    // Try moneyline first
+                    const moneylineOutcomes = moneylineMarket?.outcomes.filter(o => o.available || o.last) || [];
+                    if (moneylineOutcomes.length === 2) {
+                      return (
+                        <div className="col-span-3">
+                          <div className="flex items-center gap-2">
+                            {moneylineOutcomes.map((outcome, index) => {
+                              const price = outcome.available || outcome.last;
+                              const teamColor = index === 0 ? colors.away : colors.home;
+                              const teamName = index === 0 ? teams?.away : teams?.home;
+                              const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
+                              
                               return (
                                 <button
                                   key={outcome.id}
@@ -402,31 +397,104 @@ export function EventCard({
                                 >
                                   <div className="flex items-center justify-center gap-2">
                                     <span className="text-sm font-bold uppercase tracking-wide">
-                                      {label || outcome?.description}
+                                      {teamAbbr || outcome.description}
                                     </span>
                                     <span className="text-xl font-bold tracking-tight">
-                                      {formatOdds(price, format)}
+                                      {price && formatOdds(price, format)}
                                     </span>
                                   </div>
                                 </button>
                               );
-                            }
-                            return (
-                              <div className="flex-1 px-4 py-3 rounded-xl border border-border bg-muted/30 text-muted-foreground/50 text-sm text-center">
-                                {label || '-'}
-                              </div>
-                            );
-                          };
-                          return (
-                            <>
-                              {renderFlexBox(awayOutcome, colors.away, awayAbbr || awayName || null)}
-                              {renderFlexBox(homeOutcome, colors.home, homeAbbr || homeName || null)}
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Fallback to spread if moneyline not available
+                    const spreadOutcomes = spreadMarket?.outcomes.filter(o => o.available || o.last) || [];
+                    if (spreadOutcomes.length === 2) {
+                      return (
+                        <div className="col-span-3">
+                          <div className="flex flex-col gap-2">
+                            <Badge variant="secondary" className="text-xs self-start">Spread</Badge>
+                            <div className="flex items-center gap-2">
+                              {spreadOutcomes.map((outcome, index) => {
+                                const price = outcome.available || outcome.last;
+                                const teamName = index === 0 ? teams?.away : teams?.home;
+                                const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
+                                const spreadMatch = outcome.description.match(/([+-]?\d+\.?\d*)/);
+                                const spreadValue = spreadMatch ? spreadMatch[1] : '';
+                                
+                                return (
+                                  <button
+                                    key={outcome.id}
+                                    className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border border-border bg-muted/50 hover:bg-muted text-foreground shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onOutcomeClick?.(outcome.id);
+                                    }}
+                                  >
+                                    <div className="flex items-center justify-center gap-2">
+                                      <span className="text-sm font-bold uppercase">
+                                        {teamAbbr} {spreadValue}
+                                      </span>
+                                      <span className="text-xl font-bold tracking-tight">
+                                        {price && formatOdds(price, format)}
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Fallback to total if neither moneyline nor spread available
+                    const totalOutcomes = totalMarket?.outcomes.filter(o => o.available || o.last) || [];
+                    if (totalOutcomes.length >= 2) {
+                      return (
+                        <div className="col-span-3">
+                          <div className="flex flex-col gap-2">
+                            <Badge variant="secondary" className="text-xs self-start">Total</Badge>
+                            <div className="flex items-center gap-2">
+                              {totalOutcomes.slice(0, 2).map((outcome) => {
+                                const price = outcome.available || outcome.last;
+                                const isOver = outcome.description.toLowerCase().includes('over');
+                                const totalMatch = outcome.description.match(/(\d+\.?\d*)/);
+                                const totalValue = totalMatch ? totalMatch[1] : '';
+                                
+                                return (
+                                  <button
+                                    key={outcome.id}
+                                    className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border border-border bg-muted/50 hover:bg-muted text-foreground shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onOutcomeClick?.(outcome.id);
+                                    }}
+                                  >
+                                    <div className="flex items-center justify-center gap-2">
+                                      <span className="text-sm font-bold uppercase">
+                                        {isOver ? 'O' : 'U'} {totalValue}
+                                      </span>
+                                      <span className="text-xl font-bold tracking-tight">
+                                        {price && formatOdds(price, format)}
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // No markets available - don't show any betting buttons
+                    return null;
+                  })()
                 )}
               </div>
               );
