@@ -1,3 +1,5 @@
+export type OddsFormat = 'price' | 'decimal' | 'american' | 'percentage';
+
 /**
  * Convert decimal price to American odds
  * @param price - Decimal price (e.g., 0.36)
@@ -10,6 +12,36 @@ export function priceToAmericanOdds(price: number): string {
   } else {
     const odds = Math.round(((1 - price) / price) * 100);
     return `+${odds}`;
+  }
+}
+
+/**
+ * Convert price to decimal odds
+ * @param price - Decimal price (e.g., 0.36)
+ * @returns Decimal odds (e.g., 2.78)
+ */
+export function priceToDecimalOdds(price: number): number {
+  return 1 / price;
+}
+
+/**
+ * Format odds based on the selected format
+ * @param price - Decimal price (e.g., 0.36)
+ * @param format - Display format
+ * @returns Formatted odds string
+ */
+export function formatOdds(price: number, format: OddsFormat = 'american'): string {
+  switch (format) {
+    case 'price':
+      return price.toFixed(2);
+    case 'decimal':
+      return priceToDecimalOdds(price).toFixed(2);
+    case 'american':
+      return priceToAmericanOdds(price);
+    case 'percentage':
+      return `${(price * 100).toFixed(0)}%`;
+    default:
+      return priceToAmericanOdds(price);
   }
 }
 

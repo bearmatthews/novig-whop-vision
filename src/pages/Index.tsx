@@ -9,6 +9,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
 import { WhopUserProfile } from "@/components/WhopUserProfile";
 import { AISearchOverlay } from "@/components/AISearchOverlay";
+import { OddsFormatSelector } from "@/components/OddsFormatSelector";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -182,17 +183,20 @@ const Index = () => {
           {!isLoading && !error && data && filteredEvents.length === 0 && !searchQuery && <EmptyState icon={TrendingUp} title="No Active Events" description={selectedLeague === 'ALL' ? "There are no active events with open markets at the moment." : `There are no active ${selectedLeague} events with open markets at the moment.`} />}
 
           {filteredEvents.length > 0 && !selectedEvent && <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full max-w-md grid-cols-3">
-                <TabsTrigger value="all">
-                  All <span className="ml-1.5 text-xs">({filteredEvents.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="live">
-                  Live <span className="ml-1.5 text-xs">({liveEvents.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="pregame">
-                  Pre-Game <span className="ml-1.5 text-xs">({pregameEvents.length})</span>
-                </TabsTrigger>
-              </TabsList>
+              <div className="flex items-center justify-between mb-4">
+                <TabsList className="grid w-full max-w-md grid-cols-3">
+                  <TabsTrigger value="all">
+                    All <span className="ml-1.5 text-xs">({filteredEvents.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="live">
+                    Live <span className="ml-1.5 text-xs">({liveEvents.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="pregame">
+                    Pre-Game <span className="ml-1.5 text-xs">({pregameEvents.length})</span>
+                  </TabsTrigger>
+                </TabsList>
+                <OddsFormatSelector />
+              </div>
 
               <TabsContent value="all" className="mt-6">
                 <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">

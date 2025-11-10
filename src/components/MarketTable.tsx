@@ -1,9 +1,10 @@
 import { Badge } from "@/components/ui/badge";
-import { priceToAmericanOdds, formatCurrency } from "@/lib/betting-utils";
+import { formatOdds, formatCurrency } from "@/lib/betting-utils";
 import { TrendingUp, DollarSign, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
+import { useOddsFormat } from "@/hooks/use-odds-format";
 
 interface Market {
   id: string;
@@ -42,6 +43,7 @@ export function MarketTable({
   onOutcomeHighlighted
 }: MarketTableProps) {
   const outcomeRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const { format } = useOddsFormat();
 
   useEffect(() => {
     if (targetOutcomeId && outcomeRefs.current[targetOutcomeId]) {
@@ -124,7 +126,7 @@ export function MarketTable({
                         Price: <span className="font-semibold text-foreground">{price?.toFixed(2)}</span>
                       </div>
                       <div className="text-lg font-bold font-mono group-hover:text-primary transition-colors">
-                        {price ? priceToAmericanOdds(price) : '-'}
+                        {price ? formatOdds(price, format) : '-'}
                       </div>
                     </div>
 
