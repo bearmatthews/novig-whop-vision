@@ -14,13 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cached_novig_events: {
+        Row: {
+          event_data: Json
+          event_id: string
+          id: string
+          last_updated: string | null
+          league: string
+          status: string
+        }
+        Insert: {
+          event_data: Json
+          event_id: string
+          id?: string
+          last_updated?: string | null
+          league: string
+          status: string
+        }
+        Update: {
+          event_data?: Json
+          event_id?: string
+          id?: string
+          last_updated?: string | null
+          league?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      clean_old_cached_events: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
