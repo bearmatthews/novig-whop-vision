@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { WhopUserProfile } from "@/components/WhopUserProfile";
 import { AISearchOverlay } from "@/components/AISearchOverlay";
 import { SettingsMenu } from "@/components/SettingsMenu";
+import { LogoCachePopulator } from "@/components/LogoCachePopulator";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -201,6 +202,11 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 relative">
+        {/* Logo Cache Populator - Temporary Admin Tool */}
+        <div className="mb-6">
+          <LogoCachePopulator />
+        </div>
+        
         <div className="space-y-6">
           {isLoading && !data && <EmptyState icon={RefreshCw} title="Loading betting data" description="Fetching live markets from Novig..." />}
 
