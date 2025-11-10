@@ -149,7 +149,7 @@ const Index = () => {
         <div className="container mx-auto px-3 md:px-6 py-2 md:py-5">
           {isMobile ? (
             // Mobile Layout - Single Line
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <WhopUserProfile />
               <LeagueSelector 
                 selectedLeague={selectedLeague} 
@@ -168,9 +168,10 @@ const Index = () => {
                 variant="default" 
                 size="sm" 
                 onClick={() => setShowAIChat(!showAIChat)} 
-                className="rounded-lg shrink-0 px-2"
+                className="rounded-lg shrink-0 px-3 gap-1.5 whitespace-nowrap"
               >
                 <Bot className="w-4 h-4" />
+                <span className="text-xs">Ask Bear</span>
               </Button>
             </div>
           ) : (
