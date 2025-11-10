@@ -120,26 +120,47 @@ async function fetchESPNGameDetails(gameId: string, league: string) {
     const homeTeamName = homeTeam?.team?.displayName;
     const awayTeamName = awayTeam?.team?.displayName;
 
+    // Determine season from game date
+    const gameDate = new Date(header?.competitions?.[0]?.date || new Date());
+    const gameYear = gameDate.getFullYear();
+    const gameMonth = gameDate.getMonth();
+    
+    // Calculate season year based on sport
+    let season = gameYear.toString();
+    
+    // For sports with seasons spanning two years (NBA, NHL, WNBA)
+    // games before July belong to the previous season
+    if (['basketball/nba', 'basketball/wnba', 'hockey/nhl'].includes(sport) && gameMonth < 7) {
+      season = (gameYear - 1).toString();
+    }
+    
+    // For college football, season starts in August
+    if (sport === 'football/college-football') {
+      season = gameMonth >= 8 ? gameYear.toString() : (gameYear - 1).toString();
+    }
+
+    console.log(`Game date: ${gameDate.toISOString()}, using season: ${season}`);
+
     // Try to get cached rosters first for immediate response
     const [cachedHomeRoster, cachedAwayRoster] = await Promise.all([
-      getCachedRoster(homeTeamId, league),
-      getCachedRoster(awayTeamId, league),
+      getCachedRoster(homeTeamId, league, season),
+      getCachedRoster(awayTeamId, league, season),
     ]);
 
     // Fetch fresh data and cache in background (don't block response)
     const backgroundUpdate = async () => {
       try {
         const [homeRoster, awayRoster] = await Promise.all([
-          fetchTeamRoster(homeTeamId, sport),
-          fetchTeamRoster(awayTeamId, sport),
+          fetchTeamRoster(homeTeamId, sport, season),
+          fetchTeamRoster(awayTeamId, sport, season),
         ]);
 
         // Cache the rosters if we got new data
         if (homeRoster && homeRoster.length > 0) {
-          await cacheRoster(homeTeamId, homeTeamName, league, homeRoster);
+          await cacheRoster(homeTeamId, homeTeamName, league, homeRoster, season);
         }
         if (awayRoster && awayRoster.length > 0) {
-          await cacheRoster(awayTeamId, awayTeamName, league, awayRoster);
+          await cacheRoster(awayTeamId, awayTeamName, league, awayRoster, season);
         }
       } catch (error) {
         console.error('Background roster update failed:', error);
@@ -197,26 +218,24 @@ async function fetchESPNGameDetails(gameId: string, league: string) {
   }
 }
 
-async function getCachedRoster(teamId: string, league: string): Promise<any[] | null> {
+async function getCachedRoster(teamId: string, league: string, season?: string): Promise<any[] | null> {
   try {
-    const currentSeason = new Date().getFullYear().toString();
+    const targetSeason = season || new Date().getFullYear().toString();
     
     const { data, error } = await supabase
       .from('team_rosters_cache')
       .select('roster_data')
       .eq('team_id', teamId)
       .eq('league', league.toUpperCase())
-      .or(`season.eq.${currentSeason},season.is.null`)
-      .order('last_updated', { ascending: false })
-      .limit(1)
-      .single();
+      .eq('season', targetSeason)
+      .maybeSingle();
 
     if (error || !data) {
-      console.log('No cached roster found for team:', teamId);
+      console.log(`No cached roster found for team: ${teamId}, season: ${targetSeason}`);
       return null;
     }
 
-    console.log('Cached roster found for team:', teamId);
+    console.log(`Cached roster found for team: ${teamId}, season: ${targetSeason}`);
     return data.roster_data as any[];
   } catch (error) {
     console.error('Error getting cached roster:', error);
@@ -224,11 +243,11 @@ async function getCachedRoster(teamId: string, league: string): Promise<any[] | 
   }
 }
 
-async function cacheRoster(teamId: string, teamName: string, league: string, rosterData: any[]) {
+async function cacheRoster(teamId: string, teamName: string, league: string, rosterData: any[], season?: string) {
   if (!rosterData || rosterData.length === 0) return;
 
   try {
-    const currentSeason = new Date().getFullYear().toString();
+    const targetSeason = season || new Date().getFullYear().toString();
     
     const { error } = await supabase
       .from('team_rosters_cache')
@@ -237,7 +256,7 @@ async function cacheRoster(teamId: string, teamName: string, league: string, ros
         league: league.toUpperCase(),
         team_name: teamName,
         roster_data: rosterData,
-        season: currentSeason,
+        season: targetSeason,
         last_updated: new Date().toISOString(),
       }, {
         onConflict: 'team_id,league,season'
@@ -246,22 +265,26 @@ async function cacheRoster(teamId: string, teamName: string, league: string, ros
     if (error) {
       console.error('Error caching roster:', error);
     } else {
-      console.log(`Roster cached for ${teamName} (${rosterData.length} players)`);
+      console.log(`Roster cached for ${teamName} season ${targetSeason} (${rosterData.length} players)`);
     }
   } catch (error) {
     console.error('Error in cacheRoster:', error);
   }
 }
 
-async function fetchTeamRoster(teamId: string, sport: string) {
+async function fetchTeamRoster(teamId: string, sport: string, season?: string) {
   if (!teamId) return null;
   
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/${sport}/teams/${teamId}/roster`;
+    const seasonParam = season ? `?season=${season}` : '';
+    const url = `https://site.api.espn.com/apis/site/v2/sports/${sport}/teams/${teamId}/roster${seasonParam}`;
     console.log(`Fetching roster: ${url}`);
     
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.log(`Failed to fetch roster for team ${teamId} season ${season || 'current'}: ${response.status}`);
+      return null;
+    }
     
     const data = await response.json();
     
