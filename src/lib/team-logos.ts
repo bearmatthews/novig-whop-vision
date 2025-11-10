@@ -520,12 +520,24 @@ export function parseTeamNames(description: string): { away: string; home: strin
 
 /**
  * Get ESPN CDN logo URL for a team
+ * Supports all major leagues and provides fallback for teams not in our mapping
  */
 export function getTeamLogo(teamName: string, league: string): string | null {
   const abbreviations = TEAM_ABBREVIATIONS[league];
   if (!abbreviations) return null;
   
-  const abbr = abbreviations[teamName];
+  let abbr = abbreviations[teamName];
+  
+  // If we don't have the abbreviation, try to generate one from the team name
+  if (!abbr && (league === 'NCAAB' || league === 'NCAAF')) {
+    // For college teams, create a simplified abbreviation
+    abbr = teamName.toLowerCase()
+      .replace(/university|college|state|of|the/gi, '')
+      .trim()
+      .replace(/\s+/g, '')
+      .substring(0, 6);
+  }
+  
   if (!abbr) return null;
   
   const leagueLower = league.toLowerCase();
@@ -533,8 +545,8 @@ export function getTeamLogo(teamName: string, league: string): string | null {
 }
 
 /**
- * Get team logos for an event
- * Tries to use API-provided logos first, falls back to ESPN CDN
+ * Get team logos for an event with robust ESPN fallback
+ * Priority: 1) API-provided logos, 2) ESPN CDN, 3) null
  */
 export function getEventLogos(event: any): { away: string | null; home: string | null } {
   // Try API-provided logos first
@@ -552,9 +564,16 @@ export function getEventLogos(event: any): { away: string | null; home: string |
   const league = event.game?.league;
   if (!league) return { away: null, home: null };
   
+  const awayLogo = getTeamLogo(teams.away, league);
+  const homeLogo = getTeamLogo(teams.home, league);
+  
+  // If ESPN CDN fails, try alternative ESPN endpoints
+  const fallbackAwayLogo = awayLogo || `https://a.espncdn.com/combiner/i?img=/i/teamlogos/${league.toLowerCase()}/500/${teams.away.toLowerCase().replace(/\s+/g, '-')}.png`;
+  const fallbackHomeLogo = homeLogo || `https://a.espncdn.com/combiner/i?img=/i/teamlogos/${league.toLowerCase()}/500/${teams.home.toLowerCase().replace(/\s+/g, '-')}.png`;
+  
   return {
-    away: getTeamLogo(teams.away, league),
-    home: getTeamLogo(teams.home, league),
+    away: awayLogo || fallbackAwayLogo,
+    home: homeLogo || fallbackHomeLogo,
   };
 }
 
