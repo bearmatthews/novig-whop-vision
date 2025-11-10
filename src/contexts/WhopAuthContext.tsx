@@ -82,7 +82,10 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
             const payload = await res.json().catch(() => null);
             if (payload?.user) {
               console.log('Whop user via Vercel proxy:', payload.user);
-              setUser(normalizeWhopUser(payload.user));
+              console.log('Raw user data:', JSON.stringify(payload.user, null, 2));
+              const normalized = normalizeWhopUser(payload.user);
+              console.log('Normalized user:', normalized);
+              setUser(normalized);
               setLoading(false);
               return;
             }
@@ -104,7 +107,10 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           setError(authError.message);
         } else if (data?.user) {
           console.log('User authenticated via fallback:', data.user);
-          setUser(normalizeWhopUser(data.user));
+          console.log('Raw fallback user data:', JSON.stringify(data.user, null, 2));
+          const normalized = normalizeWhopUser(data.user);
+          console.log('Normalized fallback user:', normalized);
+          setUser(normalized);
         } else {
           console.log('No user data received');
           setError('Authentication incomplete - check Whop app configuration');
