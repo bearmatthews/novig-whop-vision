@@ -299,7 +299,7 @@ const Index = () => {
                     espnScore={findScoreForEvent(espnScores, eventWithLiquidity.description, eventWithLiquidity.game.league)}
                   />
 
-                  <Tabs defaultValue="game-data" className="w-full">
+                  <Tabs defaultValue={targetOutcomeId ? "markets" : "game-data"} className="w-full">
                     <TabsList>
                       <TabsTrigger value="game-data">Game Data</TabsTrigger>
                       <TabsTrigger value="markets">Markets</TabsTrigger>
