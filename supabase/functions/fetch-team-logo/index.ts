@@ -280,10 +280,11 @@ Deno.serve(async (req) => {
 
     if (!logoUrl) {
       console.log(`No logo URL found for team: ${teamName}`);
+      // Return 200 with a notFound flag so clients don't treat this as an error
       return new Response(
-        JSON.stringify({ error: 'No logo available for this team' }),
+        JSON.stringify({ url: null, cached: false, notFound: true, team: teamName, league }),
         { 
-          status: 404,
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );

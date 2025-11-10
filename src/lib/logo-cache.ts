@@ -7,9 +7,13 @@ export async function ensureCollegeLogoCached(teamName: string, league: "NCAAB" 
   if (requested.has(key)) return;
   requested.add(key);
   try {
-    await supabase.functions.invoke("fetch-team-logo", {
+    const { data, error } = await supabase.functions.invoke("fetch-team-logo", {
       body: { teamName, league },
     });
+    if (error) {
+      // Soft-miss: not a failure for UI; continue silently
+      console.info("Logo warmup: not found or skipped", { teamName, league });
+    }
   } catch (err) {
     // Non-blocking best-effort cache warmup
     console.warn("ensureCollegeLogoCached error", err);
