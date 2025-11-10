@@ -181,7 +181,15 @@ export function EventCard({
             </div>
 
             {/* Outcomes - prominent betting options */}
-            {showMarkets && activeMarkets.length > 0 && (
+            {showMarkets && activeMarkets.length > 0 && (() => {
+              // Debug logging
+              console.log('Active Markets:', activeMarkets.map(m => ({ 
+                description: m.description, 
+                outcomeCount: m.outcomes.filter(o => o.available || o.last).length 
+              })));
+              console.log('Show Spreads and Totals:', showSpreadsAndTotals);
+              
+              return (
               <div className="space-y-3">
                 {showSpreadsAndTotals ? (
                   // Show multiple markets: Moneyline, Spread, Total
@@ -357,7 +365,8 @@ export function EventCard({
                   )
                 )}
               </div>
-            )}
+              );
+            })()}
           </div>
         )}
       </CardHeader>
