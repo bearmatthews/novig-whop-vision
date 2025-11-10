@@ -52,15 +52,6 @@ export function EventCard({
   const teams = parseTeamNames(event.description);
   const totalLiquidity = calculateEventLiquidity(event);
   
-  // Helper to lighten hex color while keeping it opaque
-  const lightenColor = (hex: string, percent: number = 85) => {
-    const num = parseInt(hex.replace('#', ''), 16);
-    const r = (num >> 16) + Math.round(((255 - (num >> 16)) * percent) / 100);
-    const g = ((num >> 8) & 0x00FF) + Math.round(((255 - ((num >> 8) & 0x00FF)) * percent) / 100);
-    const b = (num & 0x0000FF) + Math.round(((255 - (num & 0x0000FF)) * percent) / 100);
-    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-  };
-  
   // Filter markets to show relevant one first if specified
   const displayMarkets = relevantMarket 
     ? [...activeMarkets.filter(m => m.description.toLowerCase().includes(relevantMarket.toLowerCase())),
@@ -198,10 +189,10 @@ export function EventCard({
                     // Use team colors for the buttons - away team for first outcome, home team for second
                     const teamColor = index === 0 ? colors.away : colors.home;
                     const bgStyle = teamColor 
-                      ? { backgroundColor: lightenColor(teamColor, 85), borderColor: teamColor }
+                      ? { backgroundColor: teamColor, borderColor: teamColor }
                       : {};
                     const hoverStyle = teamColor
-                      ? { '--hover-bg': lightenColor(teamColor, 75), '--hover-border': teamColor } as React.CSSProperties
+                      ? { '--hover-brightness': '1.1' } as React.CSSProperties
                       : {};
                     
                     // Get team abbreviation
@@ -212,7 +203,7 @@ export function EventCard({
                       <button
                         key={outcome.id}
                         style={{ ...bgStyle, ...hoverStyle }}
-                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border hover:shadow-lg text-foreground [&:hover]:bg-[var(--hover-bg)] [&:hover]:border-[var(--hover-border)]"
+                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border hover:shadow-lg text-white hover:brightness-[var(--hover-brightness,1.1)]"
                         onClick={(e) => {
                           e.stopPropagation();
                           onOutcomeClick?.(outcome.id);
