@@ -107,6 +107,39 @@ export type Database = {
         }
         Relationships: []
       }
+      team_rosters_cache: {
+        Row: {
+          cached_at: string
+          id: string
+          last_updated: string
+          league: string
+          roster_data: Json
+          season: string | null
+          team_id: string
+          team_name: string
+        }
+        Insert: {
+          cached_at?: string
+          id?: string
+          last_updated?: string
+          league: string
+          roster_data: Json
+          season?: string | null
+          team_id: string
+          team_name: string
+        }
+        Update: {
+          cached_at?: string
+          id?: string
+          last_updated?: string
+          league?: string
+          roster_data?: Json
+          season?: string | null
+          team_id?: string
+          team_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

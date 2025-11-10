@@ -117,11 +117,40 @@ async function fetchESPNGameDetails(gameId: string, league: string) {
     // Get team IDs for additional data
     const homeTeamId = homeTeam?.team?.id;
     const awayTeamId = awayTeam?.team?.id;
+    const homeTeamName = homeTeam?.team?.displayName;
+    const awayTeamName = awayTeam?.team?.displayName;
 
-    // Fetch rosters, injuries, and head-to-head in parallel
-    const [homeRoster, awayRoster, homeInjuries, awayInjuries, headToHead] = await Promise.all([
-      fetchTeamRoster(homeTeamId, sport),
-      fetchTeamRoster(awayTeamId, sport),
+    // Try to get cached rosters first for immediate response
+    const [cachedHomeRoster, cachedAwayRoster] = await Promise.all([
+      getCachedRoster(homeTeamId, league),
+      getCachedRoster(awayTeamId, league),
+    ]);
+
+    // Fetch fresh data and cache in background (don't block response)
+    const backgroundUpdate = async () => {
+      try {
+        const [homeRoster, awayRoster] = await Promise.all([
+          fetchTeamRoster(homeTeamId, sport),
+          fetchTeamRoster(awayTeamId, sport),
+        ]);
+
+        // Cache the rosters if we got new data
+        if (homeRoster && homeRoster.length > 0) {
+          await cacheRoster(homeTeamId, homeTeamName, league, homeRoster);
+        }
+        if (awayRoster && awayRoster.length > 0) {
+          await cacheRoster(awayTeamId, awayTeamName, league, awayRoster);
+        }
+      } catch (error) {
+        console.error('Background roster update failed:', error);
+      }
+    };
+
+    // Start background update (fire and forget)
+    backgroundUpdate().catch(err => console.error('Background update error:', err));
+
+    // Fetch only injuries and h2h for immediate response (rosters from cache)
+    const [homeInjuries, awayInjuries, headToHead] = await Promise.all([
       fetchTeamInjuries(homeTeamId, sport),
       fetchTeamInjuries(awayTeamId, sport),
       fetchHeadToHead(homeTeamId, awayTeamId, sport)
@@ -134,24 +163,24 @@ async function fetchESPNGameDetails(gameId: string, league: string) {
       attendance: gameInfo?.attendance,
       home_team: {
         id: homeTeamId,
-        name: homeTeam?.team?.displayName,
+        name: homeTeamName,
         abbreviation: homeTeam?.team?.abbreviation,
         logo: homeTeam?.team?.logo,
         record: homeTeam?.team?.record,
         statistics: homeTeam?.statistics || [],
         leaders: homeTeam?.leaders || [],
-        roster: homeRoster,
+        roster: cachedHomeRoster || [], // Use cached roster
         injuries: homeInjuries,
       },
       away_team: {
         id: awayTeamId,
-        name: awayTeam?.team?.displayName,
+        name: awayTeamName,
         abbreviation: awayTeam?.team?.abbreviation,
         logo: awayTeam?.team?.logo,
         record: awayTeam?.team?.record,
         statistics: awayTeam?.statistics || [],
         leaders: awayTeam?.leaders || [],
-        roster: awayRoster,
+        roster: cachedAwayRoster || [], // Use cached roster
         injuries: awayInjuries,
       },
       odds: data.pickcenter?.[0] || null,
@@ -165,6 +194,62 @@ async function fetchESPNGameDetails(gameId: string, league: string) {
   } catch (error) {
     console.error(`Error fetching game details:`, error);
     return null;
+  }
+}
+
+async function getCachedRoster(teamId: string, league: string): Promise<any[] | null> {
+  try {
+    const currentSeason = new Date().getFullYear().toString();
+    
+    const { data, error } = await supabase
+      .from('team_rosters_cache')
+      .select('roster_data')
+      .eq('team_id', teamId)
+      .eq('league', league.toUpperCase())
+      .or(`season.eq.${currentSeason},season.is.null`)
+      .order('last_updated', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      console.log('No cached roster found for team:', teamId);
+      return null;
+    }
+
+    console.log('Cached roster found for team:', teamId);
+    return data.roster_data as any[];
+  } catch (error) {
+    console.error('Error getting cached roster:', error);
+    return null;
+  }
+}
+
+async function cacheRoster(teamId: string, teamName: string, league: string, rosterData: any[]) {
+  if (!rosterData || rosterData.length === 0) return;
+
+  try {
+    const currentSeason = new Date().getFullYear().toString();
+    
+    const { error } = await supabase
+      .from('team_rosters_cache')
+      .upsert({
+        team_id: teamId,
+        league: league.toUpperCase(),
+        team_name: teamName,
+        roster_data: rosterData,
+        season: currentSeason,
+        last_updated: new Date().toISOString(),
+      }, {
+        onConflict: 'team_id,league,season'
+      });
+
+    if (error) {
+      console.error('Error caching roster:', error);
+    } else {
+      console.log(`Roster cached for ${teamName} (${rosterData.length} players)`);
+    }
+  } catch (error) {
+    console.error('Error in cacheRoster:', error);
   }
 }
 
