@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      cached_espn_scores: {
+        Row: {
+          away_score: number | null
+          away_team: string
+          clock: string | null
+          game_id: string
+          game_status: string | null
+          home_score: number | null
+          home_team: string
+          last_updated: string | null
+          league: string
+          period: string | null
+        }
+        Insert: {
+          away_score?: number | null
+          away_team: string
+          clock?: string | null
+          game_id: string
+          game_status?: string | null
+          home_score?: number | null
+          home_team: string
+          last_updated?: string | null
+          league: string
+          period?: string | null
+        }
+        Update: {
+          away_score?: number | null
+          away_team?: string
+          clock?: string | null
+          game_id?: string
+          game_status?: string | null
+          home_score?: number | null
+          home_team?: string
+          last_updated?: string | null
+          league?: string
+          period?: string | null
+        }
+        Relationships: []
+      }
       cached_novig_events: {
         Row: {
           event_data: Json
@@ -47,6 +86,7 @@ export type Database = {
     }
     Functions: {
       clean_old_cached_events: { Args: never; Returns: undefined }
+      clean_old_cached_scores: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

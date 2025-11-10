@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { getCachedEvents, refreshNovigCache } from "@/lib/cached-graphql-client";
+import { getCachedScores, refreshESPNScores, findScoreForEvent } from "@/lib/espn-scores";
 import { graphqlQuery } from "@/lib/graphql-client";
 import { GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
 import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle, Bot } from "lucide-react";

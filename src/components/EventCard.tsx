@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOddsFormat } from "@/hooks/use-odds-format";
 import { useMarketView } from "@/components/SettingsMenu";
+import { ESPNScore, formatGameStatus, isGameLive } from "@/lib/espn-scores";
 interface Event {
   id: string;
   description: string;
@@ -35,6 +36,7 @@ interface EventCardProps {
   aiReasoning?: string;
   relevantMarket?: string;
   onOutcomeClick?: (outcomeId: string) => void;
+  espnScore?: ESPNScore | null;
 }
 export function EventCard({
   event,
@@ -42,7 +44,8 @@ export function EventCard({
   showMarkets = false,
   aiReasoning,
   relevantMarket,
-  onOutcomeClick
+  onOutcomeClick,
+  espnScore
 }: EventCardProps) {
   const isMobile = useIsMobile();
   const {
@@ -120,9 +123,19 @@ export function EventCard({
               <CardTitle className="text-3xl font-semibold leading-tight tracking-tight">
                 {event.description}
               </CardTitle>
+              
+              {/* Score display for detail view */}
+              {espnScore && (espnScore.home_score !== null || espnScore.away_score !== null) && (
+                <div className="flex items-center justify-center gap-4 text-4xl font-bold">
+                  <span>{espnScore.away_score ?? '-'}</span>
+                  <span className="text-muted-foreground text-2xl">-</span>
+                  <span>{espnScore.home_score ?? '-'}</span>
+                </div>
+              )}
+              
               {isLive && <Badge variant="destructive" className="gap-2 whitespace-nowrap text-sm px-4 py-1.5 rounded-full font-medium">
                   <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
-                  LIVE
+                  LIVE {espnScore && formatGameStatus(espnScore)}
                 </Badge>}
             </div>
           </div> :
@@ -142,11 +155,20 @@ export function EventCard({
                   {event.description}
                 </div>
                 
+                {/* Score display for list view */}
+                {espnScore && (espnScore.home_score !== null || espnScore.away_score !== null) && (
+                  <div className="flex items-center justify-center gap-2 mt-1 text-lg font-bold">
+                    <span>{espnScore.away_score ?? '-'}</span>
+                    <span className="text-muted-foreground text-sm">-</span>
+                    <span>{espnScore.home_score ?? '-'}</span>
+                  </div>
+                )}
+                
                 {/* Show date/time only when NOT live, or show LIVE badge when live */}
                 {isLive ? <div className="flex items-center justify-center mt-2">
                     <Badge variant="destructive" className="gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium">
                       <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
-                      LIVE
+                      LIVE {espnScore && formatGameStatus(espnScore)}
                     </Badge>
                   </div> : <div className="flex items-center justify-center gap-3 mt-1.5">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
