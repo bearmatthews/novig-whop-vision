@@ -547,6 +547,11 @@ export function parseTeamNames(description: string): { away: string; home: strin
  * Supports all major leagues and provides fallback for teams not in our mapping
  */
 export function getTeamLogo(teamName: string, league: string): string | null {
+  // Special handling for UFC - return UFC logo
+  if (league === 'UFC') {
+    return 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/ufc.png';
+  }
+
   const abbreviations = TEAM_ABBREVIATIONS[league];
   if (!abbreviations) return null;
   
@@ -596,15 +601,32 @@ export function getTeamLogo(teamName: string, league: string): string | null {
   
   if (!abbr) return null;
   
+  // College sports use different CDN path
+  if (league === 'NCAAB' || league === 'NCAAF') {
+    const sport = league === 'NCAAB' ? 'mens-college-basketball' : 'college-football';
+    return `https://a.espncdn.com/i/teamlogos/${sport}/500/${abbr}.png`;
+  }
+  
   const leagueLower = league.toLowerCase();
   return `https://a.espncdn.com/i/teamlogos/${leagueLower}/500/${abbr}.png`;
 }
 
 /**
  * Get team logos for an event with robust ESPN fallback
- * Priority: 1) API-provided logos, 2) ESPN CDN, 3) null
+ * Priority: 1) API-provided logos, 2) ESPN CDN, 3) League logo for UFC, 4) null
  */
 export function getEventLogos(event: any): { away: string | null; home: string | null } {
+  const league = event.game?.league;
+  
+  // Special handling for UFC - show UFC logo for both sides or fighter images if available
+  if (league === 'UFC') {
+    const ufcLogo = 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/ufc.png';
+    return {
+      away: event.game?.away_logo || ufcLogo,
+      home: event.game?.home_logo || ufcLogo,
+    };
+  }
+
   // Try API-provided logos first
   if (event.game?.home_logo && event.game?.away_logo) {
     return {
@@ -615,21 +637,14 @@ export function getEventLogos(event: any): { away: string | null; home: string |
   
   // Fallback to parsing description and using ESPN CDN
   const teams = parseTeamNames(event.description);
-  if (!teams) return { away: null, home: null };
-  
-  const league = event.game?.league;
-  if (!league) return { away: null, home: null };
+  if (!teams || !league) return { away: null, home: null };
   
   const awayLogo = getTeamLogo(teams.away, league);
   const homeLogo = getTeamLogo(teams.home, league);
   
-  // If ESPN CDN fails, try alternative ESPN endpoints
-  const fallbackAwayLogo = awayLogo || `https://a.espncdn.com/combiner/i?img=/i/teamlogos/${league.toLowerCase()}/500/${teams.away.toLowerCase().replace(/\s+/g, '-')}.png`;
-  const fallbackHomeLogo = homeLogo || `https://a.espncdn.com/combiner/i?img=/i/teamlogos/${league.toLowerCase()}/500/${teams.home.toLowerCase().replace(/\s+/g, '-')}.png`;
-  
   return {
-    away: awayLogo || fallbackAwayLogo,
-    home: homeLogo || fallbackHomeLogo,
+    away: awayLogo,
+    home: homeLogo,
   };
 }
 
