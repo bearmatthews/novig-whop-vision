@@ -149,31 +149,34 @@ const Index = () => {
         <div className="container mx-auto px-3 md:px-6 py-2 md:py-5">
           {isMobile ? (
             // Mobile Layout - Single Line
-            <div className="flex items-center gap-1.5">
-              <WhopUserProfile />
-              <LeagueSelector 
-                selectedLeague={selectedLeague} 
-                onLeagueChange={league => {
-                  setSelectedLeague(league);
-                  setSelectedEvent(null);
-                  setSearchQuery("");
-                }} 
-              />
-              <SearchBar 
-                value={searchQuery} 
-                onChange={setSearchQuery} 
-                placeholder="Search..." 
-              />
+            <>
+              <div className="flex items-center gap-1.5">
+                <WhopUserProfile />
+                <LeagueSelector 
+                  selectedLeague={selectedLeague} 
+                  onLeagueChange={league => {
+                    setSelectedLeague(league);
+                    setSelectedEvent(null);
+                    setSearchQuery("");
+                  }} 
+                />
+                <SearchBar 
+                  value={searchQuery} 
+                  onChange={setSearchQuery} 
+                  placeholder="Search..." 
+                />
+              </div>
+              {/* Sticky Ask Bear button on mobile */}
               <Button 
                 variant="default" 
                 size="sm" 
                 onClick={() => setShowAIChat(!showAIChat)} 
-                className="rounded-lg shrink-0 px-3 gap-1.5 whitespace-nowrap"
+                className="fixed bottom-6 right-4 z-50 rounded-full shadow-lg hover:shadow-xl px-4 gap-2 h-12"
               >
-                <Bot className="w-4 h-4" />
-                <span className="text-xs">Ask Bear</span>
+                <Bot className="w-5 h-5" />
+                <span className="font-semibold">Ask Bear</span>
               </Button>
-            </div>
+            </>
           ) : (
             // Desktop Layout - Centered League Selector
             <div className="flex items-center justify-center gap-4 relative">
