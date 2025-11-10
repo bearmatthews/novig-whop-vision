@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatGameTime, calculateEventLiquidity, formatLargeCurrency } from "@/lib/betting-utils";
+import { formatGameTime, calculateEventLiquidity, formatLargeCurrency, formatOdds } from "@/lib/betting-utils";
 import { getEventLogos } from "@/lib/team-logos";
 import { Clock, ChevronRight, DollarSign, Share2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ShareBetDialog } from "@/components/ShareBetDialog";
+import { useOddsFormat } from "@/hooks/use-odds-format";
 interface Event {
   id: string;
   description: string;
@@ -46,6 +47,7 @@ export function EventCard({
 }: EventCardProps) {
   const isMobile = useIsMobile();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const { format } = useOddsFormat();
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
   const logos = getEventLogos(event);
@@ -176,23 +178,28 @@ export function EventCard({
                   {market.description}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {market.outcomes.filter(o => o.available || o.last).map(outcome => <button 
-                      key={outcome.id} 
-                      className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOutcomeClick?.(outcome.id);
-                      }}
-                    >
-                      <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
-                        {outcome.description}
-                      </span>
-                      {outcome.available ? <span className="text-lg font-black text-success font-mono">
-                          {outcome.available.toFixed(2)}
-                        </span> : outcome.last ? <span className="text-lg font-black text-warning font-mono">
-                          {outcome.last.toFixed(2)}
-                        </span> : null}
-                    </button>)}
+                  {market.outcomes.filter(o => o.available || o.last).map(outcome => {
+                    const price = outcome.available || outcome.last;
+                    return (
+                      <button 
+                        key={outcome.id} 
+                        className="bg-secondary/30 border border-border rounded-md p-3 flex flex-col gap-1 hover:border-primary hover:bg-secondary/50 transition-all group cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOutcomeClick?.(outcome.id);
+                        }}
+                      >
+                        <span className="text-xs font-bold text-foreground/90 group-hover:text-primary transition-colors">
+                          {outcome.description}
+                        </span>
+                        {price && (
+                          <span className={`text-lg font-black font-mono ${outcome.available ? 'text-success' : 'text-warning'}`}>
+                            {formatOdds(price, format)}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>)}
           </div>
