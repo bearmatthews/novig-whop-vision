@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.whop-auth]
 verify_jwt = false
+
+[functions.whop-list-channels]
+verify_jwt = false
+
+[functions.whop-share-message]
+verify_jwt = false

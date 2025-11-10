@@ -47,6 +47,28 @@ export function ShareBetDialog({
   const fetchChannels = async () => {
     setLoadingChannels(true);
     try {
+      const isInIframe = window.self !== window.top;
+      const host = window.location.hostname;
+      const ref = document.referrer || '';
+      const isLovablePreview = host.includes('lovableproject.com') || host.includes('lovable.app');
+      const isWhopEmbed = isInIframe && (
+        ref.includes('apps.whop.com') ||
+        ref.includes('whop.com') ||
+        host.endsWith('.apps.whop.com')
+      );
+
+      // Dev/preview: show mock channels
+      if (!isWhopEmbed || isLovablePreview) {
+        const mock = [
+          { id: 'exp_demo_1', name: 'Demo Experience', type: 'experience' },
+          { id: 'channel_demo_1', name: 'Demo Chat #general', type: 'chat_channel' },
+        ];
+        setChannels(mock);
+        setChannelId(mock[0].id);
+        setLoadingChannels(false);
+        return;
+      }
+
       // Try Vercel proxy endpoint first (production/Whop iframe)
       try {
         const vercelUrl = '/whop-list-channels';
