@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ensureCollegeLogoCached } from "@/lib/logo-cache";
 
 interface GameDataViewProps {
   event: any;
@@ -22,6 +23,16 @@ export function GameDataView({ event, espnScore }: GameDataViewProps) {
   const logos = getEventLogos(event);
   const teams = parseTeamNames(event.description);
   const isLive = event.status === "OPEN_INGAME" || (espnScore && isGameLive(espnScore.game_status));
+
+  // Background-warm college logo cache
+  useEffect(() => {
+    if (!teams || !event.game?.league) return;
+    const league = event.game.league as "NCAAB" | "NCAAF" | string;
+    if (league === "NCAAB" || league === "NCAAF") {
+      ensureCollegeLogoCached(teams.away, league as "NCAAB" | "NCAAF");
+      ensureCollegeLogoCached(teams.home, league as "NCAAB" | "NCAAF");
+    }
+  }, [teams?.away, teams?.home, event.game?.league]);
 
   useEffect(() => {
     const loadGameDetails = async () => {

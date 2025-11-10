@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useOddsFormat } from "@/hooks/use-odds-format";
 import { useMarketView } from "@/components/SettingsMenu";
 import { ESPNScore, formatGameStatus, isGameLive } from "@/lib/espn-scores";
+import { ensureCollegeLogoCached } from "@/lib/logo-cache";
 interface Event {
   id: string;
   description: string;
@@ -60,6 +61,16 @@ export function EventCard({
   const colors = getEventColors(event);
   const teams = parseTeamNames(event.description);
   const totalLiquidity = calculateEventLiquidity(event);
+
+  // Background-warm college logo cache
+  useEffect(() => {
+    if (!teams || !event.game?.league) return;
+    const league = event.game.league as "NCAAB" | "NCAAF" | string;
+    if (league === "NCAAB" || league === "NCAAF") {
+      ensureCollegeLogoCached(teams.away, league as "NCAAB" | "NCAAF");
+      ensureCollegeLogoCached(teams.home, league as "NCAAB" | "NCAAF");
+    }
+  }, [teams?.away, teams?.home, event.game?.league]);
 
   // Consistent market type detection functions
   const isSpread = (m: any) => {
