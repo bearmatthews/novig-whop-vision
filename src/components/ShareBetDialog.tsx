@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Share2, Loader2 } from 'lucide-react';
@@ -208,8 +209,16 @@ export function ShareBetDialog({
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : channels.length === 0 ? (
-              <div className="text-sm text-muted-foreground text-center py-8">
-                No channels available
+              <div className="space-y-2">
+                <Input
+                  id="channel-id"
+                  placeholder="Enter a channel or experience ID (exp_... or channel_...)"
+                  value={channelId}
+                  onChange={(e) => setChannelId(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  No channels found automatically. Enter a channel ID to share.
+                </p>
               </div>
             ) : channels.length === 1 ? (
               <div className="p-3 bg-secondary rounded-md">
