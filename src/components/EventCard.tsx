@@ -54,11 +54,26 @@ export function EventCard({
   const teams = parseTeamNames(event.description);
   const totalLiquidity = calculateEventLiquidity(event);
   
-  // Filter markets to show relevant one first if specified
-  const displayMarkets = relevantMarket 
-    ? [...activeMarkets.filter(m => m.description.toLowerCase().includes(relevantMarket.toLowerCase())),
-       ...activeMarkets.filter(m => !m.description.toLowerCase().includes(relevantMarket.toLowerCase()))]
-    : activeMarkets;
+  // Consistent market type detection functions
+  const isSpread = (m: any) => {
+    const d = m.description?.toLowerCase() || '';
+    const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
+    return /[+-]\d+(\.\d+)?/.test(d) || /[+-]\d+(\.\d+)?/.test(ot) || d.includes('spread');
+  };
+  const isTotal = (m: any) => {
+    const d = m.description?.toLowerCase() || '';
+    const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
+    return /(\s|^)t\s*\d+/.test(d) || d.includes('total') || d.includes('over/under') || /\bo\b|\bu\b|over|under/.test(ot);
+  };
+  const isMoneyline = (m: any) => {
+    const hasExactlyTwoOutcomes = (m.outcomes?.filter((o: any) => o.available || o.last).length === 2);
+    return hasExactlyTwoOutcomes && !isSpread(m) && !isTotal(m);
+  };
+  
+  // Find markets by type using consistent logic
+  const moneylineMarket = activeMarkets.find(isMoneyline);
+  const spreadMarket = activeMarkets.find(isSpread);
+  const totalMarket = activeMarkets.find(isTotal);
   
   const [flashClass, setFlashClass] = useState("");
   const prevLiquidityRef = useRef<number | null>(null);
@@ -196,19 +211,6 @@ export function EventCard({
                   <>
                     {/* Moneyline Column */}
                     {(() => {
-                      const isSpread = (m: any) => {
-                        const d = m.description?.toLowerCase() || '';
-                        const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
-                        return /[+-]\d+(\.\d+)?/.test(d) || /[+-]\d+(\.\d+)?/.test(ot) || d.includes('spread');
-                      };
-                      const isTotal = (m: any) => {
-                        const d = m.description?.toLowerCase() || '';
-                        const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
-                        return /(\s|^)t\s*\d+/.test(d) || d.includes('total') || d.includes('over/under') || /\bo\b|\bu\b|over|under/.test(ot);
-                      };
-                      const isMoneyline = (m: any) => (m.outcomes?.filter((o: any) => o.available || o.last).length === 2) && !isSpread(m) && !isTotal(m);
-
-                      const moneylineMarket = activeMarkets.find(isMoneyline);
                       const moneylineOutcomes = moneylineMarket?.outcomes.filter(o => o.available || o.last) || [];
                       
                       if (moneylineOutcomes.length === 2) {
@@ -260,11 +262,6 @@ export function EventCard({
 
                     {/* Spread Column */}
                     {(() => {
-                      const spreadMarket = activeMarkets.find(m => {
-                        const d = m.description?.toLowerCase() || '';
-                        const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
-                        return /[+-]\d+(\.\d+)?/.test(d) || /[+-]\d+(\.\d+)?/.test(ot) || d.includes('spread');
-                      });
                       const spreadOutcomes = spreadMarket?.outcomes.filter(o => o.available || o.last) || [];
                       
                       if (spreadOutcomes.length === 2) {
@@ -318,11 +315,6 @@ export function EventCard({
 
                     {/* Total Column */}
                     {(() => {
-                      const totalMarket = activeMarkets.find(m => {
-                        const d = m.description?.toLowerCase() || '';
-                        const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
-                        return /(\s|^)t\s*\d+/.test(d) || d.includes('total') || d.includes('over/under') || /\bo\b|\bu\b|over|under/.test(ot);
-                      });
                       const totalOutcomes = totalMarket?.outcomes.filter(o => o.available || o.last) || [];
                       
                       if (totalOutcomes.length >= 2) {
@@ -374,11 +366,11 @@ export function EventCard({
                     })()}
                   </>
                 ) : (
-                  // Default view - only moneyline
-                  displayMarkets.length > 0 && displayMarkets[0].outcomes.filter(o => o.available || o.last).length > 0 && (
+                  // Default view - show moneyline using same detection logic
+                  moneylineMarket && moneylineMarket.outcomes.filter(o => o.available || o.last).length > 0 && (
                     <div className="col-span-3">
                       <div className="flex items-center gap-2">
-                        {displayMarkets[0].outcomes
+                        {moneylineMarket.outcomes
                           .filter(o => o.available || o.last)
                           .slice(0, 2)
                           .map((outcome, index) => {
