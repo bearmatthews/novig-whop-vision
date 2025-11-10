@@ -9,31 +9,148 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Team ID mapping for common college teams (from ESPN team IDs)
+const COLLEGE_TEAM_IDS: Record<string, Record<string, string>> = {
+  NCAAF: {
+    'Alabama': '333',
+    'Georgia': '61',
+    'Ohio State': '194',
+    'Michigan': '130',
+    'Notre Dame': '87',
+    'Oklahoma': '201',
+    'Texas': '251',
+    'LSU': '99',
+    'Florida': '57',
+    'Penn State': '213',
+    'Oregon': '2483',
+    'USC': '30',
+    'Clemson': '228',
+    'Auburn': '2',
+    'Miami': '2390',
+    'Miami Florida': '2390',
+    'Florida State': '52',
+    'Wisconsin': '275',
+    'Iowa': '2294',
+    'Michigan State': '127',
+    'Nebraska': '158',
+    'Tennessee': '2633',
+    'Ole Miss': '145',
+    'Arkansas': '8',
+    'Mississippi State': '344',
+    'Kentucky': '96',
+    'South Carolina': '2579',
+    'Missouri': '142',
+    'Vanderbilt': '238',
+    'UCLA': '26',
+    'Washington': '264',
+    'Stanford': '24',
+    'Utah': '254',
+    'Colorado': '38',
+    'Arizona': '12',
+    'Arizona State': '9',
+    'Oregon State': '204',
+    'California': '25',
+    'Washington State': '265',
+    'Oklahoma State': '197',
+    'TCU': '2628',
+    'Baylor': '239',
+    'Kansas': '2305',
+    'Kansas State': '2306',
+    'Iowa State': '66',
+    'West Virginia': '277',
+    'Texas Tech': '2641',
+    'North Carolina': '153',
+    'North Carolina State': '152',
+    'Duke': '150',
+    'Virginia': '258',
+    'Virginia Tech': '259',
+    'Pittsburgh': '221',
+    'Louisville': '97',
+    'Syracuse': '183',
+    'Boston College': '103',
+    'Wake Forest': '154',
+    'Georgia Tech': '59',
+    'Northwestern': '77',
+    'Purdue': '2509',
+    'Illinois': '356',
+    'Minnesota': '135',
+    'Indiana': '84',
+    'Maryland': '120',
+    'Rutgers': '164',
+    'North Texas': '249',
+    'SMU': '2567',
+    'Houston': '248',
+    'BYU': '252',
+    'Cincinnati': '2132',
+    'UCF': '2116',
+  },
+  NCAAB: {
+    'Duke': '150',
+    'North Carolina': '153',
+    'Kentucky': '96',
+    'Kansas': '2305',
+    'UCLA': '26',
+    'Gonzaga': '2250',
+    'Villanova': '222',
+    'Michigan': '130',
+    'Arizona': '12',
+    'UConn': '41',
+    'Syracuse': '183',
+    'Louisville': '97',
+    'Indiana': '84',
+    'Michigan State': '127',
+    'Ohio State': '194',
+    'Florida': '57',
+    'Texas': '251',
+    'Purdue': '2509',
+    'Wisconsin': '275',
+    'Illinois': '356',
+    'Virginia': '258',
+    'Pittsburgh': '221',
+  }
+};
+
 // Alternative logo sources for college teams
 const LOGO_SOURCES = [
-  // ESPN College Basketball
+  // ESPN Team API (most reliable for college sports)
   (team: string, league: string) => {
+    const teamId = COLLEGE_TEAM_IDS[league]?.[team];
+    if (teamId) {
+      const sport = league === 'NCAAB' ? 'mens-college-basketball' : 'college-football';
+      return `https://a.espncdn.com/i/teamlogos/${sport}/500/${teamId}.png`;
+    }
+    return null;
+  },
+  // ESPN Direct abbreviation path
+  (team: string, league: string) => {
+    const abbr = team.toLowerCase()
+      .replace(/state$/i, 'st')
+      .replace(/university|college/gi, '')
+      .trim()
+      .replace(/\s+/g, '')
+      .substring(0, 6);
+    
     if (league === 'NCAAB') {
-      const abbr = team.toLowerCase().replace(/\s+/g, '-').substring(0, 10);
+      return `https://a.espncdn.com/i/teamlogos/ncaa/500/${abbr}.png`;
+    } else if (league === 'NCAAF') {
       return `https://a.espncdn.com/i/teamlogos/ncaa/500/${abbr}.png`;
     }
     return null;
   },
-  // ESPN College Football
+  // ESPN Combiner API
   (team: string, league: string) => {
-    if (league === 'NCAAF') {
-      const abbr = team.toLowerCase().replace(/\s+/g, '-').substring(0, 10);
-      return `https://a.espncdn.com/i/teamlogos/ncaa/500/${abbr}.png`;
+    const teamId = COLLEGE_TEAM_IDS[league]?.[team];
+    if (teamId) {
+      const sport = league === 'NCAAB' ? 'mens-college-basketball' : 'college-football';
+      return `https://a.espncdn.com/combiner/i?img=/i/teamlogos/${sport}/500/${teamId}.png&w=500&h=500`;
     }
     return null;
   },
-  // Sports Logos alternative path
+  // Try with team name slugified
   (team: string, league: string) => {
-    if (league === 'NCAAB' || league === 'NCAAF') {
-      const abbr = team.toLowerCase().replace(/\s+/g, '');
-      return `https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/${abbr}.png&h=200&w=200`;
-    }
-    return null;
+    const slug = team.toLowerCase().replace(/\s+/g, '-');
+    const sport = league === 'NCAAB' ? 'mens-college-basketball' : 'college-football';
+    return `https://a.espncdn.com/i/teamlogos/${sport}/500/${slug}.png`;
   },
 ];
 

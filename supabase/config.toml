@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.fetch-team-logo]
 verify_jwt = false
 
+[functions.populate-college-logos]
+verify_jwt = false
+
 [functions.whop-auth]
 verify_jwt = false
 
