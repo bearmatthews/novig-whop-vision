@@ -237,44 +237,6 @@ export function EventCard({
         </CardContent>
       )}
       
-      {showMarkets && displayMarkets.length > 1 && (
-        <CardContent className="pt-0 pb-5 px-5">
-          <div className="space-y-3">
-            {displayMarkets.slice(1, 3).map(market => (
-              <div key={market.id} className="space-y-2">
-                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {market.description}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {market.outcomes.filter(o => o.available || o.last).slice(0, 2).map(outcome => {
-                    const price = outcome.available || outcome.last;
-                    return (
-                      <button 
-                        key={outcome.id} 
-                        className="bg-background/50 border border-border/50 rounded-xl p-3 flex flex-col gap-1.5 hover:border-primary/30 hover:bg-secondary/30 transition-all duration-200 cursor-pointer hover:shadow-md"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onOutcomeClick?.(outcome.id);
-                        }}
-                      >
-                        <span className="text-xs font-medium text-muted-foreground truncate">
-                          {outcome.description}
-                        </span>
-                        {price && (
-                          <span className="text-lg font-bold tracking-tight">
-                            {formatOdds(price, format)}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      )}
-      
       {/* Detail view footer */}
       {!onClick && (
         <CardContent className="pt-4 pb-4 border-t border-border/30">
