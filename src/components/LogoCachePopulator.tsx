@@ -32,28 +32,6 @@ export function LogoCachePopulator() {
   };
   return <Card>
       
-      <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Button onClick={() => populateLogos()} disabled={isPopulating}>
-            {isPopulating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Populate All Logos
-          </Button>
-          <Button variant="outline" onClick={() => populateLogos('NCAAF')} disabled={isPopulating}>
-            NCAAF Only
-          </Button>
-          <Button variant="outline" onClick={() => populateLogos('NCAAB')} disabled={isPopulating}>
-            NCAAB Only
-          </Button>
-        </div>
-
-        {results && <div className="mt-4 space-y-2 text-sm">
-            {Object.entries(results).map(([league, data]: [string, any]) => <div key={league} className="p-3 rounded-lg bg-muted">
-                <div className="font-semibold">{league}</div>
-                <div className="text-muted-foreground">
-                  ✓ {data.successful} successful, ✗ {data.failed} failed ({data.total} total)
-                </div>
-              </div>)}
-          </div>}
-      </CardContent>
+      
     </Card>;
 }
