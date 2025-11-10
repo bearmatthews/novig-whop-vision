@@ -13,8 +13,9 @@ import { SettingsMenu } from "@/components/SettingsMenu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { getCachedEvents, refreshNovigCache } from "@/lib/cached-graphql-client";
 import { graphqlQuery } from "@/lib/graphql-client";
-import { GET_ALL_EVENTS_QUERY, GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
+import { GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
 import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -28,7 +29,7 @@ const Index = () => {
   const [aiFilteredEventIds, setAiFilteredEventIds] = useState<string[]>([]);
   const [targetOutcomeId, setTargetOutcomeId] = useState<string | null>(null);
 
-  // Fetch all sports
+  // Fetch all sports from cached data
   const {
     data,
     isLoading,
@@ -37,17 +38,27 @@ const Index = () => {
   } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      const allLeagues = LEAGUES.filter(l => l.id !== 'ALL').map(l => l.id);
-      const response = await graphqlQuery(GET_ALL_EVENTS_QUERY, {
-        leagues: allLeagues
-      });
+      const response = await getCachedEvents();
       if (response.errors) {
         throw new Error(response.errors[0].message);
       }
       return response.data;
     },
-    refetchInterval: 30000 // Poll every 30 seconds
+    refetchInterval: 15000, // Poll every 15 seconds (faster since we're reading from cache)
+    staleTime: 10000, // Consider data fresh for 10 seconds
   });
+
+  // Trigger cache refresh on mount and periodically
+  useEffect(() => {
+    refreshNovigCache(); // Initial refresh
+    
+    const interval = setInterval(() => {
+      refreshNovigCache(); // Refresh cache every 2 minutes in background
+    }, 120000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (error) {
       toast.error("Failed to fetch betting data", {
@@ -55,9 +66,11 @@ const Index = () => {
       });
     }
   }, [error]);
+
   const handleRefresh = async () => {
     toast.info("Refreshing data...");
-    await refetch();
+    await refreshNovigCache(); // Trigger background refresh
+    await refetch(); // Refetch from cache
     toast.success("Data refreshed");
   };
 
