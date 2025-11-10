@@ -60,9 +60,20 @@ export function EventCard({
   const [logosValid, setLogosValid] = useState({ away: true, home: true });
   const [displayLogos, setDisplayLogos] = useState(true);
   const logos = getEventLogos(event);
-  const colors = getEventColors(event);
+  const baseColors = getEventColors(event);
+  // Override colors with null when logos are hidden
+  const colors = displayLogos ? baseColors : { away: null, home: null };
   const teams = parseTeamNames(event.description);
   const totalLiquidity = calculateEventLiquidity(event);
+
+  // Generate consistent random colors for the event
+  const [randomColors] = useState(() => {
+    const colorOptions = ['#2563eb', '#dc2626', '#16a34a', '#9333ea', '#ea580c', '#0891b2'];
+    return {
+      away: colorOptions[Math.floor(Math.random() * colorOptions.length)],
+      home: colorOptions[Math.floor(Math.random() * colorOptions.length)]
+    };
+  });
 
   // Track logo load failures
   const handleLogoError = (side: 'away' | 'home') => {
@@ -230,16 +241,17 @@ export function EventCard({
                 };
                 const awayOutcome = allOutcomes.find((o: any) => matchOutcome(o, awayName, awayAbbr)) ?? allOutcomes[0];
                 const homeOutcome = allOutcomes.find((o: any) => matchOutcome(o, homeName, homeAbbr)) ?? allOutcomes[1];
-                const renderBox = (outcome: any, teamColor?: string | null, label?: string | null) => {
+                const renderBox = (outcome: any, teamColor?: string | null, label?: string | null, isAway?: boolean) => {
                   const price = outcome?.available ?? outcome?.last;
-                  // Use random color if logos are not displayed
-                  const randomColors = ['#2563eb', '#dc2626', '#16a34a', '#9333ea', '#ea580c', '#0891b2'];
-                  const randomColor = !displayLogos ? randomColors[Math.floor(Math.random() * randomColors.length)] : teamColor;
+                  // Use consistent random color if logos are not displayed
+                  const finalColor = !displayLogos 
+                    ? (isAway ? randomColors.away : randomColors.home)
+                    : teamColor;
                   
                   if (price) {
                     return <button key={outcome.id} style={{
-                      backgroundColor: randomColor || undefined,
-                      borderColor: randomColor || undefined
+                      backgroundColor: finalColor || undefined,
+                      borderColor: finalColor || undefined
                     }} className="w-full px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]" onClick={e => {
                       e.stopPropagation();
                       onOutcomeClick?.(outcome.id);
@@ -259,8 +271,8 @@ export function EventCard({
                           </div>;
                 };
                 return <div className="space-y-2">
-                          {renderBox(awayOutcome, colors.away, awayAbbr || awayName || null)}
-                          {renderBox(homeOutcome, colors.home, homeAbbr || homeName || null)}
+                          {renderBox(awayOutcome, colors.away, awayAbbr || awayName || null, true)}
+                          {renderBox(homeOutcome, colors.home, homeAbbr || homeName || null, false)}
                         </div>;
               })()}
 
