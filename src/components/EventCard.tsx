@@ -57,10 +57,24 @@ export function EventCard({
   } = useMarketView();
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
+  const [logosValid, setLogosValid] = useState({ away: true, home: true });
+  const [displayLogos, setDisplayLogos] = useState(true);
   const logos = getEventLogos(event);
   const colors = getEventColors(event);
   const teams = parseTeamNames(event.description);
   const totalLiquidity = calculateEventLiquidity(event);
+
+  // Track logo load failures
+  const handleLogoError = (side: 'away' | 'home') => {
+    setLogosValid(prev => {
+      const newValid = { ...prev, [side]: false };
+      // If either logo fails, hide both
+      if (!newValid.away || !newValid.home) {
+        setDisplayLogos(false);
+      }
+      return newValid;
+    });
+  };
 
   // Background-warm college logo cache
   useEffect(() => {
@@ -112,20 +126,16 @@ export function EventCard({
         {!onClick ?
       // Detail view - centered layout with large logos
       <div className="flex flex-col items-center gap-6 text-center">
-            {(logos.away || logos.home) && <div className="flex items-center justify-center gap-12">
+            {(displayLogos && logos.away && logos.home) && <div className="flex items-center justify-center gap-12">
                 {logos.away && <div className="flex flex-col items-center gap-4">
                     <div className="w-28 h-28 rounded-2xl bg-background shadow-lg flex items-center justify-center p-4">
-                      <img src={logos.away} alt="Away team" className="w-full h-full object-contain" onError={e => {
-                e.currentTarget.style.display = 'none';
-              }} />
+                      <img src={logos.away} alt="Away team" className="w-full h-full object-contain" onError={() => handleLogoError('away')} />
                     </div>
                   </div>}
                 <span className="text-2xl font-light text-muted-foreground/50">vs</span>
                 {logos.home && <div className="flex flex-col items-center gap-4">
                     <div className="w-28 h-28 rounded-2xl bg-background shadow-lg flex items-center justify-center p-4">
-                      <img src={logos.home} alt="Home team" className="w-full h-full object-contain" onError={e => {
-                e.currentTarget.style.display = 'none';
-              }} />
+                      <img src={logos.home} alt="Home team" className="w-full h-full object-contain" onError={() => handleLogoError('home')} />
                     </div>
                   </div>}
               </div>}
@@ -154,10 +164,8 @@ export function EventCard({
       <div className="space-y-4">
             {/* Main content: Teams and logos - centered */}
             <div className="flex items-center justify-center gap-4">
-              {logos.away && <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
-                  <img src={logos.away} alt="Away team" className="w-full h-full object-contain" onError={e => {
-              e.currentTarget.style.display = 'none';
-            }} />
+              {displayLogos && logos.away && <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                  <img src={logos.away} alt="Away team" className="w-full h-full object-contain" onError={() => handleLogoError('away')} />
                 </div>}
               
               {/* Team names and matchup - centered */}
@@ -192,10 +200,8 @@ export function EventCard({
                   </div>}
               </div>
 
-              {logos.home && <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
-                  <img src={logos.home} alt="Home team" className="w-full h-full object-contain" onError={e => {
-              e.currentTarget.style.display = 'none';
-            }} />
+              {displayLogos && logos.home && <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                  <img src={logos.home} alt="Home team" className="w-full h-full object-contain" onError={() => handleLogoError('home')} />
                 </div>}
             </div>
 
@@ -226,10 +232,14 @@ export function EventCard({
                 const homeOutcome = allOutcomes.find((o: any) => matchOutcome(o, homeName, homeAbbr)) ?? allOutcomes[1];
                 const renderBox = (outcome: any, teamColor?: string | null, label?: string | null) => {
                   const price = outcome?.available ?? outcome?.last;
+                  // Use random color if logos are not displayed
+                  const randomColors = ['#2563eb', '#dc2626', '#16a34a', '#9333ea', '#ea580c', '#0891b2'];
+                  const randomColor = !displayLogos ? randomColors[Math.floor(Math.random() * randomColors.length)] : teamColor;
+                  
                   if (price) {
                     return <button key={outcome.id} style={{
-                      backgroundColor: teamColor || undefined,
-                      borderColor: teamColor || undefined
+                      backgroundColor: randomColor || undefined,
+                      borderColor: randomColor || undefined
                     }} className="w-full px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]" onClick={e => {
                       e.stopPropagation();
                       onOutcomeClick?.(outcome.id);
