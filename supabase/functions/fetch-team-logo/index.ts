@@ -19,14 +19,36 @@ async function getNCABBLogoFrom1000Logos(teamName: string): Promise<string | nul
     const response = await fetch('https://1000logos.net/american-colleges-ncaa/');
     const html = await response.text();
     
-    // Normalize search term
-    const searchTerm = teamName.toLowerCase()
+    // Normalize search term with special cases
+    let searchTerm = teamName.toLowerCase()
       .replace(/university of /gi, '')
       .replace(/state university/gi, 'state')
       .replace(/ university$/gi, '')
+      .replace(/st\./gi, 'saint')
+      .replace(/^st /gi, 'saint ')
       .trim();
     
-    console.log(`Normalized search term: ${searchTerm}`);
+    // Handle specific variations
+    const specialCases: Record<string, string[]> = {
+      'santa clara': ['santa clara'],
+      'saint thomas': ['thomas aquinas', 'st thomas', 'saint thomas'],
+      'cal state': ['california state', 'cal state'],
+      'little rock': ['arkansas little rock', 'ualr', 'little rock'],
+      'milwaukee': ['wisconsin milwaukee', 'uwm', 'milwaukee'],
+      'uc': ['california'],
+      'umass': ['massachusetts'],
+    };
+    
+    const searchTerms: string[] = [searchTerm];
+    
+    // Check for special cases and add variations
+    for (const [key, variations] of Object.entries(specialCases)) {
+      if (searchTerm.includes(key)) {
+        searchTerms.push(...variations);
+      }
+    }
+    
+    console.log(`Search terms: ${searchTerms.join(', ')}`);
     
     // Try to find logo URL in the HTML
     const imgRegex = /<img[^>]+src="([^"]+)"[^>]+alt="([^"]+)"/gi;
@@ -36,10 +58,13 @@ async function getNCABBLogoFrom1000Logos(teamName: string): Promise<string | nul
       const [, url, alt] = match;
       const altLower = alt.toLowerCase();
       
-      // Check if alt text contains team name
-      if (altLower.includes(searchTerm) || searchTerm.split(' ').every(word => altLower.includes(word))) {
-        console.log(`Found logo on 1000logos.net: ${url}`);
-        return url;
+      // Check if alt text matches any search term
+      for (const term of searchTerms) {
+        const words = term.split(' ');
+        if (altLower.includes(term) || words.every(word => word.length > 2 && altLower.includes(word))) {
+          console.log(`Found logo on 1000logos.net: ${url} (matched: ${term})`);
+          return url;
+        }
       }
     }
     
