@@ -372,7 +372,7 @@ export function EventCard({
               if (totalOutcomes.length >= 2) {
                 return <div className="col-span-3">
                           <div className="flex flex-col gap-2">
-                            <Badge variant="secondary" className="text-xs self-start">Total</Badge>
+                            
                             <div className="flex items-center gap-2">
                               {totalOutcomes.slice(0, 2).map(outcome => {
                         const price = outcome.available || outcome.last;
