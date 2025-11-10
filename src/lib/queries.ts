@@ -16,7 +16,7 @@ export const GET_ALL_EVENTS_QUERY = `
         scheduled_start
         league
       }
-      markets(limit: 3) {
+      markets(limit: 12) {
         description
         id
         outcomes(
