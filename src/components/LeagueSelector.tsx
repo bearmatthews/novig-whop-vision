@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useRef, useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,33 @@ export const LEAGUES = [
 export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelectorProps) {
   const isMobile = useIsMobile();
   const selectedLeagueData = LEAGUES.find(l => l.id === selectedLeague) || LEAGUES[0];
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Scroll speed multiplier
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
   
   if (isMobile) {
     return (
@@ -88,15 +116,29 @@ export function LeagueSelector({ selectedLeague, onLeagueChange }: LeagueSelecto
       <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
       
       {/* Scrollable container */}
-      <div className="overflow-x-auto scrollbar-hide">
+      <div 
+        ref={scrollRef}
+        className={`overflow-x-auto scrollbar-hide ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="flex gap-1.5 pb-1 min-w-max">
           {LEAGUES.map((league) => (
             <Button
               key={league.id}
               variant={selectedLeague === league.id ? "default" : "secondary"}
-              onClick={() => onLeagueChange(league.id)}
+              onClick={(e) => {
+                // Prevent click if we were dragging
+                if (isDragging) {
+                  e.preventDefault();
+                  return;
+                }
+                onLeagueChange(league.id);
+              }}
               size="sm"
-              className="gap-2 shrink-0 px-2.5 text-xs"
+              className="gap-2 shrink-0 px-2.5 text-xs pointer-events-auto"
             >
               {league.logo ? (
                 <img src={league.logo} alt={league.name} className="w-4 h-4 object-contain" />
