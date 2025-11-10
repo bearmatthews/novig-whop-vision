@@ -5,6 +5,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Initialize Supabase client for caching
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 const sportMap: Record<string, string> = {
   nfl: 'football/nfl',
   nba: 'basketball/nba',
@@ -13,6 +18,71 @@ const sportMap: Record<string, string> = {
   wnba: 'basketball/wnba',
   mls: 'soccer/usa.1'
 };
+
+async function checkCache(gameId: string, league: string) {
+  try {
+    const { data, error } = await supabase
+      .from('game_details_cache')
+      .select('data, expires_at')
+      .eq('game_id', gameId)
+      .eq('league', league.toUpperCase())
+      .single();
+
+    if (error || !data) {
+      console.log('Cache miss for game:', gameId);
+      return null;
+    }
+
+    // Check if cache is still valid
+    if (new Date(data.expires_at) > new Date()) {
+      console.log('Cache hit for game:', gameId);
+      return data.data;
+    }
+
+    console.log('Cache expired for game:', gameId);
+    return null;
+  } catch (error) {
+    console.error('Error checking cache:', error);
+    return null;
+  }
+}
+
+async function updateCache(gameId: string, league: string, gameData: any) {
+  try {
+    // Set TTL based on game status
+    // Live games: 2 minutes, Upcoming: 1 hour, Final: 24 hours
+    let ttlHours = 1;
+    const status = gameData.home_team?.statistics?.length > 0 ? 'live' : 'scheduled';
+    
+    if (status === 'live') {
+      ttlHours = 2 / 60; // 2 minutes for live games
+    } else if (gameData.win_probability?.some((p: any) => p.play !== undefined)) {
+      ttlHours = 24; // 24 hours for completed games
+    }
+
+    const expiresAt = new Date(Date.now() + ttlHours * 60 * 60 * 1000);
+
+    const { error } = await supabase
+      .from('game_details_cache')
+      .upsert({
+        game_id: gameId,
+        league: league.toUpperCase(),
+        data: gameData,
+        cached_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+      }, {
+        onConflict: 'game_id,league'
+      });
+
+    if (error) {
+      console.error('Error updating cache:', error);
+    } else {
+      console.log(`Cache updated for game ${gameId}, expires at ${expiresAt.toISOString()}`);
+    }
+  } catch (error) {
+    console.error('Error in updateCache:', error);
+  }
+}
 
 async function fetchESPNGameDetails(gameId: string, league: string) {
   const sport = sportMap[league.toLowerCase()];
@@ -23,7 +93,7 @@ async function fetchESPNGameDetails(gameId: string, league: string) {
   try {
     // Fetch game summary with comprehensive details
     const summaryUrl = `https://site.api.espn.com/apis/site/v2/sports/${sport}/summary?event=${gameId}`;
-    console.log(`Fetching game summary: ${summaryUrl}`);
+    console.log(`Fetching game summary from ESPN: ${summaryUrl}`);
     
     const summaryResponse = await fetch(summaryUrl);
     if (!summaryResponse.ok) {
@@ -247,6 +317,17 @@ Deno.serve(async (req) => {
 
     console.log(`Fetching details for game ${gameId} in ${league}`);
     
+    // Check cache first
+    const cachedData = await checkCache(gameId, league);
+    if (cachedData) {
+      console.log('Returning cached data');
+      return new Response(
+        JSON.stringify(cachedData),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Cache miss - fetch from ESPN
     const gameDetails = await fetchESPNGameDetails(gameId, league);
 
     if (!gameDetails) {
@@ -258,6 +339,9 @@ Deno.serve(async (req) => {
         }
       );
     }
+
+    // Update cache with new data
+    await updateCache(gameId, league, gameDetails);
 
     return new Response(
       JSON.stringify(gameDetails),

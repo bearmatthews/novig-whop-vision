@@ -80,6 +80,33 @@ export type Database = {
         }
         Relationships: []
       }
+      game_details_cache: {
+        Row: {
+          cached_at: string
+          data: Json
+          expires_at: string
+          game_id: string
+          id: string
+          league: string
+        }
+        Insert: {
+          cached_at?: string
+          data: Json
+          expires_at?: string
+          game_id: string
+          id?: string
+          league: string
+        }
+        Update: {
+          cached_at?: string
+          data?: Json
+          expires_at?: string
+          game_id?: string
+          id?: string
+          league?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
