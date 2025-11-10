@@ -445,6 +445,7 @@ const TEAM_ABBREVIATIONS: Record<string, Record<string, string>> = {
     'Texas A&M': 'tam',
     'Auburn': 'aub',
     'Miami': 'miami',
+    'Miami Florida': 'miami',
     'Florida State': 'fsu',
     'Wisconsin': 'wis',
     'Iowa': 'iowa',
@@ -477,6 +478,7 @@ const TEAM_ABBREVIATIONS: Record<string, Record<string, string>> = {
     'West Virginia': 'wvu',
     'Texas Tech': 'ttech',
     'North Carolina': 'unc',
+    'North Carolina State': 'ncst',
     'NC State': 'ncst',
     'Duke': 'duke',
     'Virginia': 'uva',
@@ -495,6 +497,28 @@ const TEAM_ABBREVIATIONS: Record<string, Record<string, string>> = {
     'Maryland': 'md',
     'Rutgers': 'rutg',
     'Eastern Michigan': 'emu',
+    'North Texas': 'unt',
+    'SMU': 'smu',
+    'Houston': 'hou',
+    'BYU': 'byu',
+    'Cincinnati': 'cin',
+    'UCF': 'ucf',
+    'Memphis': 'mem',
+    'Tulane': 'tuln',
+    'Navy': 'navy',
+    'Army': 'army',
+    'Air Force': 'af',
+    'San Diego State': 'sdsu',
+    'Fresno State': 'fresno',
+    'Boise State': 'bsu',
+    'UNLV': 'unlv',
+    'Nevada': 'nev',
+    'Colorado State': 'csu',
+    'Wyoming': 'wyo',
+    'New Mexico': 'unm',
+    'Utah State': 'usu',
+    'Hawaii': 'haw',
+    'San Jose State': 'sjsu',
   },
 };
 
@@ -528,14 +552,46 @@ export function getTeamLogo(teamName: string, league: string): string | null {
   
   let abbr = abbreviations[teamName];
   
-  // If we don't have the abbreviation, try to generate one from the team name
+  // If we don't have the abbreviation, try intelligent fallbacks for college teams
   if (!abbr && (league === 'NCAAB' || league === 'NCAAF')) {
-    // For college teams, create a simplified abbreviation
-    abbr = teamName.toLowerCase()
-      .replace(/university|college|state|of|the/gi, '')
-      .trim()
-      .replace(/\s+/g, '')
-      .substring(0, 6);
+    // Try common patterns first
+    const cleanName = teamName.trim();
+    
+    // Handle common variations
+    const variations = [
+      cleanName,
+      cleanName.replace(' State', ''),
+      cleanName.replace('State', ''),
+      cleanName.split(' ')[0], // First word only
+    ];
+    
+    // Try to find a match in variations
+    for (const variation of variations) {
+      if (abbreviations[variation]) {
+        abbr = abbreviations[variation];
+        break;
+      }
+    }
+    
+    // If still no match, generate abbreviation from team name
+    if (!abbr) {
+      // Remove common words and create abbreviation
+      abbr = cleanName.toLowerCase()
+        .replace(/university|college|state university|polytechnic|institute|tech$/gi, '')
+        .trim()
+        .split(' ')
+        .map(word => word.charAt(0))
+        .join('')
+        .substring(0, 5);
+      
+      // If it's too short, try using the first word
+      if (abbr.length < 2) {
+        abbr = cleanName.toLowerCase()
+          .split(' ')[0]
+          .replace(/[^a-z]/g, '')
+          .substring(0, 6);
+      }
+    }
   }
   
   if (!abbr) return null;
