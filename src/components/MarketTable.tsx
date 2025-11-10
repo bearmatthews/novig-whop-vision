@@ -121,28 +121,14 @@ export function MarketTable({
                     ? outcome.orders.reduce((sum, order) => sum + order.qty, 0)
                     : 0;
                   
-                  // Determine team color based on market type and outcome position
+                  // Determine team color based on market type and outcome position (simple index-based mapping)
                   let teamColor = null;
                   let teamAbbr = null;
-                  
-                  if (isMoneylineMarket && teams && event) {
-                    // For moneyline, first outcome is away, second is home
+
+                  if ((isMoneylineMarket || isSpreadMarket) && teams && event) {
                     teamColor = index === 0 ? colors.away : colors.home;
                     const teamName = index === 0 ? teams.away : teams.home;
                     teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
-                  } else if (isSpreadMarket && teams && event) {
-                    // For spread, determine which team based on outcome description
-                    const outcomeDesc = outcome.description.toLowerCase();
-                    const awayTeam = teams.away.toLowerCase();
-                    const homeTeam = teams.home.toLowerCase();
-                    
-                    if (outcomeDesc.includes(awayTeam) || index === 0) {
-                      teamColor = colors.away;
-                      teamAbbr = getTeamAbbreviation(teams.away, event.game.league);
-                    } else {
-                      teamColor = colors.home;
-                      teamAbbr = getTeamAbbreviation(teams.home, event.game.league);
-                    }
                   }
                   
                   const buttonStyle = teamColor 
