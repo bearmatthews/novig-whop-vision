@@ -125,71 +125,71 @@ export function EventCard({
         ) : (
           // List view - clean horizontal layout with prominent logos
           <div className="space-y-4">
-            {/* Main content: Teams and logos */}
-            <div className="flex items-center gap-4">
-              {/* Team logos */}
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                {logos.away && (
-                  <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
-                    <img 
-                      src={logos.away} 
-                      alt="Away team" 
-                      className="w-full h-full object-contain" 
-                      onError={e => { e.currentTarget.style.display = 'none'; }} 
-                    />
-                  </div>
-                )}
-                
-                {/* Team names and matchup */}
-                <div className="flex-1 min-w-0">
-                  <div className="text-base font-semibold text-foreground leading-tight tracking-tight truncate">
-                    {event.description}
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span className="font-medium">{formatGameTime(event.game.scheduled_start)}</span>
-                    </div>
-                    {totalLiquidity > 0 && (
-                      <div className={`flex items-center gap-1 text-xs text-muted-foreground font-medium transition-colors ${flashClass}`}>
-                        <span>{formatLargeCurrency(totalLiquidity)} Vol.</span>
-                      </div>
-                    )}
-                  </div>
+            {/* Main content: Teams and logos - centered */}
+            <div className="flex items-center justify-center gap-4">
+              {logos.away && (
+                <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                  <img 
+                    src={logos.away} 
+                    alt="Away team" 
+                    className="w-full h-full object-contain" 
+                    onError={e => { e.currentTarget.style.display = 'none'; }} 
+                  />
                 </div>
-
-                {logos.home && (
-                  <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
-                    <img 
-                      src={logos.home} 
-                      alt="Home team" 
-                      className="w-full h-full object-contain" 
-                      onError={e => { e.currentTarget.style.display = 'none'; }} 
-                    />
+              )}
+              
+              {/* Team names and matchup - centered */}
+              <div className="text-center">
+                <div className="text-base font-semibold text-foreground leading-tight tracking-tight">
+                  {event.description}
+                </div>
+                <div className="flex items-center justify-center gap-3 mt-1.5">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="font-medium">{formatGameTime(event.game.scheduled_start)}</span>
                   </div>
-                )}
+                  {totalLiquidity > 0 && (
+                    <div className={`flex items-center gap-1 text-xs text-muted-foreground font-medium transition-colors ${flashClass}`}>
+                      <span>{formatLargeCurrency(totalLiquidity)} Vol.</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2 shrink-0">
+              {logos.home && (
+                <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center p-2.5 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                  <img 
+                    src={logos.home} 
+                    alt="Home team" 
+                    className="w-full h-full object-contain" 
+                    onError={e => { e.currentTarget.style.display = 'none'; }} 
+                  />
+                </div>
+              )}
+            </div>
+
+
+            {/* Actions row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 {isLive && (
                   <Badge variant="destructive" className="gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium">
                     <div className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse" />
                     LIVE
                   </Badge>
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShareDialogOpen(true);
-                  }}
-                  className="h-8 w-8 p-0 rounded-full hover:bg-accent/50"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                </Button>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShareDialogOpen(true);
+                }}
+                className="h-8 w-8 p-0 rounded-full hover:bg-accent/50"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+              </Button>
             </div>
 
             {/* Outcomes - prominent betting options */}
