@@ -12,6 +12,45 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // TheSportsDB API key (use env if set, otherwise free key '123')
 const SPORTSDB_API_KEY = Deno.env.get('THESPORTSDB_API_KEY') || '123';
 
+// NCAAB logo scraping from 1000logos.net
+async function getNCABBLogoFrom1000Logos(teamName: string): Promise<string | null> {
+  try {
+    console.log(`Searching 1000logos.net for NCAAB team: ${teamName}`);
+    const response = await fetch('https://1000logos.net/american-colleges-ncaa/');
+    const html = await response.text();
+    
+    // Normalize search term
+    const searchTerm = teamName.toLowerCase()
+      .replace(/university of /gi, '')
+      .replace(/state university/gi, 'state')
+      .replace(/ university$/gi, '')
+      .trim();
+    
+    console.log(`Normalized search term: ${searchTerm}`);
+    
+    // Try to find logo URL in the HTML
+    const imgRegex = /<img[^>]+src="([^"]+)"[^>]+alt="([^"]+)"/gi;
+    let match;
+    
+    while ((match = imgRegex.exec(html)) !== null) {
+      const [, url, alt] = match;
+      const altLower = alt.toLowerCase();
+      
+      // Check if alt text contains team name
+      if (altLower.includes(searchTerm) || searchTerm.split(' ').every(word => altLower.includes(word))) {
+        console.log(`Found logo on 1000logos.net: ${url}`);
+        return url;
+      }
+    }
+    
+    console.log(`No logo found on 1000logos.net for: ${teamName}`);
+    return null;
+  } catch (error) {
+    console.error('Error fetching from 1000logos.net:', error);
+    return null;
+  }
+}
+
 function normalizeName(name: string): string {
   return name
     .replace(/\s+/g, ' ')
@@ -192,28 +231,26 @@ Deno.serve(async (req) => {
     // Try multiple name variants to improve hit-rate for colleges
     const variants = getCandidateNames(teamName, league);
     let teamData: any = null;
+    
+    // For NCAAB, try 1000logos.net first
     let logoUrl: string | null = null;
-
-    for (const v of variants) {
-      teamData = await searchTeamOnSportsDB(v);
-      if (teamData) {
-        logoUrl = pickLogoUrl(teamData);
-        if (logoUrl) {
-          console.log(`Using logo from TheSportsDB for variant: ${v}`);
-          break;
+    
+    if (league === 'NCAAB') {
+      logoUrl = await getNCABBLogoFrom1000Logos(teamName);
+    }
+    
+    // If not found on 1000logos or not NCAAB, try TheSportsDB
+    if (!logoUrl) {
+      for (const v of variants) {
+        teamData = await searchTeamOnSportsDB(v);
+        if (teamData) {
+          logoUrl = pickLogoUrl(teamData);
+          if (logoUrl) {
+            console.log(`Using logo from TheSportsDB for variant: ${v}`);
+            break;
+          }
         }
       }
-    }
-
-    if (!teamData) {
-      console.log(`Team not found on TheSportsDB for any variant: ${variants.join(', ')}`);
-      return new Response(
-        JSON.stringify({ error: 'Team not found on TheSportsDB' }),
-        { 
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
     }
 
     if (!logoUrl) {
@@ -257,12 +294,12 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         url: cachedUrl, 
         cached: false,
-        source: 'TheSportsDB',
-        teamInfo: {
+        source: league === 'NCAAB' && !teamData ? '1000logos.net' : 'TheSportsDB',
+        teamInfo: teamData ? {
           name: teamData.strTeam,
           sport: teamData.strSport,
           league: teamData.strLeague,
-        }
+        } : { name: teamName }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
