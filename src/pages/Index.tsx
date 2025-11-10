@@ -141,19 +141,19 @@ const Index = () => {
               </Button>
             </div>
           ) : (
-          // Desktop Layout - Horizontal
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
+            // Desktop Layout - Centered League Selector
+            <div className="flex items-center justify-center gap-4 relative">
+              <div className="absolute left-0">
                 <WhopUserProfile />
-                <div className="flex-shrink-0">
-                  <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
-                  setSelectedLeague(league);
-                  setSelectedEvent(null);
-                  setSearchQuery("");
-                }} />
-                </div>
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
+              
+              <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
+                setSelectedLeague(league);
+                setSelectedEvent(null);
+                setSearchQuery("");
+              }} />
+              
+              <div className="absolute right-0 flex items-center gap-3">
                 <div className="w-auto max-w-xs">
                   <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search teams or games..." />
                 </div>
