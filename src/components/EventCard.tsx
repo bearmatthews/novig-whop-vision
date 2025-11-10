@@ -249,10 +249,10 @@ export function EventCard({
                     : teamColor;
                   
                   if (price) {
-                    return <button key={outcome.id} style={{
-                      backgroundColor: finalColor || undefined,
-                      borderColor: finalColor || undefined
-                    }} className="w-full px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]" onClick={e => {
+                    return <button key={outcome.id} style={finalColor ? {
+                      backgroundColor: finalColor,
+                      borderColor: finalColor
+                    } : {}} className={`w-full px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 hover:scale-[1.02] border ${finalColor ? 'text-white' : 'text-foreground'} hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]`} onClick={e => {
                       e.stopPropagation();
                       onOutcomeClick?.(outcome.id);
                     }}>
