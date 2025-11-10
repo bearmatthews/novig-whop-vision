@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatGameTime, calculateEventLiquidity, formatLargeCurrency, formatOdds } from "@/lib/betting-utils";
 import { getEventLogos, getEventColors, parseTeamNames, getTeamAbbreviation } from "@/lib/team-logos";
-import { Clock, DollarSign } from "lucide-react";
+import { Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOddsFormat } from "@/hooks/use-odds-format";
@@ -57,12 +57,18 @@ export function EventCard({
   } = useMarketView();
   const isLive = event.status === "OPEN_INGAME";
   const activeMarkets = event.markets?.filter(m => m.outcomes.some(o => o.available || o.last)) || [];
-  const [logosValid, setLogosValid] = useState({ away: true, home: true });
+  const [logosValid, setLogosValid] = useState({
+    away: true,
+    home: true
+  });
   const [displayLogos, setDisplayLogos] = useState(true);
   const logos = getEventLogos(event);
   const baseColors = getEventColors(event);
   // Override colors with null when logos are hidden
-  const colors = displayLogos ? baseColors : { away: null, home: null };
+  const colors = displayLogos ? baseColors : {
+    away: null,
+    home: null
+  };
   const teams = parseTeamNames(event.description);
   const totalLiquidity = calculateEventLiquidity(event);
 
@@ -78,7 +84,10 @@ export function EventCard({
   // Track logo load failures
   const handleLogoError = (side: 'away' | 'home') => {
     setLogosValid(prev => {
-      const newValid = { ...prev, [side]: false };
+      const newValid = {
+        ...prev,
+        [side]: false
+      };
       // If either logo fails, hide both
       if (!newValid.away || !newValid.home) {
         setDisplayLogos(false);
@@ -137,7 +146,7 @@ export function EventCard({
         {!onClick ?
       // Detail view - centered layout with large logos
       <div className="flex flex-col items-center gap-6 text-center">
-            {(displayLogos && logos.away && logos.home) && <div className="flex items-center justify-center gap-12">
+            {displayLogos && logos.away && logos.home && <div className="flex items-center justify-center gap-12">
                 {logos.away && <div className="flex flex-col items-center gap-4">
                     <div className="w-28 h-28 rounded-2xl bg-background shadow-lg flex items-center justify-center p-4">
                       <img src={logos.away} alt="Away team" className="w-full h-full object-contain" onError={() => handleLogoError('away')} />
@@ -157,13 +166,11 @@ export function EventCard({
               </CardTitle>
               
               {/* Score display for detail view */}
-              {espnScore && (espnScore.home_score !== null || espnScore.away_score !== null) && (
-                <div className="flex items-center justify-center gap-4 text-4xl font-bold">
+              {espnScore && (espnScore.home_score !== null || espnScore.away_score !== null) && <div className="flex items-center justify-center gap-4 text-4xl font-bold">
                   <span>{espnScore.away_score ?? '-'}</span>
                   <span className="text-muted-foreground text-2xl">-</span>
                   <span>{espnScore.home_score ?? '-'}</span>
-                </div>
-              )}
+                </div>}
               
               {isLive && <Badge variant="destructive" className="gap-2 whitespace-nowrap text-sm px-4 py-1.5 rounded-full font-medium">
                   <div className="w-2 h-2 bg-destructive-foreground rounded-full animate-pulse" />
@@ -186,13 +193,11 @@ export function EventCard({
                 </div>
                 
                 {/* Score display for list view */}
-                {espnScore && (espnScore.home_score !== null || espnScore.away_score !== null) && (
-                  <div className="flex items-center justify-center gap-2 mt-1 text-lg font-bold">
+                {espnScore && (espnScore.home_score !== null || espnScore.away_score !== null) && <div className="flex items-center justify-center gap-2 mt-1 text-lg font-bold">
                     <span>{espnScore.away_score ?? '-'}</span>
                     <span className="text-muted-foreground text-sm">-</span>
                     <span>{espnScore.home_score ?? '-'}</span>
-                  </div>
-                )}
+                  </div>}
                 
                 {/* Show date/time only when NOT live, or show LIVE badge when live */}
                 {isLive ? <div className="flex items-center justify-center mt-2">
@@ -244,10 +249,7 @@ export function EventCard({
                 const renderBox = (outcome: any, teamColor?: string | null, label?: string | null, isAway?: boolean) => {
                   const price = outcome?.available ?? outcome?.last;
                   // Use consistent random color if logos are not displayed
-                  const finalColor = !displayLogos 
-                    ? (isAway ? randomColors.away : randomColors.home)
-                    : teamColor;
-                  
+                  const finalColor = !displayLogos ? isAway ? randomColors.away : randomColors.home : teamColor;
                   if (price) {
                     return <button key={outcome.id} style={finalColor ? {
                       backgroundColor: finalColor,
@@ -370,12 +372,9 @@ export function EventCard({
                       const teamColor = isAway ? colors.away : colors.home;
                       const teamName = isAway ? teams?.away : teams?.home;
                       const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
-                      
+
                       // Apply random colors when logos are hidden
-                      const finalColor = !displayLogos 
-                        ? (isAway ? randomColors.away : randomColors.home)
-                        : teamColor;
-                      
+                      const finalColor = !displayLogos ? isAway ? randomColors.away : randomColors.home : teamColor;
                       return <button key={outcome.id} style={finalColor ? {
                         backgroundColor: finalColor,
                         borderColor: finalColor
@@ -487,7 +486,7 @@ export function EventCard({
               <span className="font-medium">{formatGameTime(event.game.scheduled_start)}</span>
             </div>
             {totalLiquidity > 0 && <div className={`flex items-center gap-1.5 font-semibold transition-colors ${flashClass}`}>
-                <DollarSign className="w-4 h-4" />
+                
                 <span>{formatLargeCurrency(totalLiquidity)} volume</span>
               </div>}
           </div>
