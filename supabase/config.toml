@@ -3,6 +3,9 @@ project_id = "pxyzuhgqcgaljkcvnmel"
 [functions.ai-betting-search]
 verify_jwt = false
 
+[functions.fetch-team-logo]
+verify_jwt = false
+
 [functions.whop-auth]
 verify_jwt = false
 

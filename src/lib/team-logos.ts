@@ -639,6 +639,14 @@ export function getEventLogos(event: any): { away: string | null; home: string |
   const teams = parseTeamNames(event.description);
   if (!teams || !league) return { away: null, home: null };
   
+  // For college sports, try to fetch cached logos via edge function
+  if (league === 'NCAAB' || league === 'NCAAF') {
+    return {
+      away: `/api/team-logo?team=${encodeURIComponent(teams.away)}&league=${league}`,
+      home: `/api/team-logo?team=${encodeURIComponent(teams.home)}&league=${league}`,
+    };
+  }
+  
   const awayLogo = getTeamLogo(teams.away, league);
   const homeLogo = getTeamLogo(teams.home, league);
   
