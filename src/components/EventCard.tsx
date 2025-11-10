@@ -203,7 +203,7 @@ export function EventCard({
                       <button
                         key={outcome.id}
                         style={{ ...bgStyle, ...hoverStyle }}
-                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border hover:shadow-lg text-white hover:brightness-[var(--hover-brightness,1.1)]"
+                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-[1.02] border text-white hover:brightness-[var(--hover-brightness,1.1)] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
                         onClick={(e) => {
                           e.stopPropagation();
                           onOutcomeClick?.(outcome.id);
