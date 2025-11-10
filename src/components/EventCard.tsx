@@ -196,11 +196,19 @@ export function EventCard({
                   <>
                     {/* Moneyline */}
                     {(() => {
-                      const moneylineMarket = activeMarkets.find(m => 
-                        m.description.toLowerCase().includes('moneyline') || 
-                        m.description.toLowerCase().includes('money line') ||
-                        m.description.toLowerCase().includes('winner')
-                      );
+                      const isSpread = (m: any) => {
+                        const d = m.description?.toLowerCase() || '';
+                        const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
+                        return /[+-]\d+(\.\d+)?/.test(d) || /[+-]\d+(\.\d+)?/.test(ot) || d.includes('spread');
+                      };
+                      const isTotal = (m: any) => {
+                        const d = m.description?.toLowerCase() || '';
+                        const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
+                        return /(\s|^)t\s*\d+/.test(d) || d.includes('total') || d.includes('over/under') || /\bo\b|\bu\b|over|under/.test(ot);
+                      };
+                      const isMoneyline = (m: any) => (m.outcomes?.filter((o: any) => o.available || o.last).length === 2) && !isSpread(m) && !isTotal(m);
+
+                      const moneylineMarket = activeMarkets.find(isMoneyline);
                       const moneylineOutcomes = moneylineMarket?.outcomes.filter(o => o.available || o.last) || [];
                       
                       return moneylineOutcomes.length === 2 && (
@@ -241,7 +249,11 @@ export function EventCard({
 
                     {/* Spread */}
                     {(() => {
-                      const spreadMarket = activeMarkets.find(m => m.description.toLowerCase().includes('spread'));
+                      const spreadMarket = activeMarkets.find(m => {
+                        const d = m.description?.toLowerCase() || '';
+                        const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
+                        return /[+-]\d+(\.\d+)?/.test(d) || /[+-]\d+(\.\d+)?/.test(ot) || d.includes('spread');
+                      });
                       const spreadOutcomes = spreadMarket?.outcomes.filter(o => o.available || o.last) || [];
                       
                       return spreadOutcomes.length === 2 && (
@@ -284,10 +296,11 @@ export function EventCard({
 
                     {/* Total */}
                     {(() => {
-                      const totalMarket = activeMarkets.find(m => 
-                        m.description.toLowerCase().includes('total') || 
-                        m.description.toLowerCase().includes('over/under')
-                      );
+                      const totalMarket = activeMarkets.find(m => {
+                        const d = m.description?.toLowerCase() || '';
+                        const ot = (m.outcomes || []).map((o: any) => o.description?.toLowerCase() || '').join(' ');
+                        return /(\s|^)t\s*\d+/.test(d) || d.includes('total') || d.includes('over/under') || /\bo\b|\bu\b|over|under/.test(ot);
+                      });
                       const totalOutcomes = totalMarket?.outcomes.filter(o => o.available || o.last) || [];
                       
                       return totalOutcomes.length >= 2 && (
