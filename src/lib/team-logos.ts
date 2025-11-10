@@ -639,11 +639,12 @@ export function getEventLogos(event: any): { away: string | null; home: string |
   const teams = parseTeamNames(event.description);
   if (!teams || !league) return { away: null, home: null };
   
-  // For college sports, try to fetch cached logos via edge function
+  // For college sports, fetch from Supabase storage cache
   if (league === 'NCAAB' || league === 'NCAAF') {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     return {
-      away: `/api/team-logo?team=${encodeURIComponent(teams.away)}&league=${league}`,
-      home: `/api/team-logo?team=${encodeURIComponent(teams.home)}&league=${league}`,
+      away: `${supabaseUrl}/storage/v1/object/public/team-logos/${league}/${teams.away.toLowerCase().replace(/\s+/g, '-')}.png`,
+      home: `${supabaseUrl}/storage/v1/object/public/team-logos/${league}/${teams.home.toLowerCase().replace(/\s+/g, '-')}.png`,
     };
   }
   
