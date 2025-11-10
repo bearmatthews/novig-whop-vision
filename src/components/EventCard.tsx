@@ -375,11 +375,11 @@ export function EventCard({
                   (() => {
                     // Try moneyline first
                     const moneylineOutcomes = moneylineMarket?.outcomes.filter(o => o.available || o.last) || [];
-                    if (moneylineOutcomes.length === 2) {
+                    if (moneylineOutcomes.length >= 2) {
                       return (
                         <div className="col-span-3">
                           <div className="flex items-center gap-2">
-                            {moneylineOutcomes.map((outcome, index) => {
+                            {moneylineOutcomes.slice(0, 2).map((outcome, index) => {
                               const price = outcome.available || outcome.last;
                               const teamColor = index === 0 ? colors.away : colors.home;
                               const teamName = index === 0 ? teams?.away : teams?.home;
@@ -413,13 +413,13 @@ export function EventCard({
 
                     // Fallback to spread if moneyline not available
                     const spreadOutcomes = spreadMarket?.outcomes.filter(o => o.available || o.last) || [];
-                    if (spreadOutcomes.length === 2) {
+                    if (spreadOutcomes.length >= 2) {
                       return (
                         <div className="col-span-3">
                           <div className="flex flex-col gap-2">
                             <Badge variant="secondary" className="text-xs self-start">Spread</Badge>
                             <div className="flex items-center gap-2">
-                              {spreadOutcomes.map((outcome, index) => {
+                              {spreadOutcomes.slice(0, 2).map((outcome, index) => {
                                 const price = outcome.available || outcome.last;
                                 const teamName = index === 0 ? teams?.away : teams?.home;
                                 const teamAbbr = teamName ? getTeamAbbreviation(teamName, event.game.league) : null;
