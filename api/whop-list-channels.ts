@@ -34,6 +34,7 @@ export default async function handler(request: Request) {
         'Content-Type': 'application/json',
         'x-whop-user-token': whopToken || '',
       },
+      body: await request.text(), // forward body (e.g., experienceId)
     });
 
     const data = await response.json();

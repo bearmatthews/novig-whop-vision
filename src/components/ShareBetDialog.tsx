@@ -78,35 +78,50 @@ export function ShareBetDialog({
         return;
       }
 
-      // In Whop: Use current experience as default channel
+      // In Whop: list channels for current experience via proxy
       if (experienceId) {
-        const defaultChannel = {
-          id: experienceId,
-          name: 'Current Experience',
-          type: 'experience',
-        };
-        setChannels([defaultChannel]);
-        setChannelId(experienceId);
-      } else {
-        // Fallback: try to fetch channels via API
         try {
           const vercelUrl = '/whop-list-channels';
           const res = await fetch(vercelUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ experience_id: experienceId }),
           });
 
           if (res.ok) {
             const payload = await res.json();
             if (payload?.channels && payload.channels.length > 0) {
-              console.log('Fetched channels via Vercel proxy:', payload.channels.length);
               setChannels(payload.channels);
               setChannelId(payload.channels[0].id);
+              setLoadingChannels(false);
+              return;
             }
           }
         } catch (e) {
-          console.error('Failed to fetch channels:', e);
+          console.error('Proxy listing failed, trying fallback invoke:', e);
         }
+
+        // Fallback to direct Supabase function call
+        const { data, error } = await supabase.functions.invoke('whop-list-channels', {
+          method: 'POST',
+          body: { experience_id: experienceId },
+        });
+
+        if (error) throw error;
+
+        if (data?.channels && data.channels.length > 0) {
+          setChannels(data.channels);
+          setChannelId(data.channels[0].id);
+          setLoadingChannels(false);
+          return;
+        }
+
+        // Ultimate fallback: default to experience itself
+        const defaultChannel = { id: experienceId, name: 'Current Experience', type: 'experience' };
+        setChannels([defaultChannel]);
+        setChannelId(experienceId);
+        setLoadingChannels(false);
+        return;
       }
     } catch (error) {
       console.error('Failed to load channels:', error);

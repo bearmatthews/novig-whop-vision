@@ -22,7 +22,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get user token from header
+    // Optional input body
+    let experienceId: string | null = null;
+    try {
+      const json = await req.json().catch(() => null);
+      experienceId = json?.experience_id ?? json?.experienceId ?? null;
+    } catch (_) {}
+
+    // Get user token from header (for logging / auth context)
     const userToken = req.headers.get('x-whop-user-token');
     if (!userToken) {
       return new Response(
@@ -31,7 +38,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Decode user ID from token
+    // Decode user ID from token (not strictly required to list channels)
     const parts = userToken.split('.');
     if (parts.length !== 3) {
       return new Response(
@@ -42,72 +49,61 @@ Deno.serve(async (req) => {
 
     const payload = JSON.parse(atob(parts[1]));
     const userId = payload.sub;
+    console.log('Fetching channels for user:', userId, 'experienceId:', experienceId);
 
-    console.log('Fetching channels for user:', userId);
-
-    // Fetch user's memberships to get experiences they have access to
-    const membershipsResponse = await fetch(
-      `https://api.whop.com/api/v1/memberships?user_id=${userId}&valid=true`,
-      {
+    // Resolve company_id using the experienceId
+    let companyId: string | null = null;
+    if (experienceId) {
+      const expResp = await fetch(`https://api.whop.com/api/v1/experiences/${experienceId}`, {
         headers: {
           'Authorization': `Bearer ${whopApiKey}`,
           'Content-Type': 'application/json',
-        },
+        }
+      });
+      if (expResp.ok) {
+        const exp = await expResp.json();
+        companyId = exp?.company?.id ?? null;
+        console.log('Resolved companyId from experience:', companyId);
+      } else {
+        const t = await expResp.text();
+        console.warn('Failed to fetch experience', experienceId, expResp.status, t);
       }
-    );
+    }
 
-    if (!membershipsResponse.ok) {
-      const errorText = await membershipsResponse.text();
-      console.error('Failed to fetch memberships:', membershipsResponse.status, errorText);
+    if (!companyId) {
+      // As a fallback, do not attempt memberships (requires company_id). Return empty.
+      console.warn('No companyId resolved; returning empty channel list');
+      return new Response(JSON.stringify({ channels: [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // List chat channels for the resolved company
+    const channelsResp = await fetch(`https://api.whop.com/api/v1/chat_channels?company_id=${companyId}&first=100`, {
+      headers: {
+        'Authorization': `Bearer ${whopApiKey}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!channelsResp.ok) {
+      const errTxt = await channelsResp.text();
+      console.error('Failed to list chat channels:', channelsResp.status, errTxt);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch user memberships' }),
-        { status: membershipsResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Failed to list chat channels' }),
+        { status: channelsResp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const membershipsData = await membershipsResponse.json();
-    const memberships = membershipsData.data || [];
+    const channelsJson = await channelsResp.json();
+    const list = channelsJson.data || [];
 
-    console.log(`Found ${memberships.length} memberships`);
+    const channels = list.map((ch: any) => ({
+      id: ch.id,
+      name: ch.experience?.name ? `${ch.experience.name}` : ch.id,
+      type: 'chat_channel',
+      who_can_post: ch.who_can_post ?? null,
+    }));
 
-    // Extract unique experience IDs from memberships
-    const experienceIds = new Set<string>();
-    for (const membership of memberships) {
-      if (membership.product?.experiences) {
-        for (const exp of membership.product.experiences) {
-          experienceIds.add(exp);
-        }
-      }
-    }
-
-    // Fetch experience details for each experience ID
-    const channels = [];
-    for (const expId of experienceIds) {
-      try {
-        const expResponse = await fetch(
-          `https://api.whop.com/api/v1/experiences/${expId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${whopApiKey}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (expResponse.ok) {
-          const experience = await expResponse.json();
-          channels.push({
-            id: experience.id,
-            name: experience.name || experience.id,
-            type: 'experience',
-          });
-        }
-      } catch (error) {
-        console.error(`Failed to fetch experience ${expId}:`, error);
-      }
-    }
-
-    console.log(`Returning ${channels.length} accessible channels`);
+    console.log(`Returning ${channels.length} channels for company ${companyId}`);
 
     return new Response(
       JSON.stringify({ channels }),
