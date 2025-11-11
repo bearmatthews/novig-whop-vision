@@ -49,19 +49,11 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const authenticateUser = async () => {
       try {
-        const isInIframe = window.self !== window.top;
-        const host = window.location.hostname;
-        const ref = document.referrer || '';
-        const isLovablePreview = host.includes('lovableproject.com') || host.includes('lovable.app');
-        const isWhopEmbed = isInIframe && (
-          ref.includes('apps.whop.com') ||
-          ref.includes('whop.com') ||
-          host.endsWith('.apps.whop.com')
-        );
+        // Use environment variable to determine if we're in production
+        const isProduction = import.meta.env.PROD;
         
-        // For development/preview outside Whop: Use mock user
-        if (!isWhopEmbed || isLovablePreview) {
-          console.log('Not in Whop embed: Using mock Whop user');
+        if (!isProduction) {
+          console.log('Running in development mode - using mock user');
           setUser({
             id: 'dev-user-123',
             username: 'TestUser',
@@ -72,7 +64,7 @@ export const WhopAuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        console.log('In Whop iframe: Attempting authentication...');
+        console.log('Production mode: Attempting Whop authentication...');
         
         // Call Vercel proxy endpoint which will forward with x-whop-user-token
         try {

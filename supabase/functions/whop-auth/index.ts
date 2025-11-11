@@ -11,71 +11,35 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Get the x-whop-user-token from the request headers
     const whopToken = req.headers.get('x-whop-user-token');
-    
-    console.log('Whop auth request received');
-    console.log('Has whop token:', !!whopToken);
-    console.log('Request URL:', req.url);
-    console.log('All headers:', JSON.stringify([...req.headers.entries()]));
-    
     if (!whopToken) {
-      console.log('No Whop token in headers');
       return new Response(
-        JSON.stringify({ error: 'No Whop token provided', user: null }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        JSON.stringify({ error: 'Unauthorized', user: null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
-    console.log('Calling Whop API to verify token...');
-    
-    // Extract user id from JWT without verification (Whop recommends SDK for full verification)
-    let userId: string | null = null;
-    try {
-      const tokenParts = (whopToken || '').split('.');
-      if (tokenParts.length === 3) {
-        const payloadJson = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(tokenParts[1]), c => c.charCodeAt(0))));
-        userId = payloadJson.sub || payloadJson.user_id || null;
-        console.log('Decoded user id from token:', userId);
-      }
-    } catch (e) {
-      console.error('Failed to decode Whop token payload:', e);
-    }
-
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unable to decode user from token', user: null }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
-    }
-
-    // Retrieve user via Whop REST API using App API key
     const whopApiKey = Deno.env.get('WHOP_API_KEY');
-    console.log('Has API key:', !!whopApiKey);
+    if (!whopApiKey) {
+      return new Response(
+        JSON.stringify({ error: 'Service configuration error', user: null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
 
-    const response = await fetch(`https://api.whop.com/api/v1/users/${userId}` , {
-      headers: {
-        'Authorization': `Bearer ${whopApiKey || ''}`,
-      },
+    // Verify token and get user data via Whop API
+    const response = await fetch('https://api.whop.com/api/v1/me', {
+      headers: { 'Authorization': `Bearer ${whopToken}` }
     });
 
-    console.log('Whop API response status:', response.status);
-
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Whop API error:', errorText);
       return new Response(
-        JSON.stringify({ error: 'Invalid Whop token', details: errorText, user: null }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        JSON.stringify({ error: 'Invalid token', user: null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
     const userData = await response.json();
-    console.log('Whop user data retrieved successfully');
-    console.log('Full user data:', JSON.stringify(userData, null, 2));
-    console.log('User ID:', userData.id);
-    console.log('User username:', userData.username);
-    console.log('Profile picture object:', userData.profile_picture);
     
     return new Response(
       JSON.stringify({ user: userData }),
@@ -83,10 +47,8 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in whop-auth function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: errorMessage, user: null }),
+      JSON.stringify({ error: 'Internal server error', user: null }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

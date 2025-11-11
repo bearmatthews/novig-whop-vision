@@ -1,4 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+
+const SearchSchema = z.object({
+  message: z.string().min(1).max(2000, 'Message too long'),
+  events: z.array(z.any()).max(100, 'Too many events'),
+  conversationHistory: z.array(z.any()).max(20, 'Conversation history too long').optional()
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +18,8 @@ serve(async (req) => {
   }
 
   try {
-    const { message, events, conversationHistory } = await req.json();
+    const rawBody = await req.json();
+    const { message, events, conversationHistory } = SearchSchema.parse(rawBody);
     
     if (!message) {
       throw new Error("Message is required");
@@ -176,9 +184,14 @@ Remember: ALWAYS return results. Be creative and helpful, not restrictive.`;
     );
 
   } catch (error) {
-    console.error("Error in ai-betting-search:", error);
+    if (error instanceof z.ZodError) {
+      return new Response(
+        JSON.stringify({ error: 'Validation error', details: error.errors }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Failed to process request" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

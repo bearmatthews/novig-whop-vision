@@ -1,7 +1,18 @@
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-whop-user-token',
 };
+
+const ShareSchema = z.object({
+  channel_id: z.string()
+    .regex(/^(exp_|channel_)[a-zA-Z0-9_]+$/, 'Invalid channel ID format')
+    .max(100),
+  content: z.string()
+    .min(1, 'Content required')
+    .max(5000, 'Content too long (max 5000 characters)')
+});
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -9,35 +20,66 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { channel_id, content } = await req.json();
+    const rawBody = await req.json();
+    const { channel_id, content } = ShareSchema.parse(rawBody);
 
-    if (!channel_id || !content) {
+    // Extract and verify user token
+    const userToken = req.headers.get('x-whop-user-token');
+    if (!userToken) {
       return new Response(
-        JSON.stringify({ error: 'channel_id and content are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Unauthorized - user token required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const whopApiKey = Deno.env.get('WHOP_API_KEY');
-    
     if (!whopApiKey) {
-      console.error('WHOP_API_KEY not configured');
       return new Response(
-        JSON.stringify({ error: 'Whop API key not configured' }),
+        JSON.stringify({ error: 'Service configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Determine if this is an experience (forum post) or chat channel (message)
-    const isExperience = channel_id.startsWith('exp_');
-    const isChatChannel = channel_id.startsWith('channel_');
+    // Extract user ID from token (will be verified by Whop API)
+    let userId: string | null = null;
+    try {
+      const tokenParts = userToken.split('.');
+      if (tokenParts.length === 3) {
+        const payloadJson = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(tokenParts[1]), c => c.charCodeAt(0))));
+        userId = payloadJson.sub || payloadJson.user_id || null;
+      }
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Invalid token format' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    console.log('Sharing to:', channel_id, 'Type:', isExperience ? 'experience/forum' : 'chat channel');
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid user token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify user has access to the channel/experience
+    const resourceId = channel_id;
+    const accessCheck = await fetch(
+      `https://api.whop.com/api/v1/users/${userId}/access/${resourceId}`,
+      { headers: { 'Authorization': `Bearer ${whopApiKey}` } }
+    );
+
+    if (!accessCheck.ok) {
+      return new Response(
+        JSON.stringify({ error: 'Access denied - you do not have permission to post here' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const isExperience = channel_id.startsWith('exp_');
 
     if (isExperience) {
       // Post to experience forum
-      console.log('Posting to experience forum:', channel_id);
-
       const whopResponse = await fetch('https://api.whop.com/api/v1/forum_posts', {
         method: 'POST',
         headers: {
@@ -52,25 +94,20 @@ Deno.serve(async (req) => {
       });
 
       if (!whopResponse.ok) {
-        const errorText = await whopResponse.text();
-        console.error('Whop API error (forum post):', whopResponse.status, errorText);
         return new Response(
-          JSON.stringify({ error: 'Failed to post to forum', details: errorText }),
+          JSON.stringify({ error: 'Failed to post to forum' }),
           { status: whopResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
       const post = await whopResponse.json();
-      console.log('Forum post created successfully:', post.id);
 
       return new Response(
         JSON.stringify({ success: true, post }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
-      // Post to chat channel (existing logic)
-      console.log('Sending message to channel:', channel_id);
-
+      // Post to chat channel
       const whopResponse = await fetch('https://api.whop.com/api/v1/messages', {
         method: 'POST',
         headers: {
@@ -84,16 +121,13 @@ Deno.serve(async (req) => {
       });
 
       if (!whopResponse.ok) {
-        const errorText = await whopResponse.text();
-        console.error('Whop API error (message):', whopResponse.status, errorText);
         return new Response(
-          JSON.stringify({ error: 'Failed to send message', details: errorText }),
+          JSON.stringify({ error: 'Failed to send message' }),
           { status: whopResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
       const message = await whopResponse.json();
-      console.log('Message sent successfully:', message.id);
 
       return new Response(
         JSON.stringify({ success: true, message }),
@@ -101,9 +135,14 @@ Deno.serve(async (req) => {
       );
     }
   } catch (error) {
-    console.error('Error in whop-share-message:', error);
+    if (error instanceof z.ZodError) {
+      return new Response(
+        JSON.stringify({ error: 'Validation error', details: error.errors }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
