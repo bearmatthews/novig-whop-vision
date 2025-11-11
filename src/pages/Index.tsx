@@ -11,6 +11,7 @@ import { WhopUserProfile } from "@/components/WhopUserProfile";
 import { AISearchOverlay } from "@/components/AISearchOverlay";
 import { SettingsMenu } from "@/components/SettingsMenu";
 import { LogoCachePopulator } from "@/components/LogoCachePopulator";
+import { ShareBetDialog } from "@/components/ShareBetDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,7 @@ import { getCachedEvents, refreshNovigCache } from "@/lib/cached-graphql-client"
 import { getCachedScores, refreshESPNScores, findScoreForEvent } from "@/lib/espn-scores";
 import { graphqlQuery } from "@/lib/graphql-client";
 import { GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
-import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle, Bot } from "lucide-react";
+import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle, Bot, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -31,6 +32,7 @@ const Index = () => {
   const [aiFilteredEventIds, setAiFilteredEventIds] = useState<string[]>([]);
   const [espnScores, setEspnScores] = useState<any[]>([]);
   const [targetOutcomeId, setTargetOutcomeId] = useState<string | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   // Fetch all sports from cached data
   const {
@@ -286,9 +288,20 @@ const Index = () => {
             </Tabs>}
 
           {selectedEvent && <div className="space-y-6">
-              <Button variant="secondary" onClick={() => setSelectedEvent(null)}>
-                ← Back to events
-              </Button>
+              <div className="flex items-center justify-between gap-3">
+                <Button variant="secondary" onClick={() => setSelectedEvent(null)}>
+                  ← Back to events
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="default"
+                  onClick={() => setShowShareDialog(true)}
+                  className="gap-2"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share to Whop
+                </Button>
+              </div>
 
               {isLoadingDetail ? <div className="text-center py-8">
                   <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground mb-4" />
@@ -340,6 +353,13 @@ const Index = () => {
         setTargetOutcomeId(outcomeId);
       }
     }} />}
+
+      {/* Share Dialog */}
+      <ShareBetDialog
+        open={showShareDialog}
+        onOpenChange={setShowShareDialog}
+        eventName={selectedEvent?.description || ''}
+      />
     </div>;
 };
 export default Index;
