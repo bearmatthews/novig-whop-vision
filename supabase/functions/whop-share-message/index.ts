@@ -28,36 +28,78 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Sending message to channel:', channel_id);
+    // Determine if this is an experience (forum post) or chat channel (message)
+    const isExperience = channel_id.startsWith('exp_');
+    const isChatChannel = channel_id.startsWith('channel_');
 
-    const whopResponse = await fetch('https://api.whop.com/api/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${whopApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        channel_id,
-        content,
-      }),
-    });
+    console.log('Sharing to:', channel_id, 'Type:', isExperience ? 'experience/forum' : 'chat channel');
 
-    if (!whopResponse.ok) {
-      const errorText = await whopResponse.text();
-      console.error('Whop API error:', whopResponse.status, errorText);
+    if (isExperience) {
+      // Post to experience forum
+      console.log('Posting to experience forum:', channel_id);
+
+      const whopResponse = await fetch('https://api.whop.com/api/v1/forum_posts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${whopApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          experience_id: channel_id,
+          content,
+          title: 'Betting Recommendation', // Required for forum posts
+        }),
+      });
+
+      if (!whopResponse.ok) {
+        const errorText = await whopResponse.text();
+        console.error('Whop API error (forum post):', whopResponse.status, errorText);
+        return new Response(
+          JSON.stringify({ error: 'Failed to post to forum', details: errorText }),
+          { status: whopResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const post = await whopResponse.json();
+      console.log('Forum post created successfully:', post.id);
+
       return new Response(
-        JSON.stringify({ error: 'Failed to send message', details: errorText }),
-        { status: whopResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: true, post }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } else {
+      // Post to chat channel (existing logic)
+      console.log('Sending message to channel:', channel_id);
+
+      const whopResponse = await fetch('https://api.whop.com/api/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${whopApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channel_id,
+          content,
+        }),
+      });
+
+      if (!whopResponse.ok) {
+        const errorText = await whopResponse.text();
+        console.error('Whop API error (message):', whopResponse.status, errorText);
+        return new Response(
+          JSON.stringify({ error: 'Failed to send message', details: errorText }),
+          { status: whopResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const message = await whopResponse.json();
+      console.log('Message sent successfully:', message.id);
+
+      return new Response(
+        JSON.stringify({ success: true, message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const message = await whopResponse.json();
-    console.log('Message sent successfully:', message.id);
-
-    return new Response(
-      JSON.stringify({ success: true, message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
   } catch (error) {
     console.error('Error in whop-share-message:', error);
     return new Response(

@@ -14,6 +14,7 @@ interface Channel {
   id: string;
   name: string;
   type: string;
+  has_forums?: boolean;
 }
 
 interface ShareBetDialogProps {
@@ -148,8 +149,8 @@ export function ShareBetDialog({
   const handleShare = async () => {
     if (!channelId.trim()) {
       toast({
-        title: 'Channel ID required',
-        description: 'Please enter a Whop channel ID',
+        title: 'Destination required',
+        description: 'Please select a forum or chat channel',
         variant: 'destructive',
       });
       return;
@@ -158,6 +159,7 @@ export function ShareBetDialog({
     setLoading(true);
     try {
       const content = customMessage.trim() || generateDefaultMessage();
+      const isExperience = channelId.startsWith('exp_');
       
       // Try Vercel proxy first
       try {
@@ -176,7 +178,9 @@ export function ShareBetDialog({
           if (result.success) {
             toast({
               title: 'Shared successfully!',
-              description: 'Your bet has been shared to the chat',
+              description: isExperience 
+                ? 'Your bet has been posted to the forum'
+                : 'Your bet has been shared to the chat',
             });
             
             onOpenChange(false);
@@ -202,7 +206,9 @@ export function ShareBetDialog({
 
       toast({
         title: 'Shared successfully!',
-        description: 'Your bet has been shared to the chat',
+        description: isExperience 
+          ? 'Your bet has been posted to the forum'
+          : 'Your bet has been shared to the chat',
       });
       
       onOpenChange(false);
@@ -226,17 +232,17 @@ export function ShareBetDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />
-            Share to Whop Chat
+            Share to Whop Community
           </DialogTitle>
           <DialogDescription>
-            Share this bet with your Whop community
+            Share this bet with your Whop forums or chat channels
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="channel-select">Share To</Label>
-            {loadingChannels ? (
+          {loadingChannels ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
@@ -249,32 +255,38 @@ export function ShareBetDialog({
                   onChange={(e) => setChannelId(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  No channels found automatically. Enter a channel ID to share.
+                  No channels or forums found automatically. Enter an ID to share.
                 </p>
               </div>
             ) : channels.length === 1 ? (
               <div className="p-3 bg-secondary rounded-md">
                 <p className="text-sm font-medium">{channels[0].name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Sharing to current experience
+                  {channels[0].type === 'experience' && channels[0].has_forums 
+                    ? 'Sharing to experience forum'
+                    : channels[0].type === 'chat_channel'
+                    ? 'Sharing to chat channel'
+                    : 'Sharing to current experience'}
                 </p>
               </div>
             ) : (
               <>
                 <Select value={channelId} onValueChange={setChannelId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose a channel..." />
+                    <SelectValue placeholder="Choose where to share..." />
                   </SelectTrigger>
                   <SelectContent>
                     {channels.map((channel) => (
                       <SelectItem key={channel.id} value={channel.id}>
                         {channel.name}
+                        {channel.type === 'experience' && channel.has_forums && ' (Forum)'}
+                        {channel.type === 'chat_channel' && ' (Chat)'}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Select where to share this bet
+                  Select a forum or chat channel to share this bet
                 </p>
               </>
             )}

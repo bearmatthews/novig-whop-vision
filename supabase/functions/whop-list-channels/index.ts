@@ -76,7 +76,60 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ channels: [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // List chat channels for the resolved company
+    // List all experiences for the company
+    const experiencesResp = await fetch(`https://api.whop.com/api/v1/experiences?company_id=${companyId}&first=100`, {
+      headers: {
+        'Authorization': `Bearer ${whopApiKey}`,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!experiencesResp.ok) {
+      const errTxt = await experiencesResp.text();
+      console.error('Failed to list experiences:', experiencesResp.status, errTxt);
+      return new Response(
+        JSON.stringify({ error: 'Failed to list experiences' }),
+        { status: experiencesResp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const experiencesJson = await experiencesResp.json();
+    const experiences = experiencesJson.data || [];
+    console.log(`Found ${experiences.length} experiences for company ${companyId}`);
+
+    // For each experience, check if it has forum posts available
+    const channelsWithForums = await Promise.all(
+      experiences.map(async (exp: any) => {
+        try {
+          // Try to fetch forum posts for this experience
+          const forumResp = await fetch(`https://api.whop.com/api/v1/forum_posts?experience_id=${exp.id}&first=1`, {
+            headers: {
+              'Authorization': `Bearer ${whopApiKey}`,
+              'Content-Type': 'application/json',
+            }
+          });
+
+          const hasForums = forumResp.ok;
+          
+          return {
+            id: exp.id,
+            name: exp.name || exp.id,
+            type: 'experience',
+            has_forums: hasForums,
+          };
+        } catch (err) {
+          console.error('Error checking forums for experience', exp.id, err);
+          return {
+            id: exp.id,
+            name: exp.name || exp.id,
+            type: 'experience',
+            has_forums: false,
+          };
+        }
+      })
+    );
+
+    // Also list chat channels for backward compatibility
     const channelsResp = await fetch(`https://api.whop.com/api/v1/chat_channels?company_id=${companyId}&first=100`, {
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,
@@ -87,26 +140,28 @@ Deno.serve(async (req) => {
     if (!channelsResp.ok) {
       const errTxt = await channelsResp.text();
       console.error('Failed to list chat channels:', channelsResp.status, errTxt);
-      return new Response(
-        JSON.stringify({ error: 'Failed to list chat channels' }),
-        { status: channelsResp.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Continue even if chat channels fail
     }
 
-    const channelsJson = await channelsResp.json();
-    const list = channelsJson.data || [];
+    const chatChannels: any[] = [];
+    if (channelsResp.ok) {
+      const channelsJson = await channelsResp.json();
+      const list = channelsJson.data || [];
+      chatChannels.push(...list.map((ch: any) => ({
+        id: ch.id,
+        name: ch.experience?.name ? `${ch.experience.name} (Chat)` : ch.id,
+        type: 'chat_channel',
+        who_can_post: ch.who_can_post ?? null,
+      })));
+    }
 
-    const channels = list.map((ch: any) => ({
-      id: ch.id,
-      name: ch.experience?.name ? `${ch.experience.name}` : ch.id,
-      type: 'chat_channel',
-      who_can_post: ch.who_can_post ?? null,
-    }));
+    // Combine experiences with forums and chat channels
+    const allChannels = [...channelsWithForums, ...chatChannels];
 
-    console.log(`Returning ${channels.length} channels for company ${companyId}`);
+    console.log(`Returning ${allChannels.length} total channels (${channelsWithForums.length} experiences, ${chatChannels.length} chat channels) for company ${companyId}`);
 
     return new Response(
-      JSON.stringify({ channels }),
+      JSON.stringify({ channels: allChannels }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
