@@ -22,7 +22,6 @@ import { GET_EVENT_DETAIL_QUERY } from "@/lib/queries";
 import { RefreshCw, Activity, TrendingUp, SearchX, AlertCircle, Bot, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 const Index = () => {
   const isMobile = useIsMobile();
   const [selectedLeague, setSelectedLeague] = useState("ALL");
@@ -49,20 +48,20 @@ const Index = () => {
       }
       return response.data;
     },
-    refetchInterval: 15000, // Poll every 15 seconds (faster since we're reading from cache)
-    staleTime: 10000, // Consider data fresh for 10 seconds
+    refetchInterval: 15000,
+    // Poll every 15 seconds (faster since we're reading from cache)
+    staleTime: 10000 // Consider data fresh for 10 seconds
   });
 
   // Trigger cache refresh on mount and periodically
   useEffect(() => {
     refreshNovigCache();
     refreshESPNScores();
-    
     const interval = setInterval(() => {
       refreshNovigCache();
       refreshESPNScores();
     }, 120000); // 2 minutes
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -72,14 +71,12 @@ const Index = () => {
       const scores = await getCachedScores();
       setEspnScores(scores);
     };
-    
     fetchScores();
-    
+
     // Refresh scores every 30 seconds
     const interval = setInterval(fetchScores, 30 * 1000);
     return () => clearInterval(interval);
   }, []);
-
   useEffect(() => {
     if (error) {
       toast.error("Failed to fetch betting data", {
@@ -87,7 +84,6 @@ const Index = () => {
       });
     }
   }, [error]);
-
   const handleRefresh = async () => {
     toast.info("Refreshing data...");
     await refreshNovigCache(); // Trigger background refresh
@@ -148,45 +144,32 @@ const Index = () => {
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 glass-effect">
         <div className="container mx-auto px-3 md:px-6 py-2 md:py-5">
-          {isMobile ? (
-            // Mobile Layout - Single Line
-            <div className="flex items-center gap-1.5">
+          {isMobile ?
+        // Mobile Layout - Single Line
+        <div className="flex items-center gap-1.5">
               <WhopUserProfile />
-              <LeagueSelector 
-                selectedLeague={selectedLeague} 
-                onLeagueChange={league => {
-                  setSelectedLeague(league);
-                  setSelectedEvent(null);
-                  setSearchQuery("");
-                }} 
-              />
-              <SearchBar 
-                value={searchQuery} 
-                onChange={setSearchQuery} 
-                placeholder="Search..." 
-              />
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={() => setShowAIChat(!showAIChat)} 
-                className="rounded-lg shrink-0 px-3 gap-1.5 whitespace-nowrap"
-              >
+              <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
+            setSelectedLeague(league);
+            setSelectedEvent(null);
+            setSearchQuery("");
+          }} />
+              <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search..." />
+              <Button variant="default" size="sm" onClick={() => setShowAIChat(!showAIChat)} className="rounded-lg shrink-0 px-3 gap-1.5 whitespace-nowrap">
                 <Bot className="w-4 h-4" />
                 <span className="text-xs">Ask Bear</span>
               </Button>
-            </div>
-          ) : (
-            // Desktop Layout - Centered League Selector
-            <div className="flex items-center justify-center gap-4 relative">
+            </div> :
+        // Desktop Layout - Centered League Selector
+        <div className="flex items-center justify-center gap-4 relative">
               <div className="absolute left-0">
                 <WhopUserProfile />
               </div>
               
               <LeagueSelector selectedLeague={selectedLeague} onLeagueChange={league => {
-                setSelectedLeague(league);
-                setSelectedEvent(null);
-                setSearchQuery("");
-              }} />
+            setSelectedLeague(league);
+            setSelectedEvent(null);
+            setSearchQuery("");
+          }} />
               
               <div className="absolute right-0 flex items-center gap-3">
                 <div className="w-auto max-w-xs">
@@ -197,8 +180,7 @@ const Index = () => {
                   Ask Bear
                 </Button>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </header>
 
@@ -240,49 +222,28 @@ const Index = () => {
 
               <TabsContent value="all" className="mt-6">
                 <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                  {filteredEvents.map((event: any) => <EventCard 
-                    key={event.id} 
-                    event={event} 
-                    onClick={() => setSelectedEvent(event)}
-                    onOutcomeClick={(outcomeId) => {
-                      setSelectedEvent(event);
-                      setTargetOutcomeId(outcomeId);
-                    }}
-                    showMarkets
-                    espnScore={findScoreForEvent(espnScores, event.description, event.game.league)}
-                  />)}
+                  {filteredEvents.map((event: any) => <EventCard key={event.id} event={event} onClick={() => setSelectedEvent(event)} onOutcomeClick={outcomeId => {
+                setSelectedEvent(event);
+                setTargetOutcomeId(outcomeId);
+              }} showMarkets espnScore={findScoreForEvent(espnScores, event.description, event.game.league)} />)}
                 </div>
               </TabsContent>
 
               <TabsContent value="live" className="mt-6">
                 {liveEvents.length === 0 ? <EmptyState icon={Activity} title="No Live Events" description="There are no live games at the moment. Check back during game time!" /> : <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                    {liveEvents.map((event: any) => <EventCard 
-                      key={event.id} 
-                      event={event} 
-                      onClick={() => setSelectedEvent(event)}
-                      onOutcomeClick={(outcomeId) => {
-                        setSelectedEvent(event);
-                        setTargetOutcomeId(outcomeId);
-                      }}
-                      showMarkets
-                      espnScore={findScoreForEvent(espnScores, event.description, event.game.league)}
-                    />)}
+                    {liveEvents.map((event: any) => <EventCard key={event.id} event={event} onClick={() => setSelectedEvent(event)} onOutcomeClick={outcomeId => {
+                setSelectedEvent(event);
+                setTargetOutcomeId(outcomeId);
+              }} showMarkets espnScore={findScoreForEvent(espnScores, event.description, event.game.league)} />)}
                   </div>}
               </TabsContent>
 
               <TabsContent value="pregame" className="mt-6">
                 {pregameEvents.length === 0 ? <EmptyState icon={TrendingUp} title="No Upcoming Games" description="All games are currently live or there are no scheduled games with open markets." /> : <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                    {pregameEvents.map((event: any) => <EventCard 
-                      key={event.id} 
-                      event={event} 
-                      onClick={() => setSelectedEvent(event)}
-                      onOutcomeClick={(outcomeId) => {
-                        setSelectedEvent(event);
-                        setTargetOutcomeId(outcomeId);
-                      }}
-                      showMarkets
-                      espnScore={findScoreForEvent(espnScores, event.description, event.game.league)}
-                    />)}
+                    {pregameEvents.map((event: any) => <EventCard key={event.id} event={event} onClick={() => setSelectedEvent(event)} onOutcomeClick={outcomeId => {
+                setSelectedEvent(event);
+                setTargetOutcomeId(outcomeId);
+              }} showMarkets espnScore={findScoreForEvent(espnScores, event.description, event.game.league)} />)}
                   </div>}
               </TabsContent>
             </Tabs>}
@@ -292,25 +253,14 @@ const Index = () => {
                 <Button variant="secondary" onClick={() => setSelectedEvent(null)}>
                   ← Back to events
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="default"
-                  onClick={() => setShowShareDialog(true)}
-                  className="gap-2"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Share to Whop
-                </Button>
+                
               </div>
 
               {isLoadingDetail ? <div className="text-center py-8">
                   <RefreshCw className="w-8 h-8 animate-spin mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Loading event details and liquidity...</p>
                 </div> : <>
-                  <EventCard 
-                    event={eventWithLiquidity}
-                    espnScore={findScoreForEvent(espnScores, eventWithLiquidity.description, eventWithLiquidity.game.league)}
-                  />
+                  <EventCard event={eventWithLiquidity} espnScore={findScoreForEvent(espnScores, eventWithLiquidity.description, eventWithLiquidity.game.league)} />
 
                   <Tabs defaultValue="markets" className="w-full">
                     <TabsList>
@@ -319,13 +269,7 @@ const Index = () => {
                     </TabsList>
 
                     <TabsContent value="markets" className="mt-6">
-                      <MarketTable 
-                        markets={eventWithLiquidity.markets} 
-                        eventId={selectedEvent.id}
-                        targetOutcomeId={targetOutcomeId}
-                        onOutcomeHighlighted={() => setTargetOutcomeId(null)}
-                        event={eventWithLiquidity}
-                      />
+                      <MarketTable markets={eventWithLiquidity.markets} eventId={selectedEvent.id} targetOutcomeId={targetOutcomeId} onOutcomeHighlighted={() => setTargetOutcomeId(null)} event={eventWithLiquidity} />
                     </TabsContent>
 
                     <TabsContent value="liquidity" className="mt-6">
@@ -355,11 +299,7 @@ const Index = () => {
     }} />}
 
       {/* Share Dialog */}
-      <ShareBetDialog
-        open={showShareDialog}
-        onOpenChange={setShowShareDialog}
-        eventName={selectedEvent?.description || ''}
-      />
+      <ShareBetDialog open={showShareDialog} onOpenChange={setShowShareDialog} eventName={selectedEvent?.description || ''} />
     </div>;
 };
 export default Index;
