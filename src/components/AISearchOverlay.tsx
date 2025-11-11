@@ -151,15 +151,15 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
 
     try {
       // Send enhanced event data with liquidity info
-      const essentialEvents = events.map(e => ({
+      const essentialEvents = events.slice(0, 100).map(e => ({
         id: e.id,
         description: e.description,
-        league: e.game.league,
+        league: e.game?.league || 'Unknown',
         status: e.status,
-        scheduled_start: e.game.scheduled_start,
-        markets: e.markets?.slice(0, 5).map((m: any) => ({
+        scheduled_start: e.game?.scheduled_start,
+        markets: (e.markets || []).slice(0, 5).map((m: any) => ({
           description: m.description,
-          outcomes: m.outcomes.slice(0, 4).map((o: any) => ({
+          outcomes: (m.outcomes || []).slice(0, 4).map((o: any) => ({
             description: o.description,
             last: o.last,
             available: o.available,
@@ -169,12 +169,20 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
         }))
       }));
 
+      const requestBody = {
+        message: query.trim().slice(0, 2000),
+        events: essentialEvents,
+        conversationHistory: messages.slice(-4).slice(0, 20)
+      };
+
+      console.log('AI Search Request:', {
+        messageLength: requestBody.message.length,
+        eventCount: requestBody.events.length,
+        historyCount: requestBody.conversationHistory.length
+      });
+
       const { data, error } = await supabase.functions.invoke("ai-betting-search", {
-        body: {
-          message: query,
-          events: essentialEvents,
-          conversationHistory: messages.slice(-4)
-        }
+        body: requestBody
       });
 
       if (error) {
@@ -182,8 +190,9 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
         throw new Error(error.message || "Failed to connect to AI service");
       }
       if (data?.error) {
-        console.error("AI service error:", data.error);
-        throw new Error(data.error);
+        console.error("AI service error:", data.error, data.details);
+        const errorMsg = data.details || data.error;
+        throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
       }
 
       const assistantMessage: Message = {

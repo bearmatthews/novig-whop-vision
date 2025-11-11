@@ -19,6 +19,11 @@ serve(async (req) => {
 
   try {
     const rawBody = await req.json();
+    console.log('Request received:', {
+      messageLength: rawBody.message?.length || 0,
+      eventCount: rawBody.events?.length || 0,
+      historyCount: rawBody.conversationHistory?.length || 0
+    });
     const { message, events, conversationHistory } = SearchSchema.parse(rawBody);
     
     if (!message) {
