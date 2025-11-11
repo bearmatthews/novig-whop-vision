@@ -157,10 +157,10 @@ export function MarketTable({
                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       )}
                       
-                      <div className="relative space-y-5">
+                      <div className="relative space-y-5 text-center">
                         {/* Header: Outcome name with arrow icon */}
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 text-center">
                             <h4 className={`font-semibold text-base leading-snug ${teamColor ? 'text-white' : 'text-foreground'}`}>
                               {teamAbbr || outcome.description}
                             </h4>
@@ -170,9 +170,17 @@ export function MarketTable({
                           </div>
                         </div>
                         
-                        {/* Odds Display - Hero element */}
-                        <div>
-                          <div className={`text-5xl font-bold tracking-tight leading-none transition-all duration-300 ${teamColor ? 'text-white' : 'text-foreground'}`}>
+                        {/* Odds Display - Hero element with color coding */}
+                        <div className="flex flex-col items-center">
+                          <div className={`text-5xl font-bold tracking-tight leading-none transition-all duration-300 ${
+                            teamColor 
+                              ? 'text-white' 
+                              : price && price >= 0.7 
+                                ? 'text-destructive' // High odds (risky/unlikely)
+                                : price && price >= 0.4 
+                                  ? 'text-warning' // Medium odds
+                                  : 'text-success' // Low odds (safer/likely)
+                          }`}>
                             {price ? formatOdds(price, format) : '-'}
                           </div>
                           <div className={`text-sm font-medium mt-2 ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
@@ -180,9 +188,9 @@ export function MarketTable({
                           </div>
                         </div>
                         
-                        {/* Liquidity footer - subtle */}
+                        {/* Liquidity footer - centered */}
                         {showLiquidity && hasOrders && (
-                          <div className={`flex items-center justify-between pt-3 border-t ${teamColor ? 'border-white/10' : 'border-border/50'}`}>
+                          <div className={`flex items-center justify-center gap-6 pt-3 border-t ${teamColor ? 'border-white/10' : 'border-border/50'}`}>
                             <div className={`flex items-center gap-1.5 text-xs font-medium ${teamColor ? 'text-white/80' : 'text-success'}`}>
                               <DollarSign className="w-3.5 h-3.5" />
                               <span>{formatCurrency(totalLiquidity)}</span>
