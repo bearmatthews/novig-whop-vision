@@ -173,12 +173,18 @@ export function AISearchOverlay({ events, onClose, onEventSelect }: AISearchOver
         body: {
           message: query,
           events: essentialEvents,
-          conversationHistory: messages.slice(-4) // Reduced from 6 to 4
+          conversationHistory: messages.slice(-4)
         }
       });
 
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Failed to connect to AI service");
+      }
+      if (data?.error) {
+        console.error("AI service error:", data.error);
+        throw new Error(data.error);
+      }
 
       const assistantMessage: Message = {
         role: "assistant",
