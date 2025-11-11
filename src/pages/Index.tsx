@@ -5,7 +5,6 @@ import { LeagueSelector, LEAGUES } from "@/components/LeagueSelector";
 import { EventCard } from "@/components/EventCard";
 import { MarketTable } from "@/components/MarketTable";
 import { LiquidityView } from "@/components/LiquidityView";
-import { GameDataView } from "@/components/GameDataView";
 import { SearchBar } from "@/components/SearchBar";
 import { EmptyState } from "@/components/EmptyState";
 import { WhopUserProfile } from "@/components/WhopUserProfile";
@@ -300,19 +299,11 @@ const Index = () => {
                     espnScore={findScoreForEvent(espnScores, eventWithLiquidity.description, eventWithLiquidity.game.league)}
                   />
 
-                  <Tabs defaultValue={targetOutcomeId ? "markets" : "game-data"} className="w-full">
+                  <Tabs defaultValue="markets" className="w-full">
                     <TabsList>
-                      <TabsTrigger value="game-data">Game Data</TabsTrigger>
                       <TabsTrigger value="markets">Markets</TabsTrigger>
                       <TabsTrigger value="liquidity">Order Book</TabsTrigger>
                     </TabsList>
-
-                    <TabsContent value="game-data" className="mt-6">
-                      <GameDataView 
-                        event={eventWithLiquidity}
-                        espnScore={findScoreForEvent(espnScores, eventWithLiquidity.description, eventWithLiquidity.game.league)}
-                      />
-                    </TabsContent>
 
                     <TabsContent value="markets" className="mt-6">
                       <MarketTable 
