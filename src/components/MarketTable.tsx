@@ -144,7 +144,7 @@ export function MarketTable({
                       onClick={() => handleOutcomeClick(outcome.id)}
                       style={buttonStyle}
                       className={`
-                        w-full rounded-xl p-4 transition-all duration-300 
+                        w-full rounded-xl p-3 transition-all duration-300 
                         border group relative overflow-hidden
                         ${teamColor 
                           ? 'border-transparent text-white hover:brightness-110 hover:scale-[1.01] shadow-lg hover:shadow-xl' 
@@ -157,50 +157,52 @@ export function MarketTable({
                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       )}
                       
-                      <div className="relative space-y-5 text-center">
+                      <div className="relative space-y-2.5">
                         {/* Header: Outcome name with arrow icon */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 text-center">
-                            <h4 className={`font-semibold text-base leading-snug ${teamColor ? 'text-white' : 'text-foreground'}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 text-center px-6">
+                            <h4 className={`font-semibold text-sm leading-tight ${teamColor ? 'text-white' : 'text-foreground'}`}>
                               {teamAbbr || outcome.description}
                             </h4>
                           </div>
                           <div className={`shrink-0 rounded-full p-1 transition-all duration-300 ${teamColor ? 'bg-white/10 group-hover:bg-white/20' : 'bg-muted group-hover:bg-foreground/5'}`}>
-                            <ArrowUpRight className={`w-4 h-4 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${teamColor ? 'text-white/90' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                            <ArrowUpRight className={`w-3.5 h-3.5 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${teamColor ? 'text-white/90' : 'text-muted-foreground group-hover:text-foreground'}`} />
                           </div>
                         </div>
                         
-                        {/* Odds Display - Hero element with color coding */}
-                        <div className="flex flex-col items-center">
-                          <div className={`text-5xl font-bold tracking-tight leading-none transition-all duration-300 ${
+                        {/* Odds Display - Compact */}
+                        <div className="text-center">
+                          <div className={`text-4xl font-bold tracking-tight leading-none transition-all duration-300 ${
                             teamColor 
                               ? 'text-white' 
                               : price && price >= 0.7 
-                                ? 'text-destructive' // High odds (risky/unlikely)
+                                ? 'text-destructive'
                                 : price && price >= 0.4 
-                                  ? 'text-warning' // Medium odds
-                                  : 'text-success' // Low odds (safer/likely)
+                                  ? 'text-warning'
+                                  : 'text-success'
                           }`}>
                             {price ? formatOdds(price, format) : '-'}
                           </div>
-                          <div className={`text-sm font-medium mt-2 ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
-                            ${price?.toFixed(3)}
-                          </div>
                         </div>
                         
-                        {/* Liquidity footer - centered */}
-                        {showLiquidity && hasOrders && (
-                          <div className={`flex items-center justify-center gap-6 pt-3 border-t ${teamColor ? 'border-white/10' : 'border-border/50'}`}>
-                            <div className={`flex items-center gap-1.5 text-xs font-medium ${teamColor ? 'text-white/80' : 'text-success'}`}>
-                              <DollarSign className="w-3.5 h-3.5" />
-                              <span>{formatCurrency(totalLiquidity)}</span>
-                            </div>
-                            <div className={`flex items-center gap-1 text-xs ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
-                              <TrendingUp className="w-3 h-3" />
-                              <span>{outcome.orders.length}</span>
-                            </div>
-                          </div>
-                        )}
+                        {/* Footer: Price and liquidity */}
+                        <div className={`flex items-center justify-center gap-4 text-xs ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
+                          <span className="font-medium">${price?.toFixed(3)}</span>
+                          {showLiquidity && hasOrders && (
+                            <>
+                              <span className={teamColor ? 'text-white/30' : 'text-border'}>•</span>
+                              <div className={`flex items-center gap-1 ${teamColor ? 'text-white/70' : 'text-success'}`}>
+                                <DollarSign className="w-3 h-3" />
+                                <span>{formatCurrency(totalLiquidity)}</span>
+                              </div>
+                              <span className={teamColor ? 'text-white/30' : 'text-border'}>•</span>
+                              <div className="flex items-center gap-1">
+                                <TrendingUp className="w-3 h-3" />
+                                <span>{outcome.orders.length}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
