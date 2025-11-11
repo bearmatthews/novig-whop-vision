@@ -144,61 +144,55 @@ export function MarketTable({
                       onClick={() => handleOutcomeClick(outcome.id)}
                       style={buttonStyle}
                       className={`
-                        w-full rounded-lg p-3 transition-all duration-200 
+                        w-full rounded-xl p-4 transition-all duration-300 
                         border group relative overflow-hidden
                         ${teamColor 
-                          ? 'border-transparent text-white hover:brightness-110 hover:scale-[1.02]' 
-                          : 'bg-muted/50 border-border hover:border-primary/50 hover:bg-muted'
+                          ? 'border-transparent text-white hover:brightness-110 hover:scale-[1.01] shadow-lg hover:shadow-xl' 
+                          : 'bg-card border-border hover:border-foreground/20 hover:shadow-md'
                         }
                       `}
                     >
                       {/* Subtle gradient overlay for team colors */}
                       {teamColor && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       )}
                       
-                      <div className="relative">
-                        {/* Header: Outcome name with action icon */}
-                        <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="relative space-y-5">
+                        {/* Header: Outcome name with arrow icon */}
+                        <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <div className={`font-bold text-lg leading-tight truncate ${teamColor ? 'text-white' : 'text-foreground'}`}>
+                            <h4 className={`font-semibold text-base leading-snug ${teamColor ? 'text-white' : 'text-foreground'}`}>
                               {teamAbbr || outcome.description}
-                            </div>
+                            </h4>
                           </div>
-                          <div className={`shrink-0 rounded-full p-1.5 transition-all ${teamColor ? 'bg-white/10 group-hover:bg-white/20' : 'bg-muted group-hover:bg-primary/10'}`}>
-                            <ArrowUpRight className={`w-4 h-4 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${teamColor ? 'text-white' : 'text-muted-foreground group-hover:text-primary'}`} />
+                          <div className={`shrink-0 rounded-full p-1 transition-all duration-300 ${teamColor ? 'bg-white/10 group-hover:bg-white/20' : 'bg-muted group-hover:bg-foreground/5'}`}>
+                            <ArrowUpRight className={`w-4 h-4 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${teamColor ? 'text-white/90' : 'text-muted-foreground group-hover:text-foreground'}`} />
                           </div>
                         </div>
                         
-                        {/* Main content: Odds and metadata */}
-                        <div className="flex items-end justify-between gap-4">
-                          {/* Left: Odds display */}
-                          <div className="flex-1">
-                            <div className={`text-xs uppercase tracking-wider font-medium mb-1 ${teamColor ? 'text-white/50' : 'text-muted-foreground'}`}>
-                              Odds
+                        {/* Odds Display - Hero element */}
+                        <div>
+                          <div className={`text-5xl font-bold tracking-tight leading-none transition-all duration-300 ${teamColor ? 'text-white' : 'text-foreground'}`}>
+                            {price ? formatOdds(price, format) : '-'}
+                          </div>
+                          <div className={`text-sm font-medium mt-2 ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
+                            ${price?.toFixed(3)}
+                          </div>
+                        </div>
+                        
+                        {/* Liquidity footer - subtle */}
+                        {showLiquidity && hasOrders && (
+                          <div className={`flex items-center justify-between pt-3 border-t ${teamColor ? 'border-white/10' : 'border-border/50'}`}>
+                            <div className={`flex items-center gap-1.5 text-xs font-medium ${teamColor ? 'text-white/80' : 'text-success'}`}>
+                              <DollarSign className="w-3.5 h-3.5" />
+                              <span>{formatCurrency(totalLiquidity)}</span>
                             </div>
-                            <div className={`text-4xl font-bold font-mono leading-none transition-all ${teamColor ? 'text-white' : 'text-foreground group-hover:text-primary'}`}>
-                              {price ? formatOdds(price, format) : '-'}
-                            </div>
-                            <div className={`text-xs font-medium mt-1.5 ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
-                              Price: ${price?.toFixed(3)}
+                            <div className={`flex items-center gap-1 text-xs ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
+                              <TrendingUp className="w-3 h-3" />
+                              <span>{outcome.orders.length}</span>
                             </div>
                           </div>
-                          
-                          {/* Right: Liquidity info */}
-                          {showLiquidity && hasOrders && (
-                            <div className={`text-right space-y-1 px-3 py-2 rounded-lg ${teamColor ? 'bg-white/10' : 'bg-muted/80'}`}>
-                              <div className={`flex items-center justify-end gap-1.5 text-sm font-bold ${teamColor ? 'text-white' : 'text-success'}`}>
-                                <DollarSign className="w-3.5 h-3.5" />
-                                {formatCurrency(totalLiquidity)}
-                              </div>
-                              <div className={`flex items-center justify-end gap-1 text-xs ${teamColor ? 'text-white/70' : 'text-muted-foreground'}`}>
-                                <TrendingUp className="w-3 h-3" />
-                                {outcome.orders.length} order{outcome.orders.length !== 1 ? 's' : ''}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </button>
                   );
