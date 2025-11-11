@@ -74,10 +74,8 @@ export function MarketTable({
     }
   }, [targetOutcomeId, onOutcomeHighlighted]);
   const handleOutcomeClick = (outcomeId: string) => {
-    if (!eventId) return;
-    
-    // Open Novig with the event markets
-    const novigUrl = `https://app.novig.us/event-markets/${eventId}`;
+    // Open Novig with referral code
+    const novigUrl = `https://app.novig.us/events/${outcomeId}/bearm?referralCode=BEARM`;
     window.open(novigUrl, '_blank');
     toast.success("Opening in Novig...");
   };
