@@ -1,6 +1,5 @@
-import { Badge } from "@/components/ui/badge";
 import { formatOdds, formatCurrency } from "@/lib/betting-utils";
-import { TrendingUp, DollarSign, ExternalLink } from "lucide-react";
+import { TrendingUp, DollarSign, ArrowUpRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
@@ -95,21 +94,23 @@ export function MarketTable({
   return (
     <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {marketsWithPrices.map((market) => {
-        // Determine if this is a moneyline market (2-way market with team outcomes)
+        // Determine market type
         const isMoneylineMarket = market.description.toLowerCase().includes('moneyline') || 
                                   market.description.toLowerCase().includes('money line') ||
                                   market.description.toLowerCase().includes('winner');
         const isSpreadMarket = market.description.toLowerCase().includes('spread');
-        const isTotalMarket = market.description.toLowerCase().includes('total') || 
-                              market.description.toLowerCase().includes('over/under');
         
         return (
-          <Card key={market.id} className="p-5 space-y-3 border border-border/30 rounded-2xl bg-card">
-            <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">
-              {market.description}
-            </h3>
+          <Card key={market.id} className="overflow-hidden border-border/50 bg-card hover:border-border transition-all">
+            {/* Market Header */}
+            <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
+              <h3 className="font-semibold text-sm text-foreground">
+                {market.description}
+              </h3>
+            </div>
             
-            <div className="grid gap-2">
+            {/* Outcomes */}
+            <div className="p-3 space-y-2">
               {market.outcomes
                 .filter((outcome) => outcome.available)
                 .map((outcome, index) => {
@@ -119,7 +120,7 @@ export function MarketTable({
                     ? outcome.orders.reduce((sum, order) => sum + order.qty, 0)
                     : 0;
                   
-                  // Determine team color based on market type and outcome position (simple index-based mapping)
+                  // Determine team styling
                   let teamColor = null;
                   let teamAbbr = null;
 
@@ -130,12 +131,11 @@ export function MarketTable({
                   }
                   
                   const buttonStyle = teamColor 
-                    ? { backgroundColor: teamColor, borderColor: teamColor }
+                    ? { 
+                        backgroundColor: teamColor,
+                        boxShadow: `0 1px 3px 0 ${teamColor}40, 0 1px 2px -1px ${teamColor}30`
+                      }
                     : {};
-                  
-                  const buttonClasses = teamColor
-                    ? "rounded-xl p-4 space-y-2 text-left w-full transition-all duration-200 hover:scale-[1.02] cursor-pointer group border text-white hover:brightness-110 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]"
-                    : "bg-muted/50 border border-border rounded-xl p-4 space-y-2 text-left w-full transition-all hover:border-primary hover:bg-muted cursor-pointer group";
 
                   return (
                     <button
@@ -143,36 +143,62 @@ export function MarketTable({
                       ref={(el) => outcomeRefs.current[outcome.id] = el}
                       onClick={() => handleOutcomeClick(outcome.id)}
                       style={buttonStyle}
-                      className={buttonClasses}
+                      className={`
+                        w-full rounded-lg p-3 transition-all duration-200 
+                        border group relative overflow-hidden
+                        ${teamColor 
+                          ? 'border-transparent text-white hover:brightness-110 hover:scale-[1.02]' 
+                          : 'bg-muted/50 border-border hover:border-primary/50 hover:bg-muted'
+                        }
+                      `}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-sm uppercase tracking-wide">
-                          {teamAbbr || outcome.description}
-                        </span>
-                        <ExternalLink className={`w-3.5 h-3.5 transition-colors ${teamColor ? 'text-white/70 group-hover:text-white' : 'text-muted-foreground group-hover:text-primary'}`} />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className={`text-xs ${teamColor ? 'text-white/70' : 'text-muted-foreground'}`}>
-                          Price: <span className={`font-semibold ${teamColor ? 'text-white' : 'text-foreground'}`}>{price?.toFixed(2)}</span>
-                        </div>
-                        <div className={`text-2xl font-bold font-mono transition-colors ${teamColor ? 'text-white' : 'group-hover:text-primary'}`}>
-                          {price ? formatOdds(price, format) : '-'}
-                        </div>
-                      </div>
-
-                      {showLiquidity && hasOrders && (
-                        <div className={`flex items-center justify-between pt-2 border-t text-xs ${teamColor ? 'border-white/20' : 'border-border/50'}`}>
-                          <div className={`flex items-center gap-1 ${teamColor ? 'text-white/90' : 'text-success'}`}>
-                            <DollarSign className="w-3 h-3" />
-                            {formatCurrency(totalLiquidity)}
-                          </div>
-                          <div className={`flex items-center gap-1 ${teamColor ? 'text-white/70' : 'text-muted-foreground'}`}>
-                            <TrendingUp className="w-3 h-3" />
-                            {outcome.orders.length} orders
-                          </div>
-                        </div>
+                      {/* Subtle gradient overlay for team colors */}
+                      {teamColor && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       )}
+                      
+                      <div className="relative space-y-2">
+                        {/* Top row: Outcome name and icon */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 text-left">
+                            <div className={`font-bold text-base leading-tight ${teamColor ? 'text-white' : 'text-foreground'}`}>
+                              {teamAbbr || outcome.description}
+                            </div>
+                            {!teamAbbr && outcome.description.length > 30 && (
+                              <div className={`text-xs mt-0.5 ${teamColor ? 'text-white/70' : 'text-muted-foreground'}`}>
+                                Tap to bet
+                              </div>
+                            )}
+                          </div>
+                          <ArrowUpRight className={`w-4 h-4 shrink-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${teamColor ? 'text-white/80' : 'text-muted-foreground'}`} />
+                        </div>
+                        
+                        {/* Bottom row: Odds and price */}
+                        <div className="flex items-end justify-between">
+                          <div className="text-left">
+                            <div className={`text-3xl font-bold font-mono leading-none ${teamColor ? 'text-white' : 'text-foreground group-hover:text-primary'}`}>
+                              {price ? formatOdds(price, format) : '-'}
+                            </div>
+                            <div className={`text-xs mt-1 ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
+                              ${price?.toFixed(2)}
+                            </div>
+                          </div>
+                          
+                          {/* Liquidity info */}
+                          {showLiquidity && hasOrders && (
+                            <div className="text-right">
+                              <div className={`flex items-center justify-end gap-1 text-xs font-medium ${teamColor ? 'text-white/90' : 'text-success'}`}>
+                                <DollarSign className="w-3 h-3" />
+                                {formatCurrency(totalLiquidity)}
+                              </div>
+                              <div className={`flex items-center justify-end gap-1 text-xs mt-0.5 ${teamColor ? 'text-white/60' : 'text-muted-foreground'}`}>
+                                <TrendingUp className="w-3 h-3" />
+                                {outcome.orders.length}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </button>
                   );
                 })}
